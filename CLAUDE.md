@@ -82,9 +82,15 @@ Single breakpoint (`EXPANDED_BREAKPOINT_PX = 840`). Below it: full-bleed phone l
 
 Shared types live in `src/shared/interfaces/*.interface.ts` and are prefixed `I` (`ISavedBrew`, `IRouteConfig`, `IBrewGuideItem`). Utilities live in `src/shared/utilities/*.utility.ts` as pure functions, each with a matching test in a sibling `__tests__/` folder (`name.utility.test.ts`).
 
+**All new code must be properly typed.** No implicit `any`, no widening a value to `any`/`unknown` to silence the compiler instead of fixing the type. Props, function params/returns, signal generics, and event payloads all get explicit or precisely-inferred types — `strict` mode is on, so this is enforced at build time, not just style.
+
+**All new code needs tests, including proper Lit-focused tests for components** — not just coverage of pure utilities/stores. A new or changed component/view should get a rendering/behavior test (e.g. via `fixture`-style DOM rendering, asserting on shadow DOM output and dispatched events), not just a manual check in the browser. Note: `vitest`'s `test.environment` in `vite.config.ts` is currently `"node"` and there's no DOM test environment (`happy-dom`/`jsdom`) or Lit test-helper package installed yet — adding real component tests means adding that setup first, not skipping the tests because the harness isn't there.
+
 ## Subagents
 
 Five project subagents live in `.claude/agents/`. Claude Code routes matching work to them automatically based on their `description`; you can also invoke one explicitly (e.g. "have the code-reviewer subagent check this" or via the Agent tool with that subagent type).
+
+**Use subagents to delegate work rather than doing everything in the main thread.** When a task (or part of one) matches a subagent's specialty, hand it off — this keeps each piece of work handled by the most relevant expertise and lets independent parts proceed effectively instead of serially. This applies within a single task too: e.g. a new component should be built by `lit-expert`, its tests by `testing-expert`, and the result checked by `code-reviewer`, rather than one agent attempting the whole thing end to end.
 
 | Agent | Use for |
 |---|---|
