@@ -1,0 +1,83 @@
+:root {
+  --brew-color-primary: #8b5000;
+  --brew-color-on-primary: #ffffff;
+  --brew-color-primary-container: #ffddb3;
+  --brew-color-on-primary-container: #2b1700;
+  --brew-color-secondary: #6f5b40;
+  --brew-color-on-secondary: #ffffff;
+  --brew-color-secondary-container: #fbdebc;
+  --brew-color-on-secondary-container: #271904;
+  --brew-color-tertiary: #51643f;
+  --brew-color-on-tertiary: #ffffff;
+  --brew-color-tertiary-container: #d2e8bc;
+  --brew-color-on-tertiary-container: #101f0c;
+  --brew-color-surface: #fff8f3;
+  --brew-color-on-surface: #201b13;
+  --brew-color-on-surface-variant: #504438;
+  --brew-color-surface-container-lowest: #ffffff;
+  --brew-color-surface-container-low: #faf1e8;
+  --brew-color-surface-container: #f5ebe0;
+  --brew-color-surface-container-high: #efe5d9;
+  --brew-color-surface-container-highest: #e9e0d4;
+  --brew-color-outline: #82756a;
+  --brew-color-outline-variant: #d3c4b4;
+  --brew-color-error: #ba1a1a;
+  --brew-color-on-error: #ffffff;
+  --brew-color-error-container: #ffdad6;
+  --brew-color-on-error-container: #410002;
+  --brew-color-inverse-surface: #362f27;
+  --brew-color-inverse-on-surface: #fbeee3;
+  --brew-page-background: #efeae3;
+  --color-scheme: light;
+
+  color-scheme: var(--color-scheme);
+}
+
+[data-theme="dark"] {
+  --brew-color-primary: #ffb951;
+  --brew-color-on-primary: #472a00;
+  --brew-color-primary-container: #663d00;
+  --brew-color-on-primary-container: #ffddb3;
+  --brew-color-secondary: #ddc3a2;
+  --brew-color-on-secondary: #3d2e17;
+  --brew-color-secondary-container: #55442b;
+  --brew-color-on-secondary-container: #fbdebc;
+  --brew-color-tertiary: #b7cca2;
+  --brew-color-on-tertiary: #253419;
+  --brew-color-tertiary-container: #3b4c2c;
+  --brew-color-on-tertiary-container: #d2e8bc;
+  --brew-color-surface: #17130d;
+  --brew-color-on-surface: #e9e0d4;
+  --brew-color-on-surface-variant: #d3c4b4;
+  --brew-color-surface-container-lowest: #110d08;
+  --brew-color-surface-container-low: #201b13;
+  --brew-color-surface-container: #241f17;
+  --brew-color-surface-container-high: #2f2a21;
+  --brew-color-surface-container-highest: #3a342b;
+  --brew-color-outline: #9c8f80;
+  --brew-color-outline-variant: #504438;
+  --brew-color-error: #ffb4ab;
+  --brew-color-on-error: #690005;
+  --brew-color-error-container: #93000a;
+  --brew-color-on-error-container: #ffdad6;
+  --brew-color-inverse-surface: #e9e0d4;
+  --brew-color-inverse-on-surface: #362f27;
+  --brew-page-background: #14110b;
+  --color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+body {
+  font-family: Roboto, system-ui, sans-serif;
+  background: var(--brew-page-background);
+  color: var(--brew-color-on-surface);
+}
+
+a {
+  color: var(--brew-color-primary);
+}

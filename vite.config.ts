@@ -1,0 +1,113 @@
+/// <reference types="vitest" />
+import { defineConfig } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
+
+export default defineConfig({
+  plugins: [
+    VitePWA({
+      registerType: "autoUpdate",
+      // We render our own install UI (`brew-install-prompt`), so skip the
+      // plugin's default "reload to update" toast/inject and let
+      // `virtual:pwa-register` drive the service worker instead.
+      injectRegister: null,
+      workbox: {
+        // Precache the full app shell (JS/CSS/HTML + every icon we ship)
+        // so the app keeps working with zero network access after the
+        // first load.
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/assets/],
+        runtimeCaching: [
+          {
+            // Google Fonts stylesheet - revalidate opportunistically,
+            // fall back to cache offline.
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: "StaleWhileRevalidate",
+            options: { cacheName: "brew-google-fonts-stylesheets" },
+          },
+          {
+            // Actual font files rarely change once fetched - cache
+            // them long-term so they're available offline.
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "brew-google-fonts-webfonts",
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxAgeSeconds: 60 * 60 * 24 * 365, maxEntries: 30 },
+            },
+          },
+        ],
+      },
+      manifest: {
+        id: "/",
+        name: "BrewMe",
+        short_name: "BrewMe",
+        description:
+          "A coffee water:coffee ratio calculator, pour-over timer, and brew method guide.",
+        theme_color: "#8b5000",
+        background_color: "#efeae3",
+        display: "standalone",
+        orientation: "portrait",
+        start_url: "/",
+        scope: "/",
+        icons: [
+          { src: "icons/icon-72x72.png", sizes: "72x72", type: "image/png" },
+          { src: "icons/icon-96x96.png", sizes: "96x96", type: "image/png" },
+          { src: "icons/icon-128x128.png", sizes: "128x128", type: "image/png" },
+          { src: "icons/icon-144x144.png", sizes: "144x144", type: "image/png" },
+          { src: "icons/icon-152x152.png", sizes: "152x152", type: "image/png" },
+          { src: "icons/icon-192x192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          {
+            src: "icons/icon-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "maskable",
+          },
+          { src: "icons/icon-384x384.png", sizes: "384x384", type: "image/png" },
+          { src: "icons/icon-512x512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          {
+            src: "icons/icon-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
+        ],
+        // Rendered by Chrome/Edge's own richer install dialog on top of our
+        // custom `brew-install-prompt` bottom sheet - same two screens.
+        screenshots: [
+          {
+            src: "screenshots/home.png",
+            sizes: "720x1560",
+            type: "image/png",
+            form_factor: "narrow",
+            label: "Home screen",
+          },
+          {
+            src: "screenshots/calculator.png",
+            sizes: "720x1560",
+            type: "image/png",
+            form_factor: "narrow",
+            label: "Ratio calculator",
+          },
+        ],
+      },
+      devOptions: {
+        // Lets `npm run dev` register a real service worker too, so
+        // offline behavior can be checked without a production build.
+        enabled: true,
+        type: "module",
+      },
+    }),
+  ],
+  build: {
+    assetsDir: "src",
+    cssMinify: true,
+  },
+  test: {
+    environment: "node",
+    coverage: {
+      exclude: ["**/node_modules", "**/vite.config.*", "**/vite-env.d.ts", "**/shared/data/**"],
+      enabled: true,
+    },
+  },
+});

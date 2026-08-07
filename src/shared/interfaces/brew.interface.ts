@@ -1,0 +1,58 @@
+export interface ISavedBrew {
+  id: number;
+  brewType: string;
+  ratio: number;
+  water: number;
+  coffee: number;
+  oz: number;
+  /** Epoch ms when this ratio was first saved - used to compute the real day streak. */
+  createdAt: number;
+}
+
+/** A curated YouTube walkthrough shown on a brew guide's detail screen. */
+export interface IBrewVideo {
+  /** The YouTube video ID, e.g. "4tQG_aMcCL0" from https://youtu.be/4tQG_aMcCL0 */
+  youtubeId: string;
+  title: string;
+  /** Who made it, e.g. "James Hoffmann" - shown under the title. */
+  channel: string;
+}
+
+export interface IBrewGuideItem {
+  id: string;
+  name: string;
+  desc: string;
+  ratioHint: string;
+  grind: string;
+  temp: string;
+  ratioDefault: number;
+  aiTips: string[];
+  /** Hand-picked walkthroughs. Pour-over methods share a common set. */
+  videos: IBrewVideo[];
+  /**
+   * Optional pointer to an external recipe collection (currently only
+   * AeroPress, which links to the World AeroPress Championship archive).
+   */
+  recipesLink?: {
+    label: string;
+    description: string;
+    /** Internal route to the in-app recipe browser. */
+    route: string;
+  };
+}
+
+/** One World AeroPress Championship placing, transcribed from the official recipe archive. */
+export interface IAeropressRecipe {
+  id: string;
+  year: number;
+  /** 1, 2 or 3 - the podium position this recipe placed. */
+  place: number;
+  competitor: string;
+  country: string;
+  /** Setup key/value pairs, e.g. { Position: "Inverted", Dose: "18g" }. */
+  setup: Record<string, string>;
+  /** Ordered brew steps. */
+  steps: string[];
+  /** Optional note from the competitor. */
+  note?: string;
+}
