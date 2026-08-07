@@ -76,8 +76,18 @@ the conventions from `app-shell-starter`:
     `localStorage`; those same two screenshots are also registered in the
     manifest's `screenshots` field so Chrome/Edge's own richer install
     dialog picks them up too.
-  - `registerType: "autoUpdate"` - new deployed versions activate silently
-    in the background rather than needing a "reload to update" prompt.
+  - **Update prompt**: `registerType: "prompt"` - a new deployed version
+    installs and waits instead of swapping itself in silently. Once it's
+    ready, `onNeedRefresh` (`register-service-worker.utility.ts`) flips
+    `needsRefreshSignal`, which `brew-update-prompt`
+    (`src/components/update-prompt/`) watches to show a small floating
+    "A new version of BrewMe is ready" snackbar - not a modal, no scrim,
+    doesn't block the app underneath. "Refresh" calls `applyUpdate()`
+    (activates the waiting worker, reloads once it takes control);
+    "Later" just hides the banner for now, and it reappears on the next
+    visit if the update's still pending. The Settings screen's "Refresh
+    app" button (`refreshApp`) is a separate, always-available manual
+    fallback for the rare case a new version hasn't been detected yet.
 - The ratio inputs (ratio field, linked Water (g) / Cup size (oz) row, live
   "coffee needed" result) are a single shared, controlled component -
   `brew-ratio-form` (`src/components/ratio-form/`) - used on both the
@@ -104,11 +114,10 @@ the conventions from `app-shell-starter`:
   brew types (add, and remove ones you added - built-in types are fixed),
   a dark-mode switch (`brew-switch`, sharing `theme.store.ts` with the
   floating `brew-theme-toggle` so both always agree), a "Refresh app"
-  button (`refreshApp` in `register-service-worker.utility.ts` - forces a
-  service-worker update check and reloads, for the rare case
-  `autoUpdate` hasn't picked up a new deploy in a long-lived tab), and a
-  danger zone that wipes all saved brews and custom brew types behind an
-  inline "are you sure" confirmation (no browser `confirm()` dialogs).
+  button (a manual fallback alongside the automatic `brew-update-prompt`
+  banner described below), and a danger zone that wipes all saved brews
+  and custom brew types behind an inline "are you sure" confirmation (no
+  browser `confirm()` dialogs).
   `brew-button` gained a `tone="danger"` option for that last one.
 
 ## What's intentionally simplified vs. app-shell-starter

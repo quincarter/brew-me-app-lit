@@ -125,8 +125,8 @@ export class SettingsPage extends SignalWatcher(LitElement) {
           <div class="divider"></div>
           <div class="section-title">App</div>
           <p class="section-hint">
-            BrewMe updates itself automatically in the background. If something seems out of
-            date, force a refresh here.
+            BrewMe checks for updates automatically and will show a prompt when a new version's
+            ready. If you don't see it but suspect there's an update, force a refresh here.
           </p>
           <brew-button variant="outlined" @button-click="${refreshApp}">Refresh app</brew-button>
 

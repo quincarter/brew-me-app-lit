@@ -6,6 +6,7 @@ import "urlpattern-polyfill";
 import { AppShellStyles } from "./app-shell.styles";
 import "./components/install-prompt/brew-install-prompt";
 import "./components/theme-toggle/brew-theme-toggle";
+import "./components/update-prompt/brew-update-prompt";
 import { withBase } from "./shared/configuration/base-path";
 import { routes } from "./shared/configuration/routes";
 import { initInstallPromptListener } from "./shared/stores/install-prompt.store";
@@ -48,6 +49,7 @@ export class AppShell extends LitElement {
       <brew-theme-toggle></brew-theme-toggle>
       <main>${this._router.outlet()}</main>
       <brew-install-prompt></brew-install-prompt>
+      <brew-update-prompt></brew-update-prompt>
     `;
   }
 }

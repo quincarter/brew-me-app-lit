@@ -5,10 +5,16 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig({
   plugins: [
     VitePWA({
-      registerType: "autoUpdate",
-      // We render our own install UI (`brew-install-prompt`), so skip the
-      // plugin's default "reload to update" toast/inject and let
-      // `virtual:pwa-register` drive the service worker instead.
+      // "prompt" (rather than "autoUpdate") means a new service worker
+      // installs but waits instead of activating itself - `onNeedRefresh`
+      // in register-service-worker.utility.ts fires so `brew-update-prompt`
+      // can ask before swapping in new code, instead of silently updating
+      // out from under someone mid-brew.
+      registerType: "prompt",
+      // We render our own install UI (`brew-install-prompt`) and update UI
+      // (`brew-update-prompt`), so skip the plugin's default injected
+      // toasts and let `virtual:pwa-register` drive the service worker
+      // instead.
       injectRegister: null,
       workbox: {
         // Precache the full app shell (JS/CSS/HTML + every icon we ship)
