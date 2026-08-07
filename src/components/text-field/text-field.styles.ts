@@ -3,6 +3,14 @@ import { css } from "lit";
 export const TextFieldStyles = css`
   :host {
     display: block;
+    /*
+     * Without this, a text field sitting in a flex row (e.g. the Water/Cup
+     * size pair on the calculator) refuses to shrink below its content's
+     * natural width - the default "min-width: auto" for flex items - and
+     * pushes its sibling off-screen on narrow viewports instead of sharing
+     * the row's width.
+     */
+    min-width: 0;
   }
 
   .field {

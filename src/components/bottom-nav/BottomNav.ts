@@ -3,7 +3,7 @@ import { property } from "lit/decorators.js";
 import "../icon/brew-icon";
 import { BottomNavStyles } from "./bottom-nav.styles";
 
-export type BottomNavTab = "calculate" | "saved" | "more" | "";
+export type BottomNavTab = "home" | "calculate" | "saved" | "more" | "";
 
 interface NavTabConfig {
   id: BottomNavTab;
@@ -13,6 +13,7 @@ interface NavTabConfig {
 }
 
 const TABS: NavTabConfig[] = [
+  { id: "home", href: "/", icon: "home", label: "Home" },
   { id: "calculate", href: "/calculate", icon: "calculate", label: "Calculate" },
   { id: "saved", href: "/saved", icon: "bookmark", label: "Saved" },
   { id: "more", href: "/more", icon: "more_horiz", label: "More" },
@@ -20,19 +21,19 @@ const TABS: NavTabConfig[] = [
 
 /**
  * # Bottom Nav
- * The persistent 3-tab navigation bar shown at the bottom of every BrewMe
+ * The persistent 4-tab navigation bar shown at the bottom of every BrewMe
  * screen. The current section is highlighted with a pill background,
  * mirroring the source design.
  * ## Usage
  * ```html
- * <brew-bottom-nav active="calculate"></brew-bottom-nav>
+ * <brew-bottom-nav active="home"></brew-bottom-nav>
  * ```
  * @element brew-bottom-nav
  */
 export class BottomNav extends LitElement {
   static styles = [BottomNavStyles];
 
-  /** Which tab is highlighted. Leave empty for screens outside the 3 tabs (e.g. Home). */
+  /** Which tab is highlighted. Leave empty if a screen doesn't map to any of the 4 tabs. */
   @property({ type: String }) active: BottomNavTab = "";
 
   render(): HTMLTemplateResult {

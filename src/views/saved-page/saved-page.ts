@@ -2,8 +2,7 @@ import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
-import "../../components/button/brew-button";
-import "../../components/icon/brew-icon";
+import "../../components/empty-state/brew-empty-state";
 import "../../components/list-row/brew-list-row";
 import "../../components/top-bar/brew-top-bar";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
@@ -25,14 +24,7 @@ export class SavedPage extends SignalWatcher(LitElement) {
         <div class="content">
           ${
             brews.length === 0
-              ? html`
-                  <div class="empty-state">
-                    <brew-icon name="bookmark" size="48"></brew-icon>
-                    <div class="empty-title">No saved ratios yet</div>
-                    <div class="empty-body">Calculate a brew and tap Save to keep it here.</div>
-                    <brew-button variant="filled" href="/calculate">Go to Calculator</brew-button>
-                  </div>
-                `
+              ? html`<div class="empty-state"><brew-empty-state></brew-empty-state></div>`
               : brews.map((brew, index) => {
                   const colors = getAvatarColors(index);
                   return html`

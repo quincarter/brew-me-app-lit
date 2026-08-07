@@ -25,23 +25,8 @@ export const SavedPageStyles = css`
   .empty-state {
     flex: 1;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 60px 20px;
-    text-align: center;
-    color: var(--brew-color-outline);
-  }
-
-  .empty-title {
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--brew-color-on-surface);
-  }
-
-  .empty-body {
-    font-size: 13px;
-    color: var(--brew-color-on-surface-variant);
+    padding: 20px;
   }
 `;

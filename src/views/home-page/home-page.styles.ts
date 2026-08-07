@@ -68,28 +68,6 @@ export const HomePageStyles = css`
 
   .recent-empty {
     margin: 0 20px 28px;
-    padding: 28px 20px 24px;
-    border-radius: 20px;
-    background: var(--brew-color-surface-container-low);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    text-align: center;
-  }
-
-  .recent-empty-image {
-    width: 96px;
-    height: auto;
-    filter: grayscale(0.15);
-  }
-
-  .recent-empty-text {
-    margin: 0;
-    font-size: 14px;
-    line-height: 1.4;
-    color: var(--brew-color-on-surface-variant);
-    max-width: 240px;
   }
 
   .recent-row {
