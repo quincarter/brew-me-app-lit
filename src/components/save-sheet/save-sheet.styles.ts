@@ -43,12 +43,6 @@ export const SaveSheetStyles = css`
     color: var(--brew-color-on-surface);
   }
 
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
   .hint {
     font-size: 12px;
     color: var(--brew-color-on-surface-variant);

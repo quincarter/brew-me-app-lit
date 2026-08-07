@@ -3,6 +3,7 @@ import { property } from "lit/decorators.js";
 import { ButtonStyles } from "./button.styles";
 
 export type ButtonVariant = "filled" | "outlined" | "text";
+export type ButtonTone = "brand" | "danger";
 
 /**
  * # Button
@@ -13,6 +14,7 @@ export type ButtonVariant = "filled" | "outlined" | "text";
  * ```html
  * <brew-button variant="filled">Save ratio</brew-button>
  * <brew-button variant="filled" href="/calculate">Go to Calculator</brew-button>
+ * <brew-button variant="outlined" tone="danger">Delete all data</brew-button>
  * ```
  * @element brew-button
  * @slot - Button label content.
@@ -22,6 +24,8 @@ export class Button extends LitElement {
   static styles = [ButtonStyles];
 
   @property({ type: String }) variant: ButtonVariant = "filled";
+  /** "danger" swaps the primary color scheme for the error one - destructive actions like Settings' "Delete all data". */
+  @property({ type: String }) tone: ButtonTone = "brand";
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property({ type: Boolean, attribute: "full-width" }) fullWidth = false;
   @property({ type: String }) href = "";
@@ -37,7 +41,7 @@ export class Button extends LitElement {
   };
 
   render(): HTMLTemplateResult {
-    const classes = `btn ${this.variant} ${this.fullWidth ? "full-width" : ""}`;
+    const classes = `btn ${this.variant} ${this.tone} ${this.fullWidth ? "full-width" : ""}`;
     return this.href
       ? html`<a class="${classes}" href="${this.href}" @click="${this._onClick}"><slot></slot></a>`
       : html`

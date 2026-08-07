@@ -94,7 +94,10 @@ export class HomePage extends SignalWatcher(LitElement) {
                             size="32"
                           ></brew-avatar>
                           <span class="recent-type">${brew.brewType}</span>
-                          <span class="recent-ratio">${brew.ratio}:1</span>
+                          <span class="recent-stats">
+                            <span class="recent-ratio">${brew.ratio}:1 · ${brew.coffee}g coffee</span>
+                            <span class="recent-detail">${brew.water}g water · ${brew.oz}oz</span>
+                          </span>
                         </a>
                       `;
                     })}

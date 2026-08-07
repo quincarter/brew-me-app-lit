@@ -78,7 +78,7 @@ export const HomePageStyles = css`
   }
 
   .recent-card {
-    min-width: 140px;
+    width: 172px;
     flex-shrink: 0;
     background: var(--brew-color-surface-container-low);
     border-radius: 16px;
@@ -88,16 +88,38 @@ export const HomePageStyles = css`
     gap: 8px;
     text-decoration: none;
     cursor: pointer;
+    box-sizing: border-box;
   }
 
   .recent-type {
     font-size: 14px;
     font-weight: 500;
     color: var(--brew-color-on-surface);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .recent-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
   .recent-ratio {
     font-size: 12px;
     color: var(--brew-color-on-surface-variant);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .recent-detail {
+    font-size: 11px;
+    color: var(--brew-color-on-surface-variant);
+    opacity: 0.85;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `;

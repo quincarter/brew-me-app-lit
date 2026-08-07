@@ -49,3 +49,8 @@ export const updateSavedBrew = (id: number, patch: Partial<Omit<ISavedBrew, "id"
 export const deleteSavedBrew = (id: number): void => {
   savedBrewsSignal.value = savedBrewsSignal.value.filter((brew) => brew.id !== id);
 };
+
+/** Danger-zone reset: clears every saved ratio. Used by the Settings screen. */
+export const deleteAllSavedBrews = (): void => {
+  savedBrewsSignal.value = [];
+};

@@ -1,6 +1,6 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement } from "lit";
-import { BREW_TYPES } from "../../shared/data/brew-content.data";
+import { addCustomBrewType, allBrewTypesSignal } from "../../shared/stores/brew-types.store";
 import {
   cancelSaveDialog,
   confirmSave,
@@ -9,7 +9,7 @@ import {
   selectPendingBrewType,
 } from "../../shared/stores/save-dialog.store";
 import "../button/brew-button";
-import "../chip/brew-chip";
+import "../type-picker/brew-type-picker";
 import { SaveSheetStyles } from "./save-sheet.styles";
 
 /**
@@ -22,6 +22,11 @@ import { SaveSheetStyles } from "./save-sheet.styles";
 export class SaveSheet extends SignalWatcher(LitElement) {
   static styles = [SaveSheetStyles];
 
+  private _onTypeAdd = (event: CustomEvent<string>): void => {
+    const added = addCustomBrewType(event.detail);
+    if (added) selectPendingBrewType(added);
+  };
+
   render(): HTMLTemplateResult {
     if (!saveDialogOpenSignal.value) return html``;
 
@@ -31,17 +36,12 @@ export class SaveSheet extends SignalWatcher(LitElement) {
       <div class="scrim">
         <div class="sheet">
           <div class="title">Name this brew</div>
-          <div class="chips">
-            ${BREW_TYPES.map(
-              (name) => html`
-                <brew-chip
-                  label="${name}"
-                  ?selected="${name === pending}"
-                  @chip-click="${() => selectPendingBrewType(name)}"
-                ></brew-chip>
-              `,
-            )}
-          </div>
+          <brew-type-picker
+            .types="${allBrewTypesSignal.value}"
+            selected="${pending ?? ""}"
+            @type-select="${(e: CustomEvent<string>) => selectPendingBrewType(e.detail)}"
+            @type-add="${this._onTypeAdd}"
+          ></brew-type-picker>
           <div class="hint">Saved locally on this device — no account needed.</div>
           <div class="actions">
             <brew-button variant="text" @button-click="${cancelSaveDialog}">Cancel</brew-button>

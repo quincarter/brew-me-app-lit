@@ -69,10 +69,10 @@ export const SavedDetailPageStyles = css`
     color: var(--brew-color-on-surface-variant);
   }
 
-  .edit-fields {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+  .field-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--brew-color-on-surface-variant);
   }
 
   .delete-link {

@@ -47,6 +47,20 @@ export const ButtonStyles = css`
     padding: 0 12px;
   }
 
+  .btn.filled.danger {
+    background: var(--brew-color-error);
+    color: var(--brew-color-on-error);
+  }
+
+  .btn.outlined.danger {
+    color: var(--brew-color-error);
+    border-color: var(--brew-color-error);
+  }
+
+  .btn.text.danger {
+    color: var(--brew-color-error);
+  }
+
   .btn[disabled] {
     opacity: 0.38;
     cursor: not-allowed;

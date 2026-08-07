@@ -78,6 +78,38 @@ the conventions from `app-shell-starter`:
     dialog picks them up too.
   - `registerType: "autoUpdate"` - new deployed versions activate silently
     in the background rather than needing a "reload to update" prompt.
+- The ratio inputs (ratio field, linked Water (g) / Cup size (oz) row, live
+  "coffee needed" result) are a single shared, controlled component -
+  `brew-ratio-form` (`src/components/ratio-form/`) - used on both the
+  Calculator screen and the Saved Ratio Detail screen's edit mode, so the
+  two look and behave identically. It doesn't own the water/oz/ratio linking
+  math itself; each screen keeps that (Calculator via `calculator.store.ts`,
+  Saved Ratio Detail via local `@state`) and feeds values back in as
+  properties. On Saved Ratio Detail, a single primary button above "Delete
+  ratio" doubles as the mode toggle: "Edit ratio" swaps the read-only
+  ratio/stat boxes for a brew-type picker plus `brew-ratio-form`, both
+  seeded from the saved brew; the same button then reads "Save changes"
+  and, once clicked, persists the (possibly retyped) brew along with the
+  edited ratio and swaps back to the boxes with the updated values.
+- Brew types aren't a fixed list - `brew-type-picker`
+  (`src/components/type-picker/`) is a shared, controlled chip grid with a
+  built-in "+ Add brew type" affordance, used identically in both the Save
+  sheet (post-creation) and the Saved Ratio Detail edit flow. New types go
+  through `addCustomBrewType` (`shared/stores/brew-types.store.ts`, trimmed
+  and case-insensitively deduped against the stock `BREW_TYPES` list) and
+  persist to IndexedDB the same way saved ratios do; `allBrewTypesSignal`
+  (stock + custom) is what both flows actually render.
+- A **Settings** screen (`/more/settings`, linked from a new section on
+  More) covers everything that isn't a brewing action: managing custom
+  brew types (add, and remove ones you added - built-in types are fixed),
+  a dark-mode switch (`brew-switch`, sharing `theme.store.ts` with the
+  floating `brew-theme-toggle` so both always agree), a "Refresh app"
+  button (`refreshApp` in `register-service-worker.utility.ts` - forces a
+  service-worker update check and reloads, for the rare case
+  `autoUpdate` hasn't picked up a new deploy in a long-lived tab), and a
+  danger zone that wipes all saved ratios and custom brew types behind an
+  inline "are you sure" confirmation (no browser `confirm()` dialogs).
+  `brew-button` gained a `tone="danger"` option for that last one.
 
 ## What's intentionally simplified vs. app-shell-starter
 
@@ -105,7 +137,7 @@ src/
   views/                               – one folder per screen/route
   shared/
     configuration/                     – routes.ts, base-path.ts
-    stores/                            – signal stores (brew, calculator, timer, save-dialog)
+    stores/                            – signal stores (brew, brew-types, calculator, timer, save-dialog, theme, install-prompt)
     data/                              – static brew type + brew guide content
     interfaces/                        – shared TypeScript types
     styles/                            – responsive.styles.ts (shared breakpoint constants)

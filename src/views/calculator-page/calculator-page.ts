@@ -4,8 +4,8 @@ import { customElement } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
 import "../../components/icon/brew-icon";
+import "../../components/ratio-form/brew-ratio-form";
 import "../../components/save-sheet/brew-save-sheet";
-import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
 import {
   coffeeSignal,
@@ -38,43 +38,15 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
         <brew-top-bar title="Calculator"></brew-top-bar>
 
         <div class="content">
-          <brew-text-field
-            label="Water : Coffee ratio"
-            type="number"
-            suffix-text=":1"
-            .value="${ratioSignal.value}"
-            @value-change="${(e: CustomEvent<string>) => setRatio(e.detail)}"
-          ></brew-text-field>
-          <p class="hint">
-            Defaults to 16:1 for pour-over &amp; drip. Try 2:1 for espresso, 3–5:1 for cold brew.
-          </p>
-
-          <div class="row">
-            <brew-text-field
-              label="Water (g)"
-              type="number"
-              .value="${water}"
-              @value-change="${(e: CustomEvent<string>) => setWater(e.detail)}"
-            ></brew-text-field>
-            <brew-text-field
-              label="Cup size (oz)"
-              type="number"
-              .value="${oz}"
-              @value-change="${(e: CustomEvent<string>) => setOz(e.detail)}"
-            ></brew-text-field>
-          </div>
-          <p class="hint">These two fields update each other automatically.</p>
-
-          ${
-            coffee !== null
-              ? html`
-                  <div class="result">
-                    <div class="result-label">Coffee needed</div>
-                    <div class="result-value">${coffee}g</div>
-                  </div>
-                `
-              : null
-          }
+          <brew-ratio-form
+            ratio="${ratioSignal.value}"
+            water="${water}"
+            oz="${oz}"
+            .coffee="${coffee}"
+            @ratio-change="${(e: CustomEvent<string>) => setRatio(e.detail)}"
+            @water-change="${(e: CustomEvent<string>) => setWater(e.detail)}"
+            @oz-change="${(e: CustomEvent<string>) => setOz(e.detail)}"
+          ></brew-ratio-form>
 
           <div class="row actions">
             <brew-button variant="outlined" full-width @button-click="${resetCalculator}"

@@ -6,7 +6,10 @@ import "../../components/list-row/brew-list-row";
 import "../../components/stat-tile/brew-stat-tile";
 import "../../components/top-bar/brew-top-bar";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
-import { streakDaysSignal, totalBrewsSignal } from "../../shared/stores/brew.store";
+import {
+  streakDaysSignal,
+  totalBrewsSignal,
+} from "../../shared/stores/brew.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { MorePageStyles } from "./more-page.styles";
@@ -33,6 +36,17 @@ export class MorePage extends SignalWatcher(LitElement) {
               label="day streak"
             ></brew-stat-tile>
           </div>
+
+          <div class="divider"></div>
+          <div class="section-title">Settings</div>
+          <brew-list-row
+            headline="Settings"
+            supporting="Brew types, dark mode, refresh, data"
+            leading-icon="settings"
+            leading-bg="var(--brew-color-surface-container-high)"
+            leading-fg="var(--brew-color-on-surface)"
+            href="/more/settings"
+          ></brew-list-row>
 
           <div class="divider"></div>
           <div class="section-title">Brewing tools</div>

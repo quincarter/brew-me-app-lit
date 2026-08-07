@@ -63,4 +63,11 @@ export const routes: IRouteConfig[] = [
     directory: "guide-detail-page",
     fileName: "guide-detail-page",
   },
+  {
+    name: "Settings",
+    path: "/more/settings",
+    tagName: "settings-page",
+    directory: "settings-page",
+    fileName: "settings-page",
+  },
 ];
