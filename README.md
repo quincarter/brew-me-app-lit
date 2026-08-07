@@ -77,6 +77,17 @@ the conventions from `app-shell-starter`:
     stale-while-revalidate, font files: cache-first) so text keeps
     rendering in the brand typeface offline too, once it's been fetched
     once.
+  - **Host-level SPA fallback**: `navigateFallback` only kicks in once the
+    service worker is actually installed and controlling the page. A
+    direct hit or hard refresh on a nested route (e.g. `/calculate`) can
+    reach the static host before that's true, and a plain static host has
+    no `/calculate` file to serve, so it 404s. `public/_redirects` (copied
+    to the build root, picked up automatically by Netlify) rewrites every
+    path to `/index.html` with a 200, so the client-side router always
+    gets a chance to load first regardless of service worker state. If
+    hosting elsewhere, the equivalent rewrite rule needs to be configured
+    for that host too (e.g. Vercel's `rewrites` in `vercel.json`, or an
+    Nginx/Apache `try_files`/`.htaccess` fallback).
   - **Custom install prompt**: `brew-install-prompt`
     (`src/components/install-prompt/`) replaces the browser's default
     install UI. `install-prompt.store.ts` captures `beforeinstallprompt`
