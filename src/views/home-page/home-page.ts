@@ -4,6 +4,7 @@ import { customElement } from "lit/decorators.js";
 import "../../components/action-tile/brew-action-tile";
 import "../../components/avatar/brew-avatar";
 import "../../components/bottom-nav/brew-bottom-nav";
+import "../../components/button/brew-button";
 import "../../components/stat-tile/brew-stat-tile";
 import {
   recentBrewsSignal,
@@ -79,9 +80,13 @@ export class HomePage extends SignalWatcher(LitElement) {
 
           ${
             recent.length === 0
-              ? html`<div class="recent-empty">
-                  No saved ratios yet - calculate a brew to get started.
-                </div>`
+              ? html`
+                  <div class="recent-empty">
+                    <img class="recent-empty-image" src="/tired-guy.png" alt="" width="117" height="187" />
+                    <p class="recent-empty-text">No coffee brews yet! Head over to Calculate to add some!</p>
+                    <brew-button variant="filled" href="/calculate">Calculate a brew</brew-button>
+                  </div>
+                `
               : html`
                   <div class="recent-row">
                     ${recent.map((brew, index) => {
