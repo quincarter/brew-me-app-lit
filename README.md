@@ -2,7 +2,7 @@
 
 A ground-up implementation of the "BrewMe Redesign" Claude Design concept as a
 real, installable Lit + TypeScript + Vite application: a coffee water:coffee
-ratio calculator with saved ratios, a pour-over timer, and a brew method
+ratio calculator with saved brews, a pour-over timer, and a brew method
 guide.
 
 ## Origin
@@ -20,7 +20,7 @@ the conventions from `app-shell-starter`:
 - Views live in `src/views/<name>/` as a single `@customElement`-decorated
   file plus a sibling `.styles.ts` file, and are lazy-loaded per route.
 - App state lives in small, framework-agnostic signal stores under
-  `src/shared/stores/`, using `@lit-labs/preact-signals`. Saved ratios persist
+  `src/shared/stores/`, using `@lit-labs/preact-signals`. Saved brews persist
   to IndexedDB via the same `persistentSignal` helper pattern as the starter;
   calculator/timer state is intentionally ephemeral (plain signals). There's
   no seed/mock data - `savedBrewsSignal` starts empty and the day streak is a
@@ -97,7 +97,7 @@ the conventions from `app-shell-starter`:
   sheet (post-creation) and the Saved Ratio Detail edit flow. New types go
   through `addCustomBrewType` (`shared/stores/brew-types.store.ts`, trimmed
   and case-insensitively deduped against the stock `BREW_TYPES` list) and
-  persist to IndexedDB the same way saved ratios do; `allBrewTypesSignal`
+  persist to IndexedDB the same way saved brews do; `allBrewTypesSignal`
   (stock + custom) is what both flows actually render.
 - A **Settings** screen (`/more/settings`, linked from a new section on
   More) covers everything that isn't a brewing action: managing custom
@@ -107,7 +107,7 @@ the conventions from `app-shell-starter`:
   button (`refreshApp` in `register-service-worker.utility.ts` - forces a
   service-worker update check and reloads, for the rare case
   `autoUpdate` hasn't picked up a new deploy in a long-lived tab), and a
-  danger zone that wipes all saved ratios and custom brew types behind an
+  danger zone that wipes all saved brews and custom brew types behind an
   inline "are you sure" confirmation (no browser `confirm()` dialogs).
   `brew-button` gained a `tone="danger"` option for that last one.
 

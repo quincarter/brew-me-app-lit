@@ -10,7 +10,7 @@ import { TopBarStyles } from "./top-bar.styles";
  * ## Usage
  * ```html
  * <brew-top-bar title="Calculator"></brew-top-bar>
- * <brew-top-bar title="Saved Ratios" icon="arrow_back" href="/saved"></brew-top-bar>
+ * <brew-top-bar title="Saved Brews" icon="arrow_back" href="/saved"></brew-top-bar>
  * ```
  * @element brew-top-bar
  */

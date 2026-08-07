@@ -48,7 +48,7 @@ export class HomePage extends SignalWatcher(LitElement) {
             ></brew-action-tile>
             <brew-action-tile
               icon="bookmark"
-              label="Saved Ratios"
+              label="Saved Brews"
               tone="secondary"
               href="/saved"
             ></brew-action-tile>
@@ -64,7 +64,7 @@ export class HomePage extends SignalWatcher(LitElement) {
             <brew-stat-tile
               icon="bookmark_added"
               value="${totalBrewsSignal.value}"
-              label="saved ratios"
+              label="saved brews"
             ></brew-stat-tile>
             <brew-stat-tile
               icon="local_fire_department"
@@ -74,7 +74,7 @@ export class HomePage extends SignalWatcher(LitElement) {
           </div>
 
           <div class="section-header">
-            <span class="section-title">Recent ratios</span>
+            <span class="section-title">Recent brews</span>
             <a class="see-all" href="/saved">See all</a>
           </div>
 

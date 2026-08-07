@@ -22,7 +22,7 @@ export const routes: IRouteConfig[] = [
     fileName: "calculator-page",
   },
   {
-    name: "Saved Ratios",
+    name: "Saved Brews",
     path: "/saved",
     tagName: "saved-page",
     directory: "saved-page",

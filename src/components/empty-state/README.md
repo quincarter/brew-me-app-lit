@@ -3,8 +3,8 @@
 The shared "nothing here yet" card: the sleepy `tired-guy` illustration, a
 cheeky one-line message, and an optional filled CTA button. Extracted so the
 wording and imaging for "no data yet" screens stay identical instead of
-drifting per-view - used on the home screen's recent ratios section and the
-Saved Ratios list.
+drifting per-view - used on the home screen's recent brews section and the
+Saved Brews list.
 
 ## Usage
 

@@ -136,7 +136,7 @@ export class SettingsPage extends SignalWatcher(LitElement) {
             ${this._confirmingDelete
               ? html`
                   <p class="section-hint">
-                    This permanently deletes all saved ratios and custom brew types on this
+                    This permanently deletes all saved brews and custom brew types on this
                     device. This can't be undone.
                   </p>
                   <div class="add-actions">
@@ -152,7 +152,7 @@ export class SettingsPage extends SignalWatcher(LitElement) {
                 `
               : html`
                   <p class="section-hint">
-                    Permanently erase all saved ratios and custom brew types from this device.
+                    Permanently erase all saved brews and custom brew types from this device.
                   </p>
                   <brew-button
                     variant="outlined"

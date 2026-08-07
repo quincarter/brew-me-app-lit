@@ -6,7 +6,7 @@ import { StatTileStyles } from "./stat-tile.styles";
 /**
  * # Stat Tile
  * A small surface card showing an icon, a big value, and a label - used for
- * the "saved ratios" / "day streak" stats on Home and More.
+ * the "saved brews" / "day streak" stats on Home and More.
  * @element brew-stat-tile
  */
 export class StatTile extends LitElement {

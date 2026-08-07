@@ -19,7 +19,7 @@ export class SavedPage extends SignalWatcher(LitElement) {
 
     return html`
       <div class="screen">
-        <brew-top-bar title="Saved Ratios"></brew-top-bar>
+        <brew-top-bar title="Saved Brews"></brew-top-bar>
 
         <div class="content">
           ${

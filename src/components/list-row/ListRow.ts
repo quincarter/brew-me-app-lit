@@ -8,7 +8,7 @@ import { ListRowStyles } from "./list-row.styles";
  * # List Row
  * A tappable row with a leading avatar or icon, a headline, optional
  * supporting text, and a trailing chevron. Renders as an `<a>` so the app
- * router can intercept navigation. Used for saved ratios, the brewing tools
+ * router can intercept navigation. Used for saved brews, the brewing tools
  * list, and the brew method guide list.
  * ## Usage
  * ```html

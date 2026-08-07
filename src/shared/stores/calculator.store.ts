@@ -3,7 +3,7 @@ import { coffeeForWater, gramsToOunces, ouncesToGrams } from "../utilities/ratio
 
 /**
  * Ephemeral calculator state. Deliberately *not* persisted (unlike
- * `brew.store`'s saved ratios) - it should reset on reload, same as the
+ * `brew.store`'s saved brews) - it should reset on reload, same as the
  * source design's in-memory component state.
  */
 export const ratioSignal = signal<string>("16");

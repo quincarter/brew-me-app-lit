@@ -7,7 +7,7 @@ router can intercept navigation.
 ## Usage
 
 ```html
-<!-- with an initial avatar (saved ratios list) -->
+<!-- with an initial avatar (saved brews list) -->
 <brew-list-row
   headline="V60 · 16:1"
   supporting="30g coffee · 480g water · 16.2oz"

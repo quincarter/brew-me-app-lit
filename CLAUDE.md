@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-BrewMe: a Lit 3 + TypeScript + Vite PWA — a coffee water:coffee ratio calculator with saved ratios, a pour-over timer, and a brew method guide. It's a from-scratch reimplementation of a design prototype, following the conventions of an internal `app-shell-starter` template (see `README.md` for the full rationale behind each convention below).
+BrewMe: a Lit 3 + TypeScript + Vite PWA — a coffee water:coffee ratio calculator with saved brews, a pour-over timer, and a brew method guide. It's a from-scratch reimplementation of a design prototype, following the conventions of an internal `app-shell-starter` template (see `README.md` for the full rationale behind each convention below).
 
 ## Commands
 
@@ -59,7 +59,7 @@ One `@customElement`-decorated file per screen plus a sibling `.styles.ts`. View
 
 Small, framework-agnostic signal stores using `@lit-labs/preact-signals` (`signal`, `computed`, `effect`) — not a Lit `ReactiveController` pattern. Two flavors:
 
-- **Persistent**: `persistentSignal(defaultValue, { key })` (`persistent-signal.ts`) backed by IndexedDB via `idb`. Used for `savedBrewsSignal` (`brew.store.ts`). No seed/mock data — it starts empty; `streakDaysSignal` is a real `computed()` over saved ratios' `createdAt`, not a hardcoded number.
+- **Persistent**: `persistentSignal(defaultValue, { key })` (`persistent-signal.ts`) backed by IndexedDB via `idb`. Used for `savedBrewsSignal` (`brew.store.ts`). No seed/mock data — it starts empty; `streakDaysSignal` is a real `computed()` over saved brews' `createdAt`, not a hardcoded number.
 - **Ephemeral**: plain `signal()` for calculator/timer/save-dialog state — intentionally lost on reload.
 
 Mutations go through exported functions (`addSavedBrew`, `updateSavedBrew`, `deleteSavedBrew`), not direct `.value =` writes from components.

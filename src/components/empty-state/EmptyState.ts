@@ -7,7 +7,7 @@ import { EmptyStateStyles } from "./empty-state.styles";
  * # Empty State
  * The shared "nothing here yet" card - the sleepy `tired-guy` illustration,
  * a cheeky message, and an optional CTA button. Used wherever a screen has
- * no data yet (home's recent ratios, the Saved Ratios list) so the wording
+ * no data yet (home's recent Brews, the Saved Brews list) so the wording
  * and imaging stay identical instead of drifting per-screen.
  * @element brew-empty-state
  */

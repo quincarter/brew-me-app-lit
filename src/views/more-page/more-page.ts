@@ -28,7 +28,7 @@ export class MorePage extends SignalWatcher(LitElement) {
             <brew-stat-tile
               icon="bookmark_added"
               value="${totalBrewsSignal.value}"
-              label="saved ratios"
+              label="saved brews"
             ></brew-stat-tile>
             <brew-stat-tile
               icon="local_fire_department"

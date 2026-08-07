@@ -8,7 +8,7 @@ export type ActionTileTone = "primary" | "secondary" | "tertiary";
 /**
  * # Action Tile
  * A large tappable tonal card used for the three primary Home-screen actions
- * (Calculate, Saved Ratios, Timer).
+ * (Calculate, Saved Brews, Timer).
  * @element brew-action-tile
  */
 export class ActionTile extends LitElement {
