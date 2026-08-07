@@ -11,23 +11,65 @@ export const BREW_TYPES: string[] = [
   "Origami",
   "French Press",
   "Drip",
+  "Hario Switch",
+  "Clever Dripper",
 ];
 
-/**
- * Technique carries across conical/flat-bed pour-over brewers, so V60,
- * Chemex, Kalita Wave and Origami all share these two walkthroughs rather
- * than each duplicating its own list.
- */
-const POUR_OVER_VIDEOS: IBrewVideo[] = [
+const CHEMEX_VIDEOS: IBrewVideo[] = [
   {
     youtubeId: "4tQG_aMcCL0",
-    title: "Chemex Brew Guide — How to Hack and Brew Incredible Coffee on the Chemex",
+    title:
+      "Chemex Brew Guide — How to Hack and Brew Incredible Coffee on the Chemex",
     channel: "Lance Hedrick",
   },
   {
     youtubeId: "ikt-X5x7yoc",
     title: "The Chemex",
     channel: "James Hoffmann",
+  },
+];
+
+const V60_VIDEOS: IBrewVideo[] = [
+  {
+    youtubeId: "PNFVCmxBjQQ",
+    title: "The Last V60 Recipe You Will Ever Need",
+    channel: "Lance Hedrick",
+  },
+  {
+    youtubeId: "1oB1oDrDkHM",
+    title: "A Better 1 Cup V60 Technique",
+    channel: "James Hoffmann",
+  },
+  {
+    youtubeId: "Ji4lZTtRAoo",
+    title: "Hario V60 Brewguide: Easy and Effective v60 Recipe",
+    channel: "Lance Hedrick",
+  },
+];
+
+const KALITA_WAVE_VIDEOS: IBrewVideo[] = [
+  {
+    youtubeId: "c5Zdlni7X00",
+    title: "Kalita Wave Brew Guide",
+    channel: "The Coffee Chronicler",
+  },
+  {
+    youtubeId: "cFlTVA_B36A",
+    title: "Kalita Wave Brew Guide - Super Easy Recipe for the 185",
+    channel: "Daddy Got Coffee",
+  },
+];
+
+const ORIGAMI_VIDEOS: IBrewVideo[] = [
+  {
+    youtubeId: "03ZnQsA5c3I",
+    title: "Origami Dripper Recipe - The Easy Pulse Pour Coffee",
+    channel: "Daddy Got Coffee",
+  },
+  {
+    youtubeId: "f1_Cc2ygvM0",
+    title: "Easy Brew Recipe 2023 Championship Method and Technique",
+    channel: "Kyle Rowsell",
   },
 ];
 
@@ -52,6 +94,27 @@ const AEROPRESS_VIDEOS: IBrewVideo[] = [
   },
 ];
 
+const HARIO_SWITCH_VIDEOS: IBrewVideo[] = [
+  {
+    youtubeId: "blQsogeBG7M",
+    title: "Hario Switch Brew Guide",
+    channel: "Lance Hedrick",
+  },
+  {
+    youtubeId: "QjIvN8mlK9Y",
+    title: "My Current Daily Driver: Hario Switch + Sibarist",
+    channel: "James Hoffmann",
+  },
+];
+
+const CLEVER_DRIPPER_VIDEOS: IBrewVideo[] = [
+  {
+    youtubeId: "RpOdennxP24",
+    title: "The Ultimate Clever Dripper Technique",
+    channel: "James Hoffmann",
+  },
+];
+
 /** Static brew method reference content shown on the More > Brew guide screens. */
 export const BREW_GUIDE: IBrewGuideItem[] = [
   {
@@ -66,7 +129,14 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Pour in slow concentric circles to keep extraction even.",
       "Let it bloom for 30–45 seconds before your main pour.",
     ],
-    videos: POUR_OVER_VIDEOS,
+    videos: V60_VIDEOS,
+    externalLinks: [
+      {
+        label: "Learn more about the V60",
+        description: "Background and brewing notes from Roastopedia",
+        url: "https://roastopedia.com/hario-v60/",
+      },
+    ],
   },
   {
     id: "chemex",
@@ -80,7 +150,14 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Rinse the filter first to remove papery taste.",
       "Pour in stages, keeping the bed evenly saturated.",
     ],
-    videos: POUR_OVER_VIDEOS,
+    videos: CHEMEX_VIDEOS,
+    externalLinks: [
+      {
+        label: "Learn more about the Chemex",
+        description: "Background and brewing notes from Roastopedia",
+        url: "https://roastopedia.com/chemex/",
+      },
+    ],
   },
   {
     id: "frenchpress",
@@ -95,6 +172,13 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Steep 4 minutes, then plunge slowly and evenly.",
     ],
     videos: FRENCH_PRESS_VIDEOS,
+    externalLinks: [
+      {
+        label: "Learn more about the French Press",
+        description: "Background and brewing notes from Roastopedia",
+        url: "https://roastopedia.com/french-press/",
+      },
+    ],
   },
   {
     id: "espresso",
@@ -109,6 +193,18 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "A finer grind slows the shot; adjust in small steps.",
     ],
     videos: [],
+    externalLinks: [
+      {
+        label: "Learn more about espresso",
+        description: "Background and brewing notes from Roastopedia",
+        url: "https://roastopedia.com/espresso/",
+      },
+      {
+        label: "How to pull an espresso shot",
+        description: "See also: a step-by-step pulling guide from Roastopedia",
+        url: "https://roastopedia.com/how-to-pull-an-espresso-shot/",
+      },
+    ],
   },
   {
     id: "coldbrew",
@@ -123,6 +219,13 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Dilute 1:1 with water or milk before drinking.",
     ],
     videos: [],
+    externalLinks: [
+      {
+        label: "Learn more about cold brew",
+        description: "Background and brewing notes from Roastopedia",
+        url: "https://roastopedia.com/cold-brew/",
+      },
+    ],
   },
   {
     id: "aeropress",
@@ -142,6 +245,13 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       description: "Browse the winning competition recipes, year by year",
       route: "/more/aeropress-recipes",
     },
+    externalLinks: [
+      {
+        label: "Learn more about the AeroPress",
+        description: "Background and brewing notes from Roastopedia",
+        url: "https://roastopedia.com/aeropress/",
+      },
+    ],
   },
   {
     id: "kalitawave",
@@ -155,7 +265,14 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "The flat bed means pour position matters less than on a V60.",
       "Keep pours steady to avoid channeling at the edges.",
     ],
-    videos: POUR_OVER_VIDEOS,
+    videos: KALITA_WAVE_VIDEOS,
+    externalLinks: [
+      {
+        label: "Learn more about the Kalita Wave",
+        description: "Background and brewing notes from Roastopedia",
+        url: "https://roastopedia.com/kalita-wave/",
+      },
+    ],
   },
   {
     id: "origami",
@@ -169,7 +286,14 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Pair with a conical filter for faster flow, flat for slower.",
       "Its ridges make it easy to swirl the slurry mid-pour.",
     ],
-    videos: POUR_OVER_VIDEOS,
+    videos: ORIGAMI_VIDEOS,
+    externalLinks: [
+      {
+        label: "Learn more about the Origami dripper",
+        description: "Background and brewing notes from Roastopedia",
+        url: "https://roastopedia.com/origami-dripper/",
+      },
+    ],
   },
   {
     id: "drip",
@@ -184,5 +308,60 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Clean your machine monthly to avoid stale, bitter flavors.",
     ],
     videos: [],
+    externalLinks: [
+      {
+        label: "Learn more about drip coffee",
+        description: "Background and brewing notes from Roastopedia",
+        url: "https://roastopedia.com/drip-coffee/",
+      },
+      {
+        label: "Batch brew",
+        description: "See also: brewing larger volumes without losing quality",
+        url: "https://roastopedia.com/batch-brew/",
+      },
+    ],
+  },
+  {
+    id: "hario-switch",
+    name: "Hario Switch",
+    desc: "A hybrid dripper with a valve at the base — steep it closed like an immersion brewer, then flip the switch to let it draw down like a pour-over, all in one device.",
+    ratioHint: "15:1",
+    grind: "Medium",
+    temp: "200°F",
+    ratioDefault: 15,
+    aiTips: [
+      "Keep the switch closed for the full steep, then open it and let gravity do the rest.",
+      "A slightly finer grind than a normal pour-over makes up for the shorter drawdown contact time.",
+    ],
+    videos: HARIO_SWITCH_VIDEOS,
+    externalLinks: [
+      {
+        label: "Clever Dripper",
+        description:
+          "See also: a very similar steep-then-release brewer, from Roastopedia",
+        url: "https://roastopedia.com/clever-dripper/",
+      },
+    ],
+  },
+  {
+    id: "clever-dripper",
+    name: "Clever Dripper",
+    desc: "Looks like a cone dripper, brews like an immersion steeper — a valve at the bottom holds the coffee back until you set it down on your cup or server, then releases a clean, filtered cup.",
+    ratioHint: "15:1",
+    grind: "Medium",
+    temp: "200°F",
+    ratioDefault: 15,
+    aiTips: [
+      "The valve only opens once it's resting on your cup or server, so steep time is fully in your control.",
+      "Give it a gentle stir partway through the steep to keep grounds from clumping at the bottom.",
+    ],
+    videos: CLEVER_DRIPPER_VIDEOS,
+    externalLinks: [
+      {
+        label: "What is a Clever Dripper?",
+        description: "Background and brewing notes from Roastopedia",
+        url: "https://roastopedia.com/clever-dripper/",
+      },
+    ],
   },
 ];

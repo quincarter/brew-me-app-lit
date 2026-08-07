@@ -39,6 +39,17 @@ export interface IBrewGuideItem {
     /** Internal route to the in-app recipe browser. */
     route: string;
   };
+  /**
+   * Optional pointers to external reference pages for further reading -
+   * mostly Roastopedia explainers, plus a same-site "see also" for a
+   * related brewer where relevant (e.g. Hario Switch → Clever Dripper).
+   * Opens in a new tab, unlike `recipesLink`. Rendered in order.
+   */
+  externalLinks?: {
+    label: string;
+    description: string;
+    url: string;
+  }[];
 }
 
 /** One World AeroPress Championship placing, transcribed from the official recipe archive. */

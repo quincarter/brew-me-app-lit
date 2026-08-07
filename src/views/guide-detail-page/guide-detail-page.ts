@@ -107,6 +107,30 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
               : nothing
           }
 
+          ${
+            guide.externalLinks
+              ? guide.externalLinks.map(
+                  (link) => html`
+                    <a
+                      class="recipes-link"
+                      href="${link.url}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <span class="recipes-icon"
+                        ><brew-icon name="info" size="24"></brew-icon
+                      ></span>
+                      <span class="recipes-text">
+                        <span class="recipes-title">${link.label}</span>
+                        <span class="recipes-subtitle">${link.description}</span>
+                      </span>
+                      <brew-icon name="open_in_new" size="20"></brew-icon>
+                    </a>
+                  `,
+                )
+              : nothing
+          }
+
           <div class="stat-row">
             <div class="stat">
               <div class="stat-value">${guide.ratioHint}</div>

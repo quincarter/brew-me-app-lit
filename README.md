@@ -36,8 +36,20 @@ the conventions from `app-shell-starter`:
   existing "search YouTube" prompt (which is kept). Videos are lazy:
   `brew-video-card` renders only a poster image until you click it, then
   swaps in a `youtube-nocookie.com` iframe, so no YouTube scripts or cookies
-  load otherwise. Technique carries across pour-over brewers, so V60, Chemex,
-  Kalita Wave and Origami share one video set.
+  load otherwise. Each brewer has its own curated video list (`shared/data/brew-content.data.ts`)
+  rather than sharing one set across all pour-over methods. There's a single generic
+  `guide-detail-page` (`/more/guide/:id`) driven entirely by
+  `BREW_GUIDE` (`shared/data/brew-content.data.ts`) - adding a new brewer
+  (like **Hario Switch** or **Clever Dripper**) is just a new data entry,
+  not a new view or route; the More screen's guide list renders straight
+  off that same array. An `IBrewGuideItem` can optionally carry
+  `externalLinks` (an array of label/description/URL entries) for further
+  reading - every guide now links out to its Roastopedia explainer this
+  way (opening in a new tab rather than navigating away from the app),
+  and a couple carry a second "see also" entry: Espresso points to a
+  shot-pulling walkthrough, Drip points to batch brewing, and Hario
+  Switch points to the Clever Dripper's guide with a note on how similar
+  the two brewers are.
 - The AeroPress guide links through to a **WAC Recipes** screen
   (`/more/aeropress-recipes`): World AeroPress Championship podium recipes
   from 2014–2025, transcribed into structured data
