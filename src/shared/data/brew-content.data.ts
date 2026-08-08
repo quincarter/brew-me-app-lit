@@ -1,4 +1,4 @@
-import type { IBrewGuideItem, IBrewVideo } from "../interfaces/brew.interface";
+import type { IBrewGlossaryTerm, IBrewGuideItem, IBrewVideo } from "../interfaces/brew.interface";
 
 /** Brew type options offered when naming a saved ratio. */
 export const BREW_TYPES: string[] = [
@@ -114,6 +114,73 @@ const CLEVER_DRIPPER_VIDEOS: IBrewVideo[] = [
   },
 ];
 
+const ESPRESSO_VIDEOS: IBrewVideo[] = [
+  {
+    youtubeId: "j-Hu4hF5PTM",
+    title: "Guide to Making Great Espresso: Understanding Variables to Dial In Perfectly",
+    channel: "Lance Hedrick",
+  },
+  {
+    youtubeId: "lFwJF-_SUr0",
+    title: "How I Dial In Espresso",
+    channel: "James Hoffmann",
+  },
+  {
+    youtubeId: "xb3IxAr4RCo",
+    title: "How I Make Espresso: Tools and Techniques",
+    channel: "James Hoffmann",
+  },
+];
+
+/** Terminology and tools glossary shown on the espresso guide screen, above the video walkthroughs. */
+const ESPRESSO_GLOSSARY: IBrewGlossaryTerm[] = [
+  {
+    term: "RDT (Ross Droplet Technique)",
+    definition:
+      "Lightly misting your beans with water right before grinding — it cuts down on static so grounds don't cling to the grinder or clump up in the portafilter.",
+  },
+  {
+    term: "WDT (Weiss Distribution Technique)",
+    definition:
+      "Stirring the grounds in the basket with a fine needle tool before tamping, breaking up clumps so the dose settles into an even, consistent density.",
+  },
+  {
+    term: "Tamping",
+    definition:
+      "Pressing the dose into a flat, even puck so water has to pass through it uniformly instead of carving out an easier path.",
+  },
+  {
+    term: "Extraction",
+    definition:
+      "The process of hot water pulling soluble flavor out of the puck — usually tracked by shot time and expressed as the percentage of the dose that ends up dissolved in your cup.",
+  },
+  {
+    term: "Channeling",
+    definition:
+      "When water finds a crack or soft spot in the puck and rushes through it, leaving the rest of the puck under-extracted and giving you a sour or harsh shot.",
+  },
+  {
+    term: "Dose & Yield",
+    definition:
+      "Dose is the weight of dry grounds you load into the basket, yield is the weight of liquid espresso you collect — the two together define your brew ratio.",
+  },
+  {
+    term: "Tamper",
+    definition:
+      "The flat, weighted tool used to compress the dose into a level puck, sized to match your basket's diameter.",
+  },
+  {
+    term: "Portafilter",
+    definition:
+      'The handled fitting that holds the basket of grounds and locks into the machine\'s group head — a "bottomless" or "naked" portafilter skips the spout, exposing the puck so you can watch the extraction and spot channeling as it happens.',
+  },
+  {
+    term: "Puck Screen",
+    definition:
+      "A thin metal disc set on top of the puck to spread incoming water evenly and keep the machine's shower screen cleaner for longer.",
+  },
+];
+
 /** Static brew method reference content shown on the More > Brew guide screens. */
 export const BREW_GUIDE: IBrewGuideItem[] = [
   {
@@ -196,7 +263,8 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Aim for a 25–30 second extraction time.",
       "A finer grind slows the shot; adjust in small steps.",
     ],
-    videos: [],
+    videos: ESPRESSO_VIDEOS,
+    glossary: ESPRESSO_GLOSSARY,
     externalLinks: [
       {
         label: "Learn more about espresso",

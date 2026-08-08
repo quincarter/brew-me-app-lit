@@ -28,6 +28,12 @@ export const GuideDetailPageStyles = css`
     gap: 14px;
   }
 
+  .glossary {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
   .section-title {
     margin: 0;
     font-size: 13px;

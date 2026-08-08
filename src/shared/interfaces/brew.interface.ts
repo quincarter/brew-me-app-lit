@@ -24,6 +24,12 @@ export interface IBrewVideo {
   channel: string;
 }
 
+/** One piece of method-specific terminology or a tool, defined in plain language. */
+export interface IBrewGlossaryTerm {
+  term: string;
+  definition: string;
+}
+
 export interface IBrewGuideItem {
   id: string;
   name: string;
@@ -57,6 +63,11 @@ export interface IBrewGuideItem {
     description: string;
     url: string;
   }[];
+  /**
+   * Optional method-specific terminology/tools glossary, shown above the
+   * video walkthroughs. Currently only populated for espresso.
+   */
+  glossary?: IBrewGlossaryTerm[];
 }
 
 /** One World AeroPress Championship placing, transcribed from the official recipe archive. */

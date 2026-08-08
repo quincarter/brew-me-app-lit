@@ -1,5 +1,22 @@
 {
   "permissions": {
-    "allow": ["Bash(npm run *)"]
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(cp /Users/quincarter/Documents/Dev/brew-me-app-lit/screenshots/*.png /Users/quincarter/Documents/Dev/brew-me-app-lit/public/screenshots/ *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --title 'Update PWA install screenshots' --body ' *)",
+      "Bash(xargs -I{} dirname {})",
+      "Bash(grep -n \"^a\\\\b\\\\|^a,\\\\|^a {\" src/index.css)",
+      "Bash(xargs -I{} sh -c 'echo {}; ls {}')",
+      "Bash(npx tsc *)",
+      "Bash(git fetch *)",
+      "Bash(echo \"lint exit: $?\")",
+      "Bash(echo \"exit $?\")",
+      "WebFetch(domain:developer.chrome.com)"
+    ]
   }
 }
