@@ -1,4 +1,5 @@
 import { computed, signal } from "@lit-labs/preact-signals";
+import { isOfflineReadySignal } from "../utilities/register-service-worker.utility";
 
 const DISMISSED_UNTIL_KEY = "brewme-install-dismissed-until";
 const SNOOZE_DAYS = 7;
@@ -29,12 +30,20 @@ export const isStandaloneSignal = signal(false);
 /** True if the user dismissed the custom prompt within the current snooze window. */
 export const installPromptSnoozedSignal = signal(readSnoozeState());
 
-/** Whether `brew-install-prompt` should render right now. */
+/**
+ * Whether `brew-install-prompt` should render right now. Requires
+ * `isOfflineReadySignal` (see `register-service-worker.utility.ts`) so the
+ * prompt - which pitches "works offline, right from your home screen" -
+ * only ever shows once the service worker has actually finished stocking
+ * its cache with this build's full asset inventory, not the instant the
+ * browser's `beforeinstallprompt` event happens to fire.
+ */
 export const canShowInstallPromptSignal = computed(
   () =>
     deferredInstallPromptSignal.value !== null &&
     !isStandaloneSignal.value &&
-    !installPromptSnoozedSignal.value,
+    !installPromptSnoozedSignal.value &&
+    isOfflineReadySignal.value,
 );
 
 function readSnoozeState(): boolean {
