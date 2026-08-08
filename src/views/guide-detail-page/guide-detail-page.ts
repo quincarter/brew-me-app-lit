@@ -3,6 +3,7 @@ import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
+import "../../components/glossary-item/brew-glossary-item";
 import "../../components/icon-button/brew-icon-button";
 import "../../components/icon/brew-icon";
 import "../../components/link-card/brew-link-card";
@@ -146,6 +147,23 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
                     >
                   </div>
                 `
+          }
+          ${
+            guide.glossary && guide.glossary.length > 0
+              ? html`
+                  <section class="glossary">
+                    <h2 class="section-title">Terminology &amp; tools</h2>
+                    ${guide.glossary.map(
+                      (item) => html`
+                        <brew-glossary-item
+                          term="${item.term}"
+                          definition="${item.definition}"
+                        ></brew-glossary-item>
+                      `,
+                    )}
+                  </section>
+                `
+              : nothing
           }
           ${
             guide.videos.length > 0
