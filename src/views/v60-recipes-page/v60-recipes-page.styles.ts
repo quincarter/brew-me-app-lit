@@ -1,6 +1,6 @@
 import { css } from "lit";
 
-export const AeropressRecipesPageStyles = css`
+export const V60RecipesPageStyles = css`
   :host {
     display: block;
     height: 100%;
@@ -27,12 +27,6 @@ export const AeropressRecipesPageStyles = css`
     font-size: 14px;
     line-height: 1.6;
     color: var(--brew-color-on-surface-variant);
-  }
-
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
   }
 
   .recipes {

@@ -5,12 +5,16 @@ import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
 import "../../components/icon-button/brew-icon-button";
 import "../../components/icon/brew-icon";
+import "../../components/link-card/brew-link-card";
+import "../../components/saved-card/brew-saved-card";
 import "../../components/top-bar/brew-top-bar";
 import "../../components/video-card/brew-video-card";
+import "../../components/video-search/brew-video-search";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
 import { primeCalculatorForRatio } from "../../shared/stores/calculator.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
+import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
 import { GuideDetailPageStyles } from "./guide-detail-page.styles";
 
@@ -31,11 +35,6 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
     }
   }
 
-  private _watchVideo(guideName: string): void {
-    const query = encodeURIComponent(`${guideName} coffee brewing guide`);
-    window.open(`https://www.youtube.com/results?search_query=${query}`, "_blank", "noopener");
-  }
-
   private _regenerateTip(tipCount: number): void {
     this._aiTipIndex = (this._aiTipIndex + 1) % tipCount;
   }
@@ -47,7 +46,7 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
 
   render(): HTMLTemplateResult {
     const guide = BREW_GUIDE.find((item) => item.id === this.routeParams.id) ?? BREW_GUIDE[0];
-    const savedMatch = savedBrewsSignal.value.find((brew) => brew.brewType === guide.name);
+    const savedMatches = savedBrewsSignal.value.filter((brew) => brew.brewType === guide.name);
 
     return html`
       <div class="screen">
@@ -57,75 +56,28 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
           <p class="description">${guide.desc}</p>
 
           ${
-            guide.videos.length > 0
-              ? html`
-                  <section class="videos">
-                    <h2 class="section-title">Watch a walkthrough</h2>
-                    ${guide.videos.map(
-                      (video) => html`
-                        <brew-video-card
-                          youtube-id="${video.youtubeId}"
-                          video-title="${video.title}"
-                          channel="${video.channel}"
-                        ></brew-video-card>
-                      `,
-                    )}
-                  </section>
-                `
-              : nothing
-          }
-
-          <div class="video-search">
-            <span class="video-icon"><brew-icon name="play_circle" size="26"></brew-icon></span>
-            <span class="video-text">
-              <span class="video-search-title">
-                ${guide.videos.length > 0 ? "Looking for more?" : "Watch a walkthrough"}
-              </span>
-              <span class="video-subtitle">
-                Find ${guide.videos.length > 0 ? "more " : ""}video guides on YouTube
-              </span>
-            </span>
-            <brew-button variant="outlined" @button-click="${() => this._watchVideo(guide.name)}"
-              >Search</brew-button
-            >
-          </div>
-
-          ${
             guide.recipesLink
               ? html`
-                  <a class="recipes-link" href="${guide.recipesLink.route}">
-                    <span class="recipes-icon"
-                      ><brew-icon name="menu_book" size="24"></brew-icon
-                    ></span>
-                    <span class="recipes-text">
-                      <span class="recipes-title">${guide.recipesLink.label}</span>
-                      <span class="recipes-subtitle">${guide.recipesLink.description}</span>
-                    </span>
-                    <brew-icon name="chevron_right"></brew-icon>
-                  </a>
+                  <brew-link-card
+                    href="${guide.recipesLink.route}"
+                    icon="menu_book"
+                    label="${guide.recipesLink.label}"
+                    description="${guide.recipesLink.description}"
+                  ></brew-link-card>
                 `
               : nothing
           }
-
           ${
             guide.externalLinks
               ? guide.externalLinks.map(
                   (link) => html`
-                    <a
-                      class="recipes-link"
+                    <brew-link-card
                       href="${link.url}"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <span class="recipes-icon"
-                        ><brew-icon name="info" size="24"></brew-icon
-                      ></span>
-                      <span class="recipes-text">
-                        <span class="recipes-title">${link.label}</span>
-                        <span class="recipes-subtitle">${link.description}</span>
-                      </span>
-                      <brew-icon name="open_in_new" size="20"></brew-icon>
-                    </a>
+                      icon="info"
+                      label="${link.label}"
+                      description="${link.description}"
+                      external
+                    ></brew-link-card>
                   `,
                 )
               : nothing
@@ -160,17 +112,29 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
           </div>
 
           ${
-            savedMatch
+            savedMatches.length > 0
               ? html`
-                  <a class="saved-match" href="/saved/${savedMatch.id}">
-                    <span class="saved-match-text">
-                      <span class="saved-match-eyebrow">Your saved ratio</span>
-                      <span class="saved-match-value"
-                        >${savedMatch.ratio}:1 · ${savedMatch.coffee}g coffee</span
-                      >
-                    </span>
-                    <brew-icon name="chevron_right"></brew-icon>
-                  </a>
+                  <section class="saved-matches">
+                    <h2 class="section-title">Recent ${guide.name} Brews</h2>
+                    <div class="saved-match-row">
+                      ${savedMatches.map((brew, index) => {
+                        const colors = getAvatarColors(index);
+                        return html`
+                          <brew-saved-card
+                            href="/saved/${brew.id}"
+                            brew-type="${brew.brewType}"
+                            ratio="${brew.ratio}"
+                            coffee="${brew.coffee}"
+                            water="${brew.water}"
+                            oz="${brew.oz}"
+                            avatar-initial="${getInitial(brew.brewType)}"
+                            avatar-bg="${colors.background}"
+                            avatar-fg="${colors.foreground}"
+                          ></brew-saved-card>
+                        `;
+                      })}
+                    </div>
+                  </section>
                 `
               : html`
                   <div class="no-match">
@@ -183,6 +147,30 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
                   </div>
                 `
           }
+          ${
+            guide.videos.length > 0
+              ? html`
+                  <section class="videos">
+                    <h2 class="section-title">Watch a walkthrough</h2>
+                    ${guide.videos.map(
+                      (video) => html`
+                        <brew-video-card
+                          youtube-id="${video.youtubeId}"
+                          video-title="${video.title}"
+                          channel="${video.channel}"
+                        ></brew-video-card>
+                      `,
+                    )}
+                  </section>
+                `
+              : nothing
+          }
+
+          <brew-video-search
+            title="${guide.videos.length > 0 ? "Looking for more?" : "Watch a walkthrough"}"
+            subtitle="Find ${guide.videos.length > 0 ? "more " : ""}video guides on YouTube"
+            query="${guide.name} coffee brewing guide"
+          ></brew-video-search>
         </div>
 
         <brew-bottom-nav active="more"></brew-bottom-nav>

@@ -36,8 +36,9 @@ export interface IBrewGuideItem {
   /** Hand-picked walkthroughs. Pour-over methods share a common set. */
   videos: IBrewVideo[];
   /**
-   * Optional pointer to an external recipe collection (currently only
-   * AeroPress, which links to the World AeroPress Championship archive).
+   * Optional pointer to an external recipe collection browsed in-app - the
+   * World AeroPress Championship archive for AeroPress, expert V60 recipes
+   * for V60.
    */
   recipesLink?: {
     label: string;
@@ -71,5 +72,20 @@ export interface IAeropressRecipe {
   /** Ordered brew steps. */
   steps: string[];
   /** Optional note from the competitor. */
+  note?: string;
+}
+
+/** One named expert or brand's V60 recipe, transcribed from an external source. */
+export interface IV60Recipe {
+  id: string;
+  /** e.g. "Scott Rao", "Hario" - a person or brand, not necessarily an individual. */
+  author: string;
+  /** The recipe's own name, e.g. "Spin to Win", "The 4:6 Method". */
+  title: string;
+  /** Setup key/value pairs, e.g. { Dose: "22g", Water: "360g" } - only the fields the source specifies. */
+  setup: Record<string, string>;
+  /** Ordered brew steps. */
+  steps: string[];
+  /** Optional note or caveat from the source. */
   note?: string;
 }

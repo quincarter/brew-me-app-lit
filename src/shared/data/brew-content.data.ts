@@ -18,8 +18,7 @@ export const BREW_TYPES: string[] = [
 const CHEMEX_VIDEOS: IBrewVideo[] = [
   {
     youtubeId: "4tQG_aMcCL0",
-    title:
-      "Chemex Brew Guide — How to Hack and Brew Incredible Coffee on the Chemex",
+    title: "Chemex Brew Guide — How to Hack and Brew Incredible Coffee on the Chemex",
     channel: "Lance Hedrick",
   },
   {
@@ -130,6 +129,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Let it bloom for 30–45 seconds before your main pour.",
     ],
     videos: V60_VIDEOS,
+    recipesLink: {
+      label: "5 expert V60 recipes",
+      description: "Rao, Hoffmann, Kasuya and more, compared side by side",
+      route: "/more/v60-recipes",
+    },
     externalLinks: [
       {
         label: "Learn more about the V60",
@@ -337,8 +341,7 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     externalLinks: [
       {
         label: "Clever Dripper",
-        description:
-          "See also: a very similar steep-then-release brewer, from Roastopedia",
+        description: "See also: a very similar steep-then-release brewer, from Roastopedia",
         url: "https://roastopedia.com/clever-dripper/",
       },
     ],

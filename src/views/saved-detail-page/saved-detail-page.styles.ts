@@ -75,6 +75,15 @@ export const SavedDetailPageStyles = css`
     color: var(--brew-color-on-surface-variant);
   }
 
+  .section-title {
+    margin: 4px 0 -8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--brew-color-on-surface-variant);
+  }
+
   .share-status {
     margin: -6px 0 0;
     text-align: center;

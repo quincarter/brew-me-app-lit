@@ -7,8 +7,6 @@ export const savedBrewsSignal = persistentSignal<ISavedBrew[]>([], { key: "saved
 
 export const totalBrewsSignal = computed(() => savedBrewsSignal.value.length);
 
-export const recentBrewsSignal = computed(() => savedBrewsSignal.value.slice(-2));
-
 const dayKey = (timestamp: number): string => new Date(timestamp).toDateString();
 
 /**

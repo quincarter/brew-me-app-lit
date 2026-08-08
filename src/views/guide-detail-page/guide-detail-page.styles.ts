@@ -37,85 +37,6 @@ export const GuideDetailPageStyles = css`
     color: var(--brew-color-on-surface-variant);
   }
 
-  /* The "search YouTube for more" prompt that sits below the curated videos. */
-  .video-search {
-    background: var(--brew-color-tertiary-container);
-    border-radius: 20px;
-    padding: 18px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .video-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: var(--brew-color-surface-container-lowest);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: var(--brew-color-tertiary);
-  }
-
-  .video-text {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .video-search-title {
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--brew-color-on-tertiary-container);
-  }
-
-  .video-subtitle {
-    font-size: 12px;
-    color: var(--brew-color-on-tertiary-container);
-  }
-
-  .recipes-link {
-    background: var(--brew-color-secondary-container);
-    color: var(--brew-color-on-secondary-container);
-    border-radius: 20px;
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    text-decoration: none;
-    cursor: pointer;
-  }
-
-  .recipes-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--brew-color-surface-container-lowest);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: var(--brew-color-secondary);
-  }
-
-  .recipes-text {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .recipes-title {
-    font-size: 15px;
-    font-weight: 500;
-  }
-
-  .recipes-subtitle {
-    font-size: 12px;
-  }
-
   .description {
     font-size: 14px;
     color: var(--brew-color-on-surface);
@@ -179,34 +100,16 @@ export const GuideDetailPageStyles = css`
     margin: 0;
   }
 
-  .saved-match {
-    background: var(--brew-color-primary-container);
-    border-radius: 20px;
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    text-decoration: none;
-    color: var(--brew-color-on-primary-container);
-    cursor: pointer;
-  }
-
-  .saved-match-text {
-    flex: 1;
+  .saved-matches {
     display: flex;
     flex-direction: column;
+    gap: 10px;
   }
 
-  .saved-match-eyebrow {
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .saved-match-value {
-    font-size: 18px;
-    font-weight: 600;
-    margin-top: 2px;
+  .saved-match-row {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   }
 
   .no-match {

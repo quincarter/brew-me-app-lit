@@ -57,6 +57,13 @@ export const routes: IRouteConfig[] = [
     fileName: "aeropress-recipes-page",
   },
   {
+    name: "V60 Recipes",
+    path: "/more/v60-recipes",
+    tagName: "v60-recipes-page",
+    directory: "v60-recipes-page",
+    fileName: "v60-recipes-page",
+  },
+  {
     name: "Brew Guide",
     path: "/more/guide/:id",
     tagName: "guide-detail-page",

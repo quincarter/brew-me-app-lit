@@ -3,9 +3,12 @@ import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
+import "../../components/link-card/brew-link-card";
 import "../../components/ratio-form/brew-ratio-form";
 import "../../components/top-bar/brew-top-bar";
 import "../../components/type-picker/brew-type-picker";
+import "../../components/video-search/brew-video-search";
+import { BREW_GUIDE } from "../../shared/data/brew-content.data";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import { addCustomBrewType, allBrewTypesSignal } from "../../shared/stores/brew-types.store";
 import { deleteSavedBrew, savedBrewsSignal, updateSavedBrew } from "../../shared/stores/brew.store";
@@ -129,6 +132,8 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     const canSaveEdit = Boolean(
       this._editBrewType && this._editWater && this._editOz && this._editCoffee !== null,
     );
+    /** No match means a custom brew type - there's no curated guide to link to. */
+    const matchingGuide = BREW_GUIDE.find((item) => item.name === brew.brewType);
 
     return html`
       <div class="screen">
@@ -211,6 +216,30 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
           <button class="delete-link" type="button" @click="${() => this._onDelete(brew.id)}">
             Delete ratio
           </button>
+
+          ${
+            this._editing
+              ? null
+              : html`
+                  <div class="section-title">Brew guide</div>
+                  ${
+                    matchingGuide
+                      ? html`
+                          <brew-link-card
+                            href="/more/guide/${matchingGuide.id}"
+                            icon="menu_book"
+                            label="${matchingGuide.name} Brew Guide"
+                            description="Ratio tips, grind size, and video walkthroughs"
+                          ></brew-link-card>
+                        `
+                      : html`
+                          <brew-video-search
+                            query="${brew.brewType} Brew Guide"
+                          ></brew-video-search>
+                        `
+                  }
+                `
+          }
         </div>
 
         <brew-bottom-nav active="saved"></brew-bottom-nav>

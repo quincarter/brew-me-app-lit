@@ -6,10 +6,7 @@ import "../../components/list-row/brew-list-row";
 import "../../components/stat-tile/brew-stat-tile";
 import "../../components/top-bar/brew-top-bar";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
-import {
-  streakDaysSignal,
-  totalBrewsSignal,
-} from "../../shared/stores/brew.store";
+import { streakDaysSignal, totalBrewsSignal } from "../../shared/stores/brew.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { MorePageStyles } from "./more-page.styles";
@@ -65,6 +62,14 @@ export class MorePage extends SignalWatcher(LitElement) {
             leading-bg="var(--brew-color-tertiary-container)"
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/more/aeropress-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="V60 Recipes"
+            supporting="Expert pour-over recipes compared"
+            leading-icon="menu_book"
+            leading-bg="var(--brew-color-tertiary-container)"
+            leading-fg="var(--brew-color-on-tertiary-container)"
+            href="/more/v60-recipes"
           ></brew-list-row>
 
           <div class="divider"></div>

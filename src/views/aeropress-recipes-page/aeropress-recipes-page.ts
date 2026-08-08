@@ -2,19 +2,22 @@ import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/chip/brew-chip";
-import "../../components/icon/brew-icon";
+import "../../components/link-card/brew-link-card";
 import "../../components/recipe-card/brew-recipe-card";
 import "../../components/top-bar/brew-top-bar";
-import { AEROPRESS_RECIPES, WAC_RECIPES_SOURCE } from "../../shared/data/aeropress-recipes.data";
+import {
+  AEROPRESS_RECIPES,
+  WAC_RECIPES_SOURCE,
+} from "../../shared/data/aeropress-recipes.data";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { AeropressRecipesPageStyles } from "./aeropress-recipes-page.styles";
 
 const ALL_YEARS = "all";
 
 /** Descending list of the years present in the recipe archive. */
-const YEARS: number[] = [...new Set(AEROPRESS_RECIPES.map((recipe) => recipe.year))].sort(
-  (a, b) => b - a,
-);
+const YEARS: number[] = [
+  ...new Set(AEROPRESS_RECIPES.map((recipe) => recipe.year)),
+].sort((a, b) => b - a);
 
 @customElement("aeropress-recipes-page")
 export class AeropressRecipesPage extends LitElement {
@@ -45,10 +48,18 @@ export class AeropressRecipesPage extends LitElement {
 
         <div class="content">
           <p class="intro">
-            Winning recipes from the World AeroPress Championship. These are competition entries
-            dialled in for one specific coffee and roast — treat them as starting points, not
-            gospel.
+            Winning recipes from the World AeroPress Championship. These are
+            competition entries dialled in for one specific coffee and roast —
+            treat them as starting points, not gospel.
           </p>
+
+          <brew-link-card
+            href="${WAC_RECIPES_SOURCE.url}"
+            icon="link"
+            label="Recipes courtesy of the ${WAC_RECIPES_SOURCE.name}"
+            description="View the full archive, back to 2008"
+            external
+          ></brew-link-card>
 
           <div class="filters">
             <brew-chip
@@ -81,19 +92,6 @@ export class AeropressRecipesPage extends LitElement {
               `,
             )}
           </div>
-
-          <a
-            class="source"
-            href="${WAC_RECIPES_SOURCE.url}"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span class="source-text">
-              <span class="source-label">Recipes courtesy of the ${WAC_RECIPES_SOURCE.name}</span>
-              <span class="source-sub">View the full archive, back to 2008</span>
-            </span>
-            <brew-icon name="open_in_new" size="18"></brew-icon>
-          </a>
         </div>
 
         <brew-bottom-nav active="more"></brew-bottom-nav>

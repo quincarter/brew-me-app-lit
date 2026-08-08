@@ -11,7 +11,6 @@ export const ratioSignal = signal<string>("16");
 export const waterSignal = signal<string>("");
 export const ozSignal = signal<string>("");
 export const coffeeSignal = signal<number | null>(null);
-export const tipOpenSignal = signal(false);
 
 export const setRatio = (value: string): void => {
   const ratio = Number.parseFloat(value);
@@ -45,10 +44,6 @@ export const resetCalculator = (): void => {
   ozSignal.value = "";
   coffeeSignal.value = null;
   ratioSignal.value = "16";
-};
-
-export const toggleTip = (): void => {
-  tipOpenSignal.value = !tipOpenSignal.value;
 };
 
 /** Primes the calculator with a guide's default ratio - used by "Calculate this ratio" on the guide detail screen. */

@@ -2,12 +2,12 @@ import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
 import "../../components/action-tile/brew-action-tile";
-import "../../components/avatar/brew-avatar";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/empty-state/brew-empty-state";
+import "../../components/saved-card/brew-saved-card";
 import "../../components/stat-tile/brew-stat-tile";
 import {
-  recentBrewsSignal,
+  savedBrewsSignal,
   streakDaysSignal,
   totalBrewsSignal,
 } from "../../shared/stores/brew.store";
@@ -29,7 +29,7 @@ export class HomePage extends SignalWatcher(LitElement) {
   static styles = [HomePageStyles, responsiveScreenStyles];
 
   render(): HTMLTemplateResult {
-    const recent = recentBrewsSignal.value;
+    const recent = savedBrewsSignal.value;
 
     return html`
       <div class="screen">
@@ -86,19 +86,17 @@ export class HomePage extends SignalWatcher(LitElement) {
                     ${recent.map((brew, index) => {
                       const colors = getAvatarColors(index);
                       return html`
-                        <a class="recent-card" href="/saved/${brew.id}">
-                          <brew-avatar
-                            initial="${getInitial(brew.brewType)}"
-                            background="${colors.background}"
-                            foreground="${colors.foreground}"
-                            size="32"
-                          ></brew-avatar>
-                          <span class="recent-type">${brew.brewType}</span>
-                          <span class="recent-stats">
-                            <span class="recent-ratio">${brew.ratio}:1 · ${brew.coffee}g coffee</span>
-                            <span class="recent-detail">${brew.water}g water · ${brew.oz}oz</span>
-                          </span>
-                        </a>
+                        <brew-saved-card
+                          href="/saved/${brew.id}"
+                          brew-type="${brew.brewType}"
+                          ratio="${brew.ratio}"
+                          coffee="${brew.coffee}"
+                          water="${brew.water}"
+                          oz="${brew.oz}"
+                          avatar-initial="${getInitial(brew.brewType)}"
+                          avatar-bg="${colors.background}"
+                          avatar-fg="${colors.foreground}"
+                        ></brew-saved-card>
                       `;
                     })}
                   </div>

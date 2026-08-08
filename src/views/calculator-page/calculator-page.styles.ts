@@ -39,35 +39,35 @@ export const CalculatorPageStyles = css`
     color: var(--brew-color-on-surface-variant);
   }
 
-  .tips {
-    border-top: 1px solid var(--brew-color-outline-variant);
-    padding-top: 14px;
-    margin-top: 4px;
+  .ratio-tips {
+    background: var(--brew-color-surface-container-low);
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
-  .tips-toggle {
-    all: unset;
-    box-sizing: border-box;
+  .ratio-tips-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    cursor: pointer;
-    width: 100%;
     color: var(--brew-color-on-surface-variant);
   }
 
-  .tips-label {
+  .ratio-tips-title {
     flex: 1;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--brew-color-on-surface);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brew-color-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
-  .tips-body {
-    font-size: 13px;
-    color: var(--brew-color-on-surface-variant);
-    line-height: 1.6;
-    padding: 10px 0 0 28px;
+  .ratio-tips-body {
+    font-size: 14px;
+    color: var(--brew-color-on-surface);
+    line-height: 1.5;
     margin: 0;
   }
 `;

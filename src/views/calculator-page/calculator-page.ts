@@ -15,13 +15,14 @@ import {
   setOz,
   setRatio,
   setWater,
-  tipOpenSignal,
-  toggleTip,
   waterSignal,
 } from "../../shared/stores/calculator.store";
 import { openSaveDialog } from "../../shared/stores/save-dialog.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
-import { SHARE_OUTCOME_MESSAGES, shareBrew } from "../../shared/utilities/share.utility";
+import {
+  SHARE_OUTCOME_MESSAGES,
+  shareBrew,
+} from "../../shared/utilities/share.utility";
 import { CalculatorPageStyles } from "./calculator-page.styles";
 
 /** Placeholder brew type for a share sent straight from the calculator, before it's been named/saved. */
@@ -56,7 +57,13 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
     const ratio = Number.parseFloat(ratioSignal.value);
     if (coffee === null || Number.isNaN(water) || Number.isNaN(oz)) return;
 
-    const outcome = await shareBrew({ brewType: UNSAVED_BREW_TYPE, ratio, water, coffee, oz });
+    const outcome = await shareBrew({
+      brewType: UNSAVED_BREW_TYPE,
+      ratio,
+      water,
+      coffee,
+      oz,
+    });
     this._showStatus(SHARE_OUTCOME_MESSAGES[outcome]);
   };
 
@@ -82,7 +89,10 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
           ></brew-ratio-form>
 
           <div class="row actions">
-            <brew-button variant="outlined" full-width @button-click="${resetCalculator}"
+            <brew-button
+              variant="outlined"
+              full-width
+              @button-click="${resetCalculator}"
               >Reset</brew-button
             >
             <brew-button
@@ -101,24 +111,29 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             @button-click="${this._onShare}"
             >Share this brew</brew-button
           >
-          ${this._shareStatusText ? html`<p class="share-status">${this._shareStatusText}</p>` : null}
+          ${this._shareStatusText
+            ? html`<p class="share-status">${this._shareStatusText}</p>`
+            : null}
 
-          <div class="tips">
-            <button class="tips-toggle" type="button" @click="${toggleTip}">
+          <div class="ratio-tips">
+            <div class="ratio-tips-header">
               <brew-icon name="info" size="20"></brew-icon>
-              <span class="tips-label">Ratio tips</span>
-              <brew-icon name="${tipOpenSignal.value ? "expand_less" : "expand_more"}"></brew-icon>
-            </button>
-            ${
-              tipOpenSignal.value
-                ? html`
-                    <p class="tips-body">
-                      Lower ratio = stronger, more intense brew. Higher ratio = weaker, lighter cup.
-                      Pour-over/drip: 15–18:1 · Espresso: ~2:1 · Cold brew: 3–5:1. Adjust to taste.
-                    </p>
-                  `
-                : null
-            }
+              <span class="ratio-tips-title">Ratio tips</span>
+            </div>
+            <p class="ratio-tips-body">
+              Lower ratio = stronger, more intense brew.
+            </p>
+            <p class="ratio-tips-body">Higher ratio = weaker, lighter cup.</p>
+            <p class="ratio-tips-body">
+              As always - Adjust to taste. If it tastes good, the math and
+              numbers are just numbers.
+            </p>
+            <span class="ratio-tips-body">Brew Examples</span>
+            <ul class="ratio-tips-body">
+              <li>Pour-over/drip: 15–18:1</li>
+              <li>Espresso: ~2:1</li>
+              <li>Cold brew: 3–5:1.</li>
+            </ul>
           </div>
         </div>
 
