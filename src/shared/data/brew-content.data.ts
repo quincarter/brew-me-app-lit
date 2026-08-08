@@ -1,4 +1,8 @@
-import type { IBrewGlossaryTerm, IBrewGuideItem, IBrewVideo } from "../interfaces/brew.interface";
+import type {
+  IBrewGlossaryTerm,
+  IBrewGuideItem,
+  IBrewVideo,
+} from "../interfaces/brew.interface";
 
 /** Brew type options offered when naming a saved ratio. */
 export const BREW_TYPES: string[] = [
@@ -15,10 +19,18 @@ export const BREW_TYPES: string[] = [
   "Clever Dripper",
 ];
 
+/** Shared tip video linked from every pour-over dripper's guide, in addition to its own walkthroughs. */
+const POUR_OVER_TIP_VIDEO: IBrewVideo = {
+  youtubeId: "mMwscUNKbPk",
+  title: "How To Avoid A Bad Pour Over Brew",
+  channel: "James Hoffmann",
+};
+
 const CHEMEX_VIDEOS: IBrewVideo[] = [
   {
     youtubeId: "4tQG_aMcCL0",
-    title: "Chemex Brew Guide — How to Hack and Brew Incredible Coffee on the Chemex",
+    title:
+      "Chemex Brew Guide — How to Hack and Brew Incredible Coffee on the Chemex",
     channel: "Lance Hedrick",
   },
   {
@@ -26,6 +38,7 @@ const CHEMEX_VIDEOS: IBrewVideo[] = [
     title: "The Chemex",
     channel: "James Hoffmann",
   },
+  POUR_OVER_TIP_VIDEO,
 ];
 
 const V60_VIDEOS: IBrewVideo[] = [
@@ -44,6 +57,7 @@ const V60_VIDEOS: IBrewVideo[] = [
     title: "Hario V60 Brewguide: Easy and Effective v60 Recipe",
     channel: "Lance Hedrick",
   },
+  POUR_OVER_TIP_VIDEO,
 ];
 
 const KALITA_WAVE_VIDEOS: IBrewVideo[] = [
@@ -57,6 +71,7 @@ const KALITA_WAVE_VIDEOS: IBrewVideo[] = [
     title: "Kalita Wave Brew Guide - Super Easy Recipe for the 185",
     channel: "Daddy Got Coffee",
   },
+  POUR_OVER_TIP_VIDEO,
 ];
 
 const ORIGAMI_VIDEOS: IBrewVideo[] = [
@@ -70,6 +85,7 @@ const ORIGAMI_VIDEOS: IBrewVideo[] = [
     title: "Easy Brew Recipe 2023 Championship Method and Technique",
     channel: "Kyle Rowsell",
   },
+  POUR_OVER_TIP_VIDEO,
 ];
 
 const FRENCH_PRESS_VIDEOS: IBrewVideo[] = [
@@ -104,6 +120,7 @@ const HARIO_SWITCH_VIDEOS: IBrewVideo[] = [
     title: "My Current Daily Driver: Hario Switch + Sibarist",
     channel: "James Hoffmann",
   },
+  POUR_OVER_TIP_VIDEO,
 ];
 
 const CLEVER_DRIPPER_VIDEOS: IBrewVideo[] = [
@@ -112,12 +129,38 @@ const CLEVER_DRIPPER_VIDEOS: IBrewVideo[] = [
     title: "The Ultimate Clever Dripper Technique",
     channel: "James Hoffmann",
   },
+  POUR_OVER_TIP_VIDEO,
+];
+
+const COLD_BREW_VIDEOS: IBrewVideo[] = [
+  {
+    youtubeId: "AB0QLjroFss",
+    title: "Everything I Learned About Cold Brew Coffee",
+    channel: "James Hoffmann",
+  },
+  {
+    youtubeId: "c1UbW3cKGe0",
+    title:
+      "The Cold Brew Recipe You Should Be Making (and it's tasty, obviously)",
+    channel: "Morgan Eckroth",
+  },
+  {
+    youtubeId: "gQ3x8qd2dWg",
+    title: "Cold Brew 101 | Everything You Need to Know",
+    channel: "HomeGrounds Coffee",
+  },
+  {
+    youtubeId: "8K4aHBnpg7Q",
+    title: "How to Make Nitro Cold Brew Coffee at Home with Royal Brew",
+    channel: "Chris Duke",
+  },
 ];
 
 const ESPRESSO_VIDEOS: IBrewVideo[] = [
   {
     youtubeId: "j-Hu4hF5PTM",
-    title: "Guide to Making Great Espresso: Understanding Variables to Dial In Perfectly",
+    title:
+      "Guide to Making Great Espresso: Understanding Variables to Dial In Perfectly",
     channel: "Lance Hedrick",
   },
   {
@@ -290,12 +333,25 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Steep longer (up to 24hrs) for a stronger concentrate.",
       "Dilute 1:1 with water or milk before drinking.",
     ],
-    videos: [],
+    videos: COLD_BREW_VIDEOS,
     externalLinks: [
       {
         label: "Learn more about cold brew",
         description: "Background and brewing notes from Roastopedia",
         url: "https://roastopedia.com/cold-brew/",
+      },
+    ],
+    productLinks: [
+      {
+        label: "Nitro Cold Brew Kegs — Royal Brew",
+        description: "A home nitro cold brew kegging system we like",
+        url: "https://amzn.to/4wNaC8N",
+      },
+      {
+        label: "GrowlerWerks - uKeg Nitro Cold Brew",
+        description:
+          "MAKE NITRO AT HOME – the uKeg Nitro brews and infuses to make delicious nitro cold brew Coffee",
+        url: "https://amzn.to/4gliHeM",
       },
     ],
   },
@@ -409,7 +465,8 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     externalLinks: [
       {
         label: "Clever Dripper",
-        description: "See also: a very similar steep-then-release brewer, from Roastopedia",
+        description:
+          "See also: a very similar steep-then-release brewer, from Roastopedia",
         url: "https://roastopedia.com/clever-dripper/",
       },
     ],

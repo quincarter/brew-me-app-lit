@@ -22,6 +22,12 @@ export const GuideDetailPageStyles = css`
     overflow: auto;
   }
 
+  .product-links {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
   .videos {
     display: flex;
     flex-direction: column;

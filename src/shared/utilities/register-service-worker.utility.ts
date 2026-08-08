@@ -9,6 +9,22 @@ let updateServiceWorker: ServiceWorkerUpdater | null = null;
 export const needsRefreshSignal = signal(false);
 
 /**
+ * True once the app shell's asset inventory is confirmed cached and the app
+ * is genuinely usable offline. `install-prompt.store.ts` gates
+ * `canShowInstallPromptSignal` on this so people aren't invited to install a
+ * PWA that can't yet back up its "works offline" pitch. Seeded from
+ * `navigator.serviceWorker.controller` for returning visits, where
+ * precaching already completed in a prior session and Workbox's
+ * `onOfflineReady` (below) - which only fires once, the first time this
+ * build's precache finishes - won't fire again this load. Intentionally
+ * stays false (and so keeps the install prompt hidden) if registration
+ * never succeeds - see `onRegisterError` below - since a broken
+ * registration means the app genuinely isn't installable/offline-capable
+ * yet.
+ */
+export const isOfflineReadySignal = signal(Boolean(navigator.serviceWorker?.controller));
+
+/**
  * Registers the Workbox service worker that `vite-plugin-pwa` generates at
  * build time (and, via `devOptions.enabled` in `vite.config.ts`, in
  * `npm run dev` too). `registerType: "prompt"` in the plugin config means a
@@ -24,6 +40,7 @@ export const registerServiceWorker = (): void => {
       needsRefreshSignal.value = true;
     },
     onOfflineReady() {
+      isOfflineReadySignal.value = true;
       console.info("[BrewMe] Ready to work offline.");
     },
     onRegisterError(error) {

@@ -56,6 +56,20 @@ export default defineConfig({
         orientation: "portrait",
         start_url: "/",
         scope: "/",
+        // Chrome/Edge (desktop 139+, and Android via the WebAPK an install
+        // creates) already capture in-scope links into an installed PWA
+        // automatically - no manifest opt-in field for that part exists
+        // anymore (the old "capture_links" field never shipped and was
+        // dropped in 2022; capturing itself is a browser/OS setting, not
+        // something a manifest field turns on). `launch_handler` is the one
+        // piece of that behavior actually left to the app: once a link is
+        // captured, it decides whether to reuse the existing app window
+        // instead of always popping a new one. Not supported on iOS - a
+        // home-screen web app there is a WebClip, not a WebAPK/native
+        // install, and Safari has no equivalent capturing mechanism.
+        launch_handler: {
+          client_mode: "navigate-existing",
+        },
         icons: [
           { src: "icons/icon-72x72.png", sizes: "72x72", type: "image/png" },
           { src: "icons/icon-96x96.png", sizes: "96x96", type: "image/png" },
@@ -159,7 +173,7 @@ export default defineConfig({
     cssMinify: true,
   },
   test: {
-    environment: "node",
+    environment: "happy-dom",
     coverage: {
       exclude: ["**/node_modules", "**/vite.config.*", "**/vite-env.d.ts", "**/shared/data/**"],
       enabled: true,

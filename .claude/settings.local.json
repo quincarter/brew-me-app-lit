@@ -16,7 +16,12 @@
       "Bash(git fetch *)",
       "Bash(echo \"lint exit: $?\")",
       "Bash(echo \"exit $?\")",
-      "WebFetch(domain:developer.chrome.com)"
+      "WebFetch(domain:developer.chrome.com)",
+      "WebSearch",
+      "Bash(npx vitest *)",
+      "Bash(npm ls *)",
+      "Bash(npm install *)",
+      "Bash(cat)"
     ]
   }
 }
