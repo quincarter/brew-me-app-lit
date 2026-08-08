@@ -12,6 +12,7 @@ import { deleteSavedBrew, savedBrewsSignal, updateSavedBrew } from "../../shared
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
 import { coffeeForWater, gramsToOunces, ouncesToGrams } from "../../shared/utilities/ratio.utility";
+import { SHARE_OUTCOME_MESSAGES, shareBrew } from "../../shared/utilities/share.utility";
 import { SavedDetailPageStyles } from "./saved-detail-page.styles";
 
 @customElement("saved-detail-page")
@@ -26,6 +27,28 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
   @state() private _editWater = "";
   @state() private _editOz = "";
   @state() private _editCoffee: number | null = null;
+  @state() private _shareStatusText = "";
+
+  private _statusTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    clearTimeout(this._statusTimeout);
+  }
+
+  private _showStatus(text: string): void {
+    clearTimeout(this._statusTimeout);
+    this._shareStatusText = text;
+    if (!text) return;
+    this._statusTimeout = setTimeout(() => {
+      this._shareStatusText = "";
+    }, 2500);
+  }
+
+  private _onShare = async (brew: ISavedBrew): Promise<void> => {
+    const outcome = await shareBrew(brew);
+    this._showStatus(SHARE_OUTCOME_MESSAGES[outcome]);
+  };
 
   /** Mirrors calculator.store.ts's setRatio/setWater/setOz linking, scoped to this brew's local edit state. */
   private _setEditRatio(value: string): void {
@@ -49,7 +72,8 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     const grams = Number.isNaN(ounces) ? "" : String(ouncesToGrams(ounces));
     this._editOz = value;
     this._editWater = grams;
-    this._editCoffee = grams === "" || !ratio ? null : coffeeForWater(Number.parseFloat(grams), ratio);
+    this._editCoffee =
+      grams === "" || !ratio ? null : coffeeForWater(Number.parseFloat(grams), ratio);
   }
 
   /** Toggling on seeds fresh from the saved brew; toggling off discards any unsaved edits. */
@@ -111,49 +135,51 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
         <brew-top-bar title="${brew.brewType}" icon="arrow_back" href="/saved"></brew-top-bar>
 
         <div class="content">
-          ${this._editing
-            ? html`
-                <div class="field-label">Brew type</div>
-                <brew-type-picker
-                  .types="${allBrewTypesSignal.value}"
-                  selected="${this._editBrewType}"
-                  @type-select="${(e: CustomEvent<string>) => {
-                    this._editBrewType = e.detail;
-                  }}"
-                  @type-add="${this._onTypeAdd}"
-                ></brew-type-picker>
+          ${
+            this._editing
+              ? html`
+                  <div class="field-label">Brew type</div>
+                  <brew-type-picker
+                    .types="${allBrewTypesSignal.value}"
+                    selected="${this._editBrewType}"
+                    @type-select="${(e: CustomEvent<string>) => {
+                      this._editBrewType = e.detail;
+                    }}"
+                    @type-add="${this._onTypeAdd}"
+                  ></brew-type-picker>
 
-                <brew-ratio-form
-                  ratio="${this._editRatio}"
-                  water="${this._editWater}"
-                  oz="${this._editOz}"
-                  .coffee="${this._editCoffee}"
-                  @ratio-change="${(e: CustomEvent<string>) => this._setEditRatio(e.detail)}"
-                  @water-change="${(e: CustomEvent<string>) => this._setEditWater(e.detail)}"
-                  @oz-change="${(e: CustomEvent<string>) => this._setEditOz(e.detail)}"
-                ></brew-ratio-form>
-              `
-            : html`
-                <div class="ratio-hero">
-                  <div class="ratio-label">Ratio</div>
-                  <div class="ratio-value">${brew.ratio}:1</div>
-                </div>
+                  <brew-ratio-form
+                    ratio="${this._editRatio}"
+                    water="${this._editWater}"
+                    oz="${this._editOz}"
+                    .coffee="${this._editCoffee}"
+                    @ratio-change="${(e: CustomEvent<string>) => this._setEditRatio(e.detail)}"
+                    @water-change="${(e: CustomEvent<string>) => this._setEditWater(e.detail)}"
+                    @oz-change="${(e: CustomEvent<string>) => this._setEditOz(e.detail)}"
+                  ></brew-ratio-form>
+                `
+              : html`
+                  <div class="ratio-hero">
+                    <div class="ratio-label">Ratio</div>
+                    <div class="ratio-value">${brew.ratio}:1</div>
+                  </div>
 
-                <div class="stat-row">
-                  <div class="stat">
-                    <div class="stat-value">${brew.coffee}g</div>
-                    <div class="stat-label">coffee</div>
+                  <div class="stat-row">
+                    <div class="stat">
+                      <div class="stat-value">${brew.coffee}g</div>
+                      <div class="stat-label">coffee</div>
+                    </div>
+                    <div class="stat">
+                      <div class="stat-value">${brew.water}g</div>
+                      <div class="stat-label">water</div>
+                    </div>
+                    <div class="stat">
+                      <div class="stat-value">${brew.oz}oz</div>
+                      <div class="stat-label">cup size</div>
+                    </div>
                   </div>
-                  <div class="stat">
-                    <div class="stat-value">${brew.water}g</div>
-                    <div class="stat-label">water</div>
-                  </div>
-                  <div class="stat">
-                    <div class="stat-value">${brew.oz}oz</div>
-                    <div class="stat-label">cup size</div>
-                  </div>
-                </div>
-              `}
+                `
+          }
 
           <brew-button
             variant="filled"
@@ -163,6 +189,24 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
               this._editing ? this._onSaveEdit(brew.id) : this._toggleEditing(brew)}"
             >${this._editing ? "Save changes" : "Edit ratio"}</brew-button
           >
+
+          ${
+            this._editing
+              ? null
+              : html`
+                  <brew-button
+                    variant="outlined"
+                    full-width
+                    @button-click="${() => this._onShare(brew)}"
+                    >Share ratio</brew-button
+                  >
+                  ${
+                    this._shareStatusText
+                      ? html`<p class="share-status">${this._shareStatusText}</p>`
+                      : null
+                  }
+                `
+          }
 
           <button class="delete-link" type="button" @click="${() => this._onDelete(brew.id)}">
             Delete ratio

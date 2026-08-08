@@ -9,6 +9,12 @@ export interface ISavedBrew {
   createdAt: number;
 }
 
+/**
+ * A brew's numbers without persistence metadata - what `addSavedBrew` takes
+ * in, and what a `/share` link's query params carry (see `share.utility.ts`).
+ */
+export type IShareableBrew = Omit<ISavedBrew, "id" | "createdAt">;
+
 /** A curated YouTube walkthrough shown on a brew guide's detail screen. */
 export interface IBrewVideo {
   /** The YouTube video ID, e.g. "4tQG_aMcCL0" from https://youtu.be/4tQG_aMcCL0 */

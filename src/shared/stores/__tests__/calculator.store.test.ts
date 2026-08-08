@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   coffeeSignal,
   ozSignal,
+  primeCalculatorForBrew,
   ratioSignal,
   resetCalculator,
   setOz,
@@ -38,5 +39,13 @@ describe("calculator.store", () => {
     expect(waterSignal.value).toBe("");
     expect(coffeeSignal.value).toBeNull();
     expect(ratioSignal.value).toBe("16");
+  });
+
+  it("primes the calculator with a shared brew's exact numbers", () => {
+    primeCalculatorForBrew({ brewType: "Pour-over", ratio: 15, water: 300, coffee: 20, oz: 10.58 });
+    expect(ratioSignal.value).toBe("15");
+    expect(waterSignal.value).toBe("300");
+    expect(ozSignal.value).toBe("10.58");
+    expect(coffeeSignal.value).toBe(20);
   });
 });

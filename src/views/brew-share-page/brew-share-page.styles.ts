@@ -1,6 +1,6 @@
 import { css } from "lit";
 
-export const SavedDetailPageStyles = css`
+export const BrewSharePageStyles = css`
   :host {
     display: block;
     height: 100%;
@@ -16,10 +16,18 @@ export const SavedDetailPageStyles = css`
     padding: 8px 20px 28px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     flex: 1;
     min-height: 0;
     overflow: auto;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--brew-color-on-surface-variant);
   }
 
   .ratio-hero {
@@ -69,26 +77,17 @@ export const SavedDetailPageStyles = css`
     color: var(--brew-color-on-surface-variant);
   }
 
-  .field-label {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--brew-color-on-surface-variant);
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
   }
 
   .share-status {
-    margin: -6px 0 0;
+    margin: -4px 0 0;
     text-align: center;
     font-size: 13px;
     color: var(--brew-color-on-surface-variant);
-  }
-
-  .delete-link {
-    all: unset;
-    align-self: center;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 10px 12px;
-    color: var(--brew-color-error);
   }
 `;

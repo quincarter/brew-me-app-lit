@@ -70,4 +70,11 @@ export const routes: IRouteConfig[] = [
     directory: "settings-page",
     fileName: "settings-page",
   },
+  {
+    name: "Shared Brew",
+    path: "/share",
+    tagName: "brew-share-page",
+    directory: "brew-share-page",
+    fileName: "brew-share-page",
+  },
 ];

@@ -1,4 +1,5 @@
 import { signal } from "@lit-labs/preact-signals";
+import type { IShareableBrew } from "../interfaces/brew.interface";
 import { coffeeForWater, gramsToOunces, ouncesToGrams } from "../utilities/ratio.utility";
 
 /**
@@ -56,4 +57,12 @@ export const primeCalculatorForRatio = (ratioDefault: number): void => {
   ozSignal.value = "";
   coffeeSignal.value = null;
   ratioSignal.value = String(ratioDefault);
+};
+
+/** Primes the calculator with a shared brew's exact numbers - used by the Share screen's "Open in Calculator" action. */
+export const primeCalculatorForBrew = (brew: IShareableBrew): void => {
+  ratioSignal.value = String(brew.ratio);
+  waterSignal.value = String(brew.water);
+  ozSignal.value = String(brew.oz);
+  coffeeSignal.value = brew.coffee;
 };

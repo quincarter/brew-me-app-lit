@@ -32,6 +32,13 @@ export const CalculatorPageStyles = css`
     flex: 1;
   }
 
+  .share-status {
+    margin: -8px 0 0;
+    text-align: center;
+    font-size: 13px;
+    color: var(--brew-color-on-surface-variant);
+  }
+
   .tips {
     border-top: 1px solid var(--brew-color-outline-variant);
     padding-top: 14px;

@@ -5,7 +5,45 @@
     <base href="%BASE_URL%" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#8b5000" />
-    <title>BrewMe</title>
+    <meta
+      name="description"
+      content="Dial in the perfect water:coffee ratio, save your favorite brews, run a pour-over timer, and share any ratio with a friend."
+    />
+    <title>BrewMe — Coffee Ratio Calculator & Brew Guide</title>
+
+    <!--
+			Open Graph / Twitter Card - the defaults every crawler sees. For
+			`/share?...` links, netlify/edge-functions/share-meta.ts rewrites
+			og:title, og:description, og:url and <title> (via a plain string
+			replace, so the attribute order/quoting here has to stay exactly as
+			written) to describe that specific brew instead of the app as a
+			whole. og:image is intentionally left pointing at the same generic
+			banner for every page, shared and not - there's no per-brew image.
+			public/og-image.png is a static 1200x630 render (the recommended
+			1.91:1 OG ratio) of the app icon centered on the app's background
+			color, generated the same way as the iOS splash screens below -
+			icon-512x512.png alone is square and gets flagged by preview
+			validators for the wrong aspect ratio.
+		-->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="BrewMe" />
+    <meta property="og:title" content="BrewMe — Coffee Ratio Calculator & Brew Guide" />
+    <meta
+      property="og:description"
+      content="Dial in the perfect water:coffee ratio, save your favorite brews, run a pour-over timer, and share any ratio with a friend."
+    />
+    <meta property="og:image" content="https://brewme.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://brewme.app/" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="BrewMe — Coffee Ratio Calculator & Brew Guide" />
+    <meta
+      name="twitter:description"
+      content="Dial in the perfect water:coffee ratio, save your favorite brews, run a pour-over timer, and share any ratio with a friend."
+    />
+    <meta name="twitter:image" content="https://brewme.app/og-image.png" />
 
     <!-- Favicon + home screen / install icons (from /public/icon(s)) -->
     <link rel="icon" type="image/png" href="/icon/favicon.png" />

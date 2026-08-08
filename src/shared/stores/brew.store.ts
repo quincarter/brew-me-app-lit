@@ -1,5 +1,5 @@
 import { computed } from "@lit-labs/preact-signals";
-import type { ISavedBrew } from "../interfaces/brew.interface";
+import type { IShareableBrew, ISavedBrew } from "../interfaces/brew.interface";
 import { persistentSignal } from "./persistent-signal";
 
 /** No seed data - a fresh install starts with nothing saved. */
@@ -35,7 +35,7 @@ export const streakDaysSignal = computed(() => {
 export const getSavedBrewById = (id: number): ISavedBrew | undefined =>
   savedBrewsSignal.value.find((brew) => brew.id === id);
 
-export const addSavedBrew = (brew: Omit<ISavedBrew, "id" | "createdAt">): void => {
+export const addSavedBrew = (brew: IShareableBrew): void => {
   const now = Date.now();
   savedBrewsSignal.value = [...savedBrewsSignal.value, { ...brew, id: now, createdAt: now }];
 };

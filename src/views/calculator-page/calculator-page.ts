@@ -1,6 +1,6 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
 import "../../components/icon/brew-icon";
@@ -21,11 +21,44 @@ import {
 } from "../../shared/stores/calculator.store";
 import { openSaveDialog } from "../../shared/stores/save-dialog.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
+import { SHARE_OUTCOME_MESSAGES, shareBrew } from "../../shared/utilities/share.utility";
 import { CalculatorPageStyles } from "./calculator-page.styles";
+
+/** Placeholder brew type for a share sent straight from the calculator, before it's been named/saved. */
+const UNSAVED_BREW_TYPE = "Custom Ratio";
 
 @customElement("calculator-page")
 export class CalculatorPage extends SignalWatcher(LitElement) {
   static styles = [CalculatorPageStyles, responsiveScreenStyles];
+
+  @state() private _shareStatusText = "";
+
+  private _statusTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    clearTimeout(this._statusTimeout);
+  }
+
+  private _showStatus(text: string): void {
+    clearTimeout(this._statusTimeout);
+    this._shareStatusText = text;
+    if (!text) return;
+    this._statusTimeout = setTimeout(() => {
+      this._shareStatusText = "";
+    }, 2500);
+  }
+
+  private _onShare = async (): Promise<void> => {
+    const coffee = coffeeSignal.value;
+    const water = Number.parseFloat(waterSignal.value);
+    const oz = Number.parseFloat(ozSignal.value);
+    const ratio = Number.parseFloat(ratioSignal.value);
+    if (coffee === null || Number.isNaN(water) || Number.isNaN(oz)) return;
+
+    const outcome = await shareBrew({ brewType: UNSAVED_BREW_TYPE, ratio, water, coffee, oz });
+    this._showStatus(SHARE_OUTCOME_MESSAGES[outcome]);
+  };
 
   render(): HTMLTemplateResult {
     const coffee = coffeeSignal.value;
@@ -60,6 +93,15 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
               >Save ratio</brew-button
             >
           </div>
+
+          <brew-button
+            variant="text"
+            full-width
+            ?disabled="${!isValid}"
+            @button-click="${this._onShare}"
+            >Share this brew</brew-button
+          >
+          ${this._shareStatusText ? html`<p class="share-status">${this._shareStatusText}</p>` : null}
 
           <div class="tips">
             <button class="tips-toggle" type="button" @click="${toggleTip}">
