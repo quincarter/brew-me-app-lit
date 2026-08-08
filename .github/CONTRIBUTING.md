@@ -47,6 +47,7 @@ BrewMe uses fast, modern tooling for linting, formatting, building, and testing:
 | `npm run fmt` | Formats code files using `oxfmt`. |
 | `npm run fmt:check` | Checks if code formatting complies with `oxfmt`. |
 | `npm test` | Runs the Vitest test suite with coverage report. |
+| `npm run screenshots` | Uses Playwright to automatically capture and update screenshots in `./screenshots/`. |
 
 > [!IMPORTANT]
 > Always run `npm run build`, `npm run lint`, and `npm test` before creating a pull request. The build step will fail if any TypeScript type errors exist.

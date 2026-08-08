@@ -1,0 +1,4 @@
+#!/bin/sh
+# Automatically update app screenshots before push
+echo "📷 Capturing fresh app screenshots before git push..."
+npm run screenshots
