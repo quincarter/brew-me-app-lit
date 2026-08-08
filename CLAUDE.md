@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-BrewMe: a Lit 3 + TypeScript + Vite PWA — a coffee water:coffee ratio calculator with saved brews, a pour-over timer, and a brew method guide. It's a from-scratch reimplementation of a design prototype, following the conventions of an internal `app-shell-starter` template (see `README.md` for the full rationale behind each convention below).
+BrewMe: a Lit 3 + TypeScript + Vite PWA — a coffee water:coffee ratio calculator with saved brews, a pour-over timer, and a brew method guide. It's a from-scratch reimplementation of a design prototype, following the conventions of an internal `app-shell-starter` template (see `docs/AI_CONTEXT.md` for the full rationale behind each convention below).
 
 ## Commands
 
