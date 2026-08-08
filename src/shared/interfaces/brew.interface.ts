@@ -30,6 +30,18 @@ export interface IBrewGlossaryTerm {
   definition: string;
 }
 
+/**
+ * A paid/affiliate product recommendation shown on a brew guide's detail
+ * screen - distinct from `externalLinks`, which is editorial reference
+ * material. Rendered with `brew-product-link-card`, which always carries a
+ * visible affiliate disclosure.
+ */
+export interface IBrewProductLink {
+  label: string;
+  description: string;
+  url: string;
+}
+
 export interface IBrewGuideItem {
   id: string;
   name: string;
@@ -63,6 +75,14 @@ export interface IBrewGuideItem {
     description: string;
     url: string;
   }[];
+  /**
+   * Optional paid/affiliate product recommendations - e.g. brewing gear
+   * available to buy. Rendered separately from `externalLinks` via
+   * `brew-product-link-card`, which shows an affiliate disclosure. Unlike
+   * `externalLinks`'s editorial "further reading" role, these are
+   * monetized links and must always be visually distinguished as such.
+   */
+  productLinks?: IBrewProductLink[];
   /**
    * Optional method-specific terminology/tools glossary, shown above the
    * video walkthroughs. Currently only populated for espresso.
