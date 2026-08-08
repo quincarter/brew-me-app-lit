@@ -1,10 +1,14 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import { type HTMLTemplateResult, LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
 import "../../components/empty-state/brew-empty-state";
+import "../../components/link-card/brew-link-card";
 import "../../components/top-bar/brew-top-bar";
+import "../../components/video-search/brew-video-search";
+
+import { BREW_GUIDE } from "../../shared/data/brew-content.data";
 import type { IShareableBrew } from "../../shared/interfaces/brew.interface";
 import { addSavedBrew, savedBrewsSignal } from "../../shared/stores/brew.store";
 import { primeCalculatorForBrew } from "../../shared/stores/calculator.store";
@@ -95,6 +99,11 @@ export class BrewSharePage extends SignalWatcher(LitElement) {
         saved.oz === brew.oz,
     );
     const isSaved = this._justSaved || alreadySaved;
+    console.log("brew type", brew.brewType);
+    const matchingGuide = BREW_GUIDE.find((item) => {
+      console.log(item.name);
+      return item.name === brew.brewType;
+    });
 
     return html`
       <div class="screen">
@@ -135,14 +144,37 @@ export class BrewSharePage extends SignalWatcher(LitElement) {
               full-width
               ?disabled="${isSaved}"
               @button-click="${() => this._onSave(brew)}"
-              >${isSaved ? "Saved to your brews" : "Save to my brews"}</brew-button
+              >${isSaved
+                ? "Saved to your brews"
+                : "Save to my brews"}</brew-button
             >
-            <brew-button variant="text" full-width @button-click="${() => this._onShare(brew)}"
+            <brew-button
+              variant="text"
+              full-width
+              @button-click="${() => this._onShare(brew)}"
               >Share this brew</brew-button
             >
           </div>
 
-          ${this._shareStatusText ? html`<p class="share-status">${this._shareStatusText}</p>` : null}
+          ${this._shareStatusText
+            ? html`<p class="share-status">${this._shareStatusText}</p>`
+            : null}
+
+          <div class="section-title">Brew guide</div>
+          ${matchingGuide
+            ? html`
+                <brew-link-card
+                  href="/more/guide/${matchingGuide.id}"
+                  icon="menu_book"
+                  label="${matchingGuide.name} Brew Guide"
+                  description="Ratio tips, grind size, and video walkthroughs"
+                ></brew-link-card>
+              `
+            : html`
+                <brew-video-search
+                  query="${brew.brewType} Brew Guide"
+                ></brew-video-search>
+              `}
         </div>
 
         <brew-bottom-nav></brew-bottom-nav>
