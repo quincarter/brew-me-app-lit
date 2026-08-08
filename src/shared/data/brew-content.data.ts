@@ -135,7 +135,7 @@ const ESPRESSO_VIDEOS: IBrewVideo[] = [
 /** Terminology and tools glossary shown on the espresso guide screen, above the video walkthroughs. */
 const ESPRESSO_GLOSSARY: IBrewGlossaryTerm[] = [
   {
-    term: "RDT (Ron's Dosing Trick)",
+    term: "RDT (Ross Droplet Technique)",
     definition:
       "Lightly misting your beans with water right before grinding — it cuts down on static so grounds don't cling to the grinder or clump up in the portafilter.",
   },
