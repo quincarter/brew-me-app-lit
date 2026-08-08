@@ -25,8 +25,8 @@ export class SavedPage extends SignalWatcher(LitElement) {
           ${
             brews.length === 0
               ? html`<div class="empty-state"><brew-empty-state></brew-empty-state></div>`
-              : brews.map((brew, index) => {
-                  const colors = getAvatarColors(index);
+              : brews.map((brew) => {
+                  const colors = getAvatarColors(brew.id);
                   return html`
                     <brew-list-row
                       headline="${brew.brewType} · ${brew.ratio}:1"
