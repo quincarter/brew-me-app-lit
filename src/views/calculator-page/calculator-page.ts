@@ -6,7 +6,9 @@ import "../../components/button/brew-button";
 import "../../components/icon/brew-icon";
 import "../../components/ratio-form/brew-ratio-form";
 import "../../components/save-sheet/brew-save-sheet";
+import "../../components/saved-card/brew-saved-card";
 import "../../components/top-bar/brew-top-bar";
+import { recentSavedBrewsSignal } from "../../shared/stores/brew.store";
 import {
   coffeeSignal,
   ozSignal,
@@ -19,6 +21,10 @@ import {
 } from "../../shared/stores/calculator.store";
 import { openSaveDialog } from "../../shared/stores/save-dialog.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
+import {
+  getAvatarColors,
+  getInitial,
+} from "../../shared/utilities/avatar-palette.utility";
 import {
   SHARE_OUTCOME_MESSAGES,
   shareBrew,
@@ -72,6 +78,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
     const water = waterSignal.value;
     const oz = ozSignal.value;
     const isValid = Boolean(water && oz && coffee);
+    const recentBrews = recentSavedBrewsSignal.value;
 
     return html`
       <div class="screen">
@@ -135,6 +142,34 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
               <li>Cold brew: 3–5:1.</li>
             </ul>
           </div>
+
+          ${recentBrews.length > 0
+            ? html`
+                <div class="section-header">
+                  <span class="section-title">Recent brews</span>
+                  <a class="see-all" href="/saved">See all</a>
+                </div>
+
+                <div class="recent-row">
+                  ${recentBrews.map((brew) => {
+                    const colors = getAvatarColors(brew.id);
+                    return html`
+                      <brew-saved-card
+                        href="/saved/${brew.id}"
+                        brew-type="${brew.brewType}"
+                        ratio="${brew.ratio}"
+                        coffee="${brew.coffee}"
+                        water="${brew.water}"
+                        oz="${brew.oz}"
+                        avatar-initial="${getInitial(brew.brewType)}"
+                        avatar-bg="${colors.background}"
+                        avatar-fg="${colors.foreground}"
+                      ></brew-saved-card>
+                    `;
+                  })}
+                </div>
+              `
+            : null}
         </div>
 
         <brew-bottom-nav active="calculate"></brew-bottom-nav>

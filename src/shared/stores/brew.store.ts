@@ -7,6 +7,14 @@ export const savedBrewsSignal = persistentSignal<ISavedBrew[]>([], { key: "saved
 
 export const totalBrewsSignal = computed(() => savedBrewsSignal.value.length);
 
+/** Number of most-recently-saved brews surfaced by recentSavedBrewsSignal. */
+const RECENT_BREWS_LIMIT = 4;
+
+/** The most recently saved brews, newest first, capped for "Recent brews" style sections. */
+export const recentSavedBrewsSignal = computed(() =>
+  savedBrewsSignal.value.slice(-RECENT_BREWS_LIMIT).reverse(),
+);
+
 const dayKey = (timestamp: number): string => new Date(timestamp).toDateString();
 
 /**

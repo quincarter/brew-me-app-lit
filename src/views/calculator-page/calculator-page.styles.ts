@@ -70,4 +70,27 @@ export const CalculatorPageStyles = css`
     line-height: 1.5;
     margin: 0;
   }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--brew-color-on-surface);
+  }
+
+  .see-all {
+    font-size: 14px;
+    text-decoration: none;
+  }
+
+  .recent-row {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
 `;

@@ -7,7 +7,7 @@ import "../../components/empty-state/brew-empty-state";
 import "../../components/saved-card/brew-saved-card";
 import "../../components/stat-tile/brew-stat-tile";
 import {
-  savedBrewsSignal,
+  recentSavedBrewsSignal,
   streakDaysSignal,
   totalBrewsSignal,
 } from "../../shared/stores/brew.store";
@@ -29,7 +29,7 @@ export class HomePage extends SignalWatcher(LitElement) {
   static styles = [HomePageStyles, responsiveScreenStyles];
 
   render(): HTMLTemplateResult {
-    const recent = savedBrewsSignal.value;
+    const recent = recentSavedBrewsSignal.value;
 
     return html`
       <div class="screen">
@@ -83,8 +83,8 @@ export class HomePage extends SignalWatcher(LitElement) {
               ? html`<brew-empty-state class="recent-empty"></brew-empty-state>`
               : html`
                   <div class="recent-row">
-                    ${recent.map((brew, index) => {
-                      const colors = getAvatarColors(index);
+                    ${recent.map((brew) => {
+                      const colors = getAvatarColors(brew.id);
                       return html`
                         <brew-saved-card
                           href="/saved/${brew.id}"
