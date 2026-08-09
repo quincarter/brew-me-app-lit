@@ -49,7 +49,7 @@ A few of the more general-purpose components (`button`, `text-field`, `bottom-na
 
 ### Views (`src/views/<name>/`)
 
-One `@customElement`-decorated file per screen plus a sibling `.styles.ts`. Views *are* registered inline (unlike components) since they're only ever loaded once, lazily, by the router. Route params arrive via a plain `routeParams` property (no `ViewMixin`/`NavigationContext` machinery — this app has a fixed screen set with no access control or multi-tenant nav).
+One `@customElement`-decorated file per screen plus a sibling `.styles.ts`. Views _are_ registered inline (unlike components) since they're only ever loaded once, lazily, by the router. Route params arrive via a plain `routeParams` property (no `ViewMixin`/`NavigationContext` machinery — this app has a fixed screen set with no access control or multi-tenant nav).
 
 ### Routing (`src/app-shell.ts` + `src/shared/configuration/routes.ts`)
 
@@ -92,12 +92,12 @@ Five project subagents live in `.claude/agents/`. Claude Code routes matching wo
 
 **Use subagents to delegate work rather than doing everything in the main thread.** When a task (or part of one) matches a subagent's specialty, hand it off — this keeps each piece of work handled by the most relevant expertise and lets independent parts proceed effectively instead of serially. This applies within a single task too: e.g. a new component should be built by `lit-expert`, its tests by `testing-expert`, and the result checked by `code-reviewer`, rather than one agent attempting the whole thing end to end.
 
-| Agent | Use for |
-|---|---|
-| `lit-expert` | Adding/modifying components or views, signal stores, routing — anything that needs to follow the three-file component pattern, the view/router shape, or the signal-store conventions above. |
-| `typescript-expert` | Type errors, strict-mode fallout (`noUnusedLocals`/`noUnusedParameters`), interface/type design, generics, module resolution issues. |
-| `testing-expert` | Writing or fixing Vitest tests for utilities/stores, diagnosing `npm test` failures, coverage gaps. |
-| `ui-designer` | Visual/UX work: design tokens in `index.css`, light/dark theme parity, responsive rail/bottom-nav behavior, keeping new components visually consistent with the existing Material-inspired look. |
-| `code-reviewer` | Proactive review after a change is made — checks it against the conventions in this file, lint/type correctness, and Lit best practices. Read-only: it reports findings rather than editing. |
+| Agent               | Use for                                                                                                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `lit-expert`        | Adding/modifying components or views, signal stores, routing — anything that needs to follow the three-file component pattern, the view/router shape, or the signal-store conventions above.     |
+| `typescript-expert` | Type errors, strict-mode fallout (`noUnusedLocals`/`noUnusedParameters`), interface/type design, generics, module resolution issues.                                                             |
+| `testing-expert`    | Writing or fixing Vitest tests for utilities/stores, diagnosing `npm test` failures, coverage gaps.                                                                                              |
+| `ui-designer`       | Visual/UX work: design tokens in `index.css`, light/dark theme parity, responsive rail/bottom-nav behavior, keeping new components visually consistent with the existing Material-inspired look. |
+| `code-reviewer`     | Proactive review after a change is made — checks it against the conventions in this file, lint/type correctness, and Lit best practices. Read-only: it reports findings rather than editing.     |
 
 Default to running `code-reviewer` after any non-trivial change, before considering the task done.

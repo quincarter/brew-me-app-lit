@@ -43,7 +43,9 @@ export class TypePicker extends LitElement {
   @state() private _draft = "";
 
   private _selectType(name: string): void {
-    this.dispatchEvent(new CustomEvent<string>("type-select", { detail: name, bubbles: true, composed: true }));
+    this.dispatchEvent(
+      new CustomEvent<string>("type-select", { detail: name, bubbles: true, composed: true }),
+    );
   }
 
   private _startAdding = (): void => {
@@ -59,7 +61,9 @@ export class TypePicker extends LitElement {
   private _confirmAdding = (): void => {
     const trimmed = this._draft.trim();
     if (!trimmed) return;
-    this.dispatchEvent(new CustomEvent<string>("type-add", { detail: trimmed, bubbles: true, composed: true }));
+    this.dispatchEvent(
+      new CustomEvent<string>("type-add", { detail: trimmed, bubbles: true, composed: true }),
+    );
     this._adding = false;
     this._draft = "";
   };
@@ -79,28 +83,32 @@ export class TypePicker extends LitElement {
         <brew-chip label="+ Add brew type" @chip-click="${this._startAdding}"></brew-chip>
       </div>
 
-      ${this._adding
-        ? html`
-            <div class="add-row">
-              <brew-text-field
-                label="New brew type"
-                .value="${this._draft}"
-                @value-change="${(e: CustomEvent<string>) => {
-                  this._draft = e.detail;
-                }}"
-              ></brew-text-field>
-              <div class="add-actions">
-                <brew-button variant="text" @button-click="${this._cancelAdding}">Cancel</brew-button>
-                <brew-button
-                  variant="filled"
-                  ?disabled="${!this._draft.trim()}"
-                  @button-click="${this._confirmAdding}"
-                  >Add</brew-button
-                >
+      ${
+        this._adding
+          ? html`
+              <div class="add-row">
+                <brew-text-field
+                  label="New brew type"
+                  .value="${this._draft}"
+                  @value-change="${(e: CustomEvent<string>) => {
+                    this._draft = e.detail;
+                  }}"
+                ></brew-text-field>
+                <div class="add-actions">
+                  <brew-button variant="text" @button-click="${this._cancelAdding}"
+                    >Cancel</brew-button
+                  >
+                  <brew-button
+                    variant="filled"
+                    ?disabled="${!this._draft.trim()}"
+                    @button-click="${this._confirmAdding}"
+                    >Add</brew-button
+                  >
+                </div>
               </div>
-            </div>
-          `
-        : nothing}
+            `
+          : nothing
+      }
     `;
   }
 }

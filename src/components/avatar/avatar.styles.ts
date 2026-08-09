@@ -14,4 +14,12 @@ export const AvatarStyles = css`
     font-weight: 600;
     font-family: inherit;
   }
+
+  /* Icon SVGs ship with hardcoded width="34" height="34" attributes - scale
+   * them to the avatar's own size instead. CSS wins over SVG presentation
+   * attributes, so this overrides them regardless of the avatar's "size". */
+  .avatar svg {
+    width: 60%;
+    height: 60%;
+  }
 `;

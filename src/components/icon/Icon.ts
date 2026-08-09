@@ -25,8 +25,14 @@ export class Icon extends LitElement {
   @property({ type: Number })
   size = 24;
 
+  /** Renders the filled variant via the Material Symbols variable-font FILL axis. @attr filled */
+  @property({ type: Boolean })
+  filled = false;
+
   render(): HTMLTemplateResult {
-    return html`<span class="material-symbols-outlined" style="font-size:${this.size}px"
+    return html`<span
+      class="material-symbols-outlined"
+      style="font-size:${this.size}px; font-variation-settings: 'FILL' ${this.filled ? 1 : 0}"
       >${this.name}</span
     >`;
   }

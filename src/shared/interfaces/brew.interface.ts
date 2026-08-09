@@ -1,19 +1,29 @@
 export interface ISavedBrew {
   id: number;
   brewType: string;
+  /** Optional icon key (a `BREW_ICON_MAP` key from `brew-icon.utility.ts`) chosen at creation time for a custom brew type that doesn't already map to a stock icon. Unset means "use the automatic brewType → icon mapping, or fall back to an initial letter." */
+  icon?: string;
+  /** Optional free-form name a user gives a brew, e.g. "Sunday morning pour". Falls back to `brewType` for display when unset. */
+  name?: string;
   ratio: number;
   water: number;
   coffee: number;
   oz: number;
   /** Epoch ms when this ratio was first saved - used to compute the real day streak. */
   createdAt: number;
+  /** Optional 1-5 star rating, set via the Saved Ratio Detail edit flow. */
+  rating?: number;
+  /** Optional short tasting note, set via the Saved Ratio Detail edit flow. */
+  tastingNote?: string;
 }
 
 /**
  * A brew's numbers without persistence metadata - what `addSavedBrew` takes
  * in, and what a `/share` link's query params carry (see `share.utility.ts`).
+ * Rating/tasting note are edit-only annotations on an already-saved brew, so
+ * they're excluded here too - they must never leak into the share-link flow.
  */
-export type IShareableBrew = Omit<ISavedBrew, "id" | "createdAt">;
+export type IShareableBrew = Omit<ISavedBrew, "id" | "createdAt" | "rating" | "tastingNote">;
 
 /** A curated YouTube walkthrough shown on a brew guide's detail screen. */
 export interface IBrewVideo {

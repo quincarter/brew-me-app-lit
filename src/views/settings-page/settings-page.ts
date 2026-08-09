@@ -82,34 +82,36 @@ export class SettingsPage extends SignalWatcher(LitElement) {
             )}
           </div>
 
-          ${this._addingType
-            ? html`
-                <div class="add-row">
-                  <brew-text-field
-                    label="New brew type"
-                    .value="${this._typeDraft}"
-                    @value-change="${(e: CustomEvent<string>) => {
-                      this._typeDraft = e.detail;
-                    }}"
-                  ></brew-text-field>
-                  <div class="add-actions">
-                    <brew-button variant="text" @button-click="${this._cancelAddType}"
-                      >Cancel</brew-button
-                    >
-                    <brew-button
-                      variant="filled"
-                      ?disabled="${!this._typeDraft.trim()}"
-                      @button-click="${this._confirmAddType}"
-                      >Add</brew-button
-                    >
+          ${
+            this._addingType
+              ? html`
+                  <div class="add-row">
+                    <brew-text-field
+                      label="New brew type"
+                      .value="${this._typeDraft}"
+                      @value-change="${(e: CustomEvent<string>) => {
+                        this._typeDraft = e.detail;
+                      }}"
+                    ></brew-text-field>
+                    <div class="add-actions">
+                      <brew-button variant="text" @button-click="${this._cancelAddType}"
+                        >Cancel</brew-button
+                      >
+                      <brew-button
+                        variant="filled"
+                        ?disabled="${!this._typeDraft.trim()}"
+                        @button-click="${this._confirmAddType}"
+                        >Add</brew-button
+                      >
+                    </div>
                   </div>
-                </div>
-              `
-            : html`
-                <brew-button variant="outlined" @button-click="${this._startAddType}"
-                  >Add brew type</brew-button
-                >
-              `}
+                `
+              : html`
+                  <brew-button variant="outlined" @button-click="${this._startAddType}"
+                    >Add brew type</brew-button
+                  >
+                `
+          }
 
           <div class="divider"></div>
           <div class="section-title">Appearance</div>
@@ -133,36 +135,43 @@ export class SettingsPage extends SignalWatcher(LitElement) {
           <div class="divider"></div>
           <div class="danger-zone">
             <div class="section-title danger">Danger zone</div>
-            ${this._confirmingDelete
-              ? html`
-                  <p class="section-hint">
-                    This permanently deletes all saved brews and custom brew types on this
-                    device. This can't be undone.
-                  </p>
-                  <div class="add-actions">
-                    <brew-button variant="text" @button-click="${() => {
-                      this._confirmingDelete = false;
-                    }}"
-                      >Cancel</brew-button
+            ${
+              this._confirmingDelete
+                ? html`
+                    <p class="section-hint">
+                      This permanently deletes all saved brews and custom brew types on this device.
+                      This can't be undone.
+                    </p>
+                    <div class="add-actions">
+                      <brew-button
+                        variant="text"
+                        @button-click="${() => {
+                          this._confirmingDelete = false;
+                        }}"
+                        >Cancel</brew-button
+                      >
+                      <brew-button
+                        variant="filled"
+                        tone="danger"
+                        @button-click="${this._onDeleteAllData}"
+                        >Yes, delete everything</brew-button
+                      >
+                    </div>
+                  `
+                : html`
+                    <p class="section-hint">
+                      Permanently erase all saved brews and custom brew types from this device.
+                    </p>
+                    <brew-button
+                      variant="outlined"
+                      tone="danger"
+                      @button-click="${() => {
+                        this._confirmingDelete = true;
+                      }}"
+                      >Delete all data</brew-button
                     >
-                    <brew-button variant="filled" tone="danger" @button-click="${this._onDeleteAllData}"
-                      >Yes, delete everything</brew-button
-                    >
-                  </div>
-                `
-              : html`
-                  <p class="section-hint">
-                    Permanently erase all saved brews and custom brew types from this device.
-                  </p>
-                  <brew-button
-                    variant="outlined"
-                    tone="danger"
-                    @button-click="${() => {
-                      this._confirmingDelete = true;
-                    }}"
-                    >Delete all data</brew-button
-                  >
-                `}
+                  `
+            }
           </div>
         </div>
 

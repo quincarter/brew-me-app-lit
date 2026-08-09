@@ -5,6 +5,8 @@ import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
 import "../../components/link-card/brew-link-card";
 import "../../components/ratio-form/brew-ratio-form";
+import "../../components/star-rating/brew-star-rating";
+import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
 import "../../components/type-picker/brew-type-picker";
 import "../../components/video-search/brew-video-search";
@@ -13,6 +15,8 @@ import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import { addCustomBrewType, allBrewTypesSignal } from "../../shared/stores/brew-types.store";
 import { deleteSavedBrew, savedBrewsSignal, updateSavedBrew } from "../../shared/stores/brew.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
+import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
+import { BREW_ICON_MAP, normalizeBrewIconKey } from "../../shared/utilities/brew-icon.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
 import { coffeeForWater, gramsToOunces, ouncesToGrams } from "../../shared/utilities/ratio.utility";
 import { SHARE_OUTCOME_MESSAGES, shareBrew } from "../../shared/utilities/share.utility";
@@ -26,10 +30,13 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
 
   @state() private _editing = false;
   @state() private _editBrewType = "";
+  @state() private _editBrewName = "";
   @state() private _editRatio = "";
   @state() private _editWater = "";
   @state() private _editOz = "";
   @state() private _editCoffee: number | null = null;
+  @state() private _editRating = 0;
+  @state() private _editTastingNote = "";
   @state() private _shareStatusText = "";
 
   private _statusTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -86,10 +93,13 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
       return;
     }
     this._editBrewType = brew.brewType;
+    this._editBrewName = brew.name ?? "";
     this._editRatio = String(brew.ratio);
     this._editWater = String(brew.water);
     this._editOz = String(brew.oz);
     this._editCoffee = brew.coffee;
+    this._editRating = brew.rating ?? 0;
+    this._editTastingNote = brew.tastingNote ?? "";
     this._editing = true;
   }
 
@@ -99,7 +109,19 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     const coffee = coffeeForWater(water, ratio);
     if (coffee === null || !this._editBrewType) return;
     const oz = this._editOz ? Number.parseFloat(this._editOz) : gramsToOunces(water);
-    updateSavedBrew(id, { brewType: this._editBrewType, water, ratio, coffee, oz });
+    /** A retyped brew that now has its own automatic icon match must drop any stale manual override from its old (custom) type. */
+    const hasAutomaticIcon = Boolean(BREW_ICON_MAP[normalizeBrewIconKey(this._editBrewType)]);
+    updateSavedBrew(id, {
+      brewType: this._editBrewType,
+      name: this._editBrewName.trim() || undefined,
+      water,
+      ratio,
+      coffee,
+      oz,
+      rating: this._editRating || undefined,
+      tastingNote: this._editTastingNote.trim() || undefined,
+      ...(hasAutomaticIcon ? { icon: undefined } : {}),
+    });
     this._editing = false;
   }
 
@@ -137,12 +159,24 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
 
     return html`
       <div class="screen">
-        <brew-top-bar title="${brew.brewType}" icon="arrow_back" href="/saved"></brew-top-bar>
+        <brew-top-bar
+          title="${getBrewDisplayName(brew)}"
+          icon="arrow_back"
+          href="/saved"
+        ></brew-top-bar>
 
         <div class="content">
           ${
             this._editing
               ? html`
+                  <brew-text-field
+                    label="Brew name"
+                    .value="${this._editBrewName}"
+                    @value-change="${(e: CustomEvent<string>) => {
+                      this._editBrewName = e.detail;
+                    }}"
+                  ></brew-text-field>
+
                   <div class="field-label">Brew type</div>
                   <brew-type-picker
                     .types="${allBrewTypesSignal.value}"
@@ -162,6 +196,23 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                     @water-change="${(e: CustomEvent<string>) => this._setEditWater(e.detail)}"
                     @oz-change="${(e: CustomEvent<string>) => this._setEditOz(e.detail)}"
                   ></brew-ratio-form>
+
+                  <div class="field-label">Rating</div>
+                  <brew-star-rating
+                    editable
+                    .value="${this._editRating}"
+                    @rating-change="${(e: CustomEvent<number>) => {
+                      this._editRating = e.detail;
+                    }}"
+                  ></brew-star-rating>
+
+                  <brew-text-field
+                    label="Tasting note"
+                    .value="${this._editTastingNote}"
+                    @value-change="${(e: CustomEvent<string>) => {
+                      this._editTastingNote = e.detail;
+                    }}"
+                  ></brew-text-field>
                 `
               : html`
                   <div class="ratio-hero">
@@ -183,6 +234,19 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                       <div class="stat-label">cup size</div>
                     </div>
                   </div>
+
+                  ${
+                    brew.rating
+                      ? html`
+                          <brew-star-rating value="${brew.rating}"></brew-star-rating>
+                          ${
+                            brew.tastingNote
+                              ? html`<p class="tasting-note">${brew.tastingNote}</p>`
+                              : null
+                          }
+                        `
+                      : null
+                  }
                 `
           }
 

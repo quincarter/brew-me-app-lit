@@ -43,7 +43,9 @@ export class RatioForm extends LitElement {
   @property({ type: Number }) coffee: number | null = null;
 
   private _emit(name: "ratio-change" | "water-change" | "oz-change", value: string): void {
-    this.dispatchEvent(new CustomEvent<string>(name, { detail: value, bubbles: true, composed: true }));
+    this.dispatchEvent(
+      new CustomEvent<string>(name, { detail: value, bubbles: true, composed: true }),
+    );
   }
 
   render(): HTMLTemplateResult {
@@ -75,14 +77,16 @@ export class RatioForm extends LitElement {
       </div>
       <p class="hint">These two fields update each other automatically.</p>
 
-      ${this.coffee !== null
-        ? html`
-            <div class="result">
-              <div class="result-label">Coffee needed</div>
-              <div class="result-value">${this.coffee}g</div>
-            </div>
-          `
-        : nothing}
+      ${
+        this.coffee !== null
+          ? html`
+              <div class="result">
+                <div class="result-label">Coffee needed</div>
+                <div class="result-value">${this.coffee}g</div>
+              </div>
+            `
+          : nothing
+      }
     `;
   }
 }

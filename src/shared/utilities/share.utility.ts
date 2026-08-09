@@ -1,5 +1,6 @@
 import { withBase } from "../configuration/base-path";
 import type { IShareableBrew } from "../interfaces/brew.interface";
+import { getBrewDisplayName } from "./brew-display.utility";
 
 /**
  * Reconstructs a brew from a `/share` link's query string. Returns null if
@@ -9,6 +10,7 @@ import type { IShareableBrew } from "../interfaces/brew.interface";
 export const parseShareParams = (search: string): IShareableBrew | null => {
   const params = new URLSearchParams(search);
   const brewType = params.get("brewType");
+  const name = params.get("name")?.trim();
   const ratio = Number.parseFloat(params.get("ratio") ?? "");
   const water = Number.parseFloat(params.get("water") ?? "");
   const coffee = Number.parseFloat(params.get("coffee") ?? "");
@@ -21,7 +23,7 @@ export const parseShareParams = (search: string): IShareableBrew | null => {
     return null;
   }
 
-  return { brewType, ratio, water, coffee, oz };
+  return { brewType, ratio, water, coffee, oz, ...(name ? { name } : {}) };
 };
 
 /**
@@ -40,6 +42,7 @@ export const buildShareUrl = (
     coffee: String(brew.coffee),
     oz: String(brew.oz),
   });
+  if (brew.name) params.set("name", brew.name);
   return `${origin}${withBase("/share")}?${params.toString()}`;
 };
 
@@ -60,7 +63,7 @@ export const SHARE_OUTCOME_MESSAGES: Record<ShareOutcome, string> = {
  */
 export const shareBrew = async (brew: IShareableBrew): Promise<ShareOutcome> => {
   const url = buildShareUrl(brew);
-  const text = `${brew.brewType} — ${brew.ratio}:1 (${brew.coffee}g coffee, ${brew.water}g water)`;
+  const text = `${getBrewDisplayName(brew)} — ${brew.ratio}:1 (${brew.coffee}g coffee, ${brew.water}g water)`;
 
   if (typeof navigator.share === "function") {
     try {

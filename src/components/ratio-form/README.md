@@ -5,7 +5,7 @@ Cup size (oz) row, and a live "coffee needed" result box. Shared by the
 Calculator screen and the Saved Ratio Detail screen's edit mode so both
 inputs look and behave identically.
 
-It's a *controlled* component: it renders whatever `ratio`/`water`/`oz`/
+It's a _controlled_ component: it renders whatever `ratio`/`water`/`oz`/
 `coffee` it's given and fires a `*-change` event per field, but doesn't do
 the water/oz/ratio linking math itself. The consumer owns that (see
 `calculator.store.ts`'s `setRatio`/`setWater`/`setOz`, and
@@ -29,17 +29,17 @@ same markup.
 
 ## Properties
 
-| Property | Attribute | Type             | Default | Description                                 |
-| -------- | --------- | ---------------- | ------- | -------------------------------------------- |
-| `ratio`  | `ratio`   | `String`         | `"16"`  | Current ratio field value (the `N` in `N:1`). |
-| `water`  | `water`   | `String`         | `""`    | Current water (g) field value.                |
-| `oz`     | `oz`      | `String`         | `""`    | Current cup size (oz) field value.            |
+| Property | Attribute | Type             | Default | Description                                               |
+| -------- | --------- | ---------------- | ------- | --------------------------------------------------------- |
+| `ratio`  | `ratio`   | `String`         | `"16"`  | Current ratio field value (the `N` in `N:1`).             |
+| `water`  | `water`   | `String`         | `""`    | Current water (g) field value.                            |
+| `oz`     | `oz`      | `String`         | `""`    | Current cup size (oz) field value.                        |
 | `coffee` | -         | `number \| null` | `null`  | Computed coffee amount; hides the result box when `null`. |
 
 ## Events
 
-| Event          | Type                  | Description                                    |
-| -------------- | --------------------- | ------------------------------------------------ |
-| `ratio-change` | `CustomEvent<string>` | Fired with the new ratio field value.            |
-| `water-change` | `CustomEvent<string>` | Fired with the new water (g) field value.        |
-| `oz-change`    | `CustomEvent<string>` | Fired with the new cup size (oz) field value.    |
+| Event          | Type                  | Description                                   |
+| -------------- | --------------------- | --------------------------------------------- |
+| `ratio-change` | `CustomEvent<string>` | Fired with the new ratio field value.         |
+| `water-change` | `CustomEvent<string>` | Fired with the new water (g) field value.     |
+| `oz-change`    | `CustomEvent<string>` | Fired with the new cup size (oz) field value. |

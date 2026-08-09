@@ -41,9 +41,11 @@ export const streakDaysSignal = computed(() => {
 export const getSavedBrewById = (id: number): ISavedBrew | undefined =>
   savedBrewsSignal.value.find((brew) => brew.id === id);
 
-export const addSavedBrew = (brew: IShareableBrew): void => {
+export const addSavedBrew = (brew: IShareableBrew): ISavedBrew => {
   const now = Date.now();
-  savedBrewsSignal.value = [...savedBrewsSignal.value, { ...brew, id: now, createdAt: now }];
+  const savedBrew = { ...brew, id: now, createdAt: now };
+  savedBrewsSignal.value = [...savedBrewsSignal.value, savedBrew];
+  return savedBrew;
 };
 
 export const updateSavedBrew = (id: number, patch: Partial<Omit<ISavedBrew, "id">>): void => {

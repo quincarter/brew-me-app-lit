@@ -26,12 +26,13 @@ router can intercept navigation.
 
 ## Properties
 
-| Property         | Attribute         | Type     | Default                                    | Description                                                         |
-| ---------------- | ----------------- | -------- | ------------------------------------------ | ------------------------------------------------------------------- |
-| `headline`       | `headline`        | `String` | `""`                                       | Primary row text.                                                   |
-| `supporting`     | `supporting`      | `String` | `""`                                       | Optional secondary line.                                            |
-| `leadingIcon`    | `leading-icon`    | `String` | `""`                                       | Material Symbols name for an icon circle.                           |
-| `leadingInitial` | `leading-initial` | `String` | `""`                                       | Single character for an avatar (takes priority over `leadingIcon`). |
-| `leadingBg`      | `leading-bg`      | `String` | `var(--brew-color-secondary-container)`    | Background color for the leading element.                           |
-| `leadingFg`      | `leading-fg`      | `String` | `var(--brew-color-on-secondary-container)` | Foreground color for the leading element.                           |
-| `href`           | `href`            | `String` | `""`                                       | Navigation target.                                                  |
+| Property         | Attribute         | Type     | Default                                    | Description                                                                                         |
+| ---------------- | ----------------- | -------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `headline`       | `headline`        | `String` | `""`                                       | Primary row text.                                                                                   |
+| `supporting`     | `supporting`      | `String` | `""`                                       | Optional secondary line.                                                                            |
+| `leadingIcon`    | `leading-icon`    | `String` | `""`                                       | Material Symbols name for an icon circle.                                                           |
+| `leadingInitial` | `leading-initial` | `String` | `""`                                       | Single character for an avatar (takes priority over `leadingIcon`).                                 |
+| `leadingBg`      | `leading-bg`      | `String` | `var(--brew-color-secondary-container)`    | Background color for the leading element.                                                           |
+| `leadingFg`      | `leading-fg`      | `String` | `var(--brew-color-on-secondary-container)` | Foreground color for the leading element.                                                           |
+| `href`           | `href`            | `String` | `""`                                       | Navigation target.                                                                                  |
+| `rating`         | `rating`          | `Number` | `0`                                        | Optional 1-5 star rating; renders a compact read-only indicator below the supporting text when > 0. |

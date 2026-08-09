@@ -13,6 +13,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run --coverage",
+    "test:e2e": "playwright test",
     "screenshots": "node scripts/capture-screenshots.js"
   },
   "dependencies": {
@@ -23,7 +24,9 @@
     "urlpattern-polyfill": "^10.1.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@vitest/coverage-v8": "^4.1.10",
+    "fake-indexeddb": "^6.2.5",
     "happy-dom": "^20.11.2",
     "oxfmt": "^0.62.0",
     "oxlint": "^1.77.0",

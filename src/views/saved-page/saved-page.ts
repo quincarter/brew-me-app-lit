@@ -8,6 +8,8 @@ import "../../components/top-bar/brew-top-bar";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
+import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
+import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
 import { SavedPageStyles } from "./saved-page.styles";
 
 @customElement("saved-page")
@@ -29,12 +31,14 @@ export class SavedPage extends SignalWatcher(LitElement) {
                   const colors = getAvatarColors(brew.id);
                   return html`
                     <brew-list-row
-                      headline="${brew.brewType} · ${brew.ratio}:1"
+                      headline="${getBrewDisplayName(brew)} · ${brew.ratio}:1"
                       supporting="${brew.coffee}g coffee · ${brew.water}g water · ${brew.oz}oz"
-                      leading-initial="${getInitial(brew.brewType)}"
+                      leading-initial="${getInitial(getBrewDisplayName(brew))}"
                       leading-bg="${colors.background}"
                       leading-fg="${colors.foreground}"
+                      .avatarIcon="${getBrewTypeIcon(brew.brewType, brew.icon)}"
                       href="/saved/${brew.id}"
+                      rating="${brew.rating ?? 0}"
                     ></brew-list-row>
                   `;
                 })

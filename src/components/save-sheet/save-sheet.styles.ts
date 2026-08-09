@@ -43,6 +43,12 @@ export const SaveSheetStyles = css`
     color: var(--brew-color-on-surface);
   }
 
+  .field-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--brew-color-on-surface-variant);
+  }
+
   .hint {
     font-size: 12px;
     color: var(--brew-color-on-surface-variant);

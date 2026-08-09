@@ -75,6 +75,12 @@ export const SavedDetailPageStyles = css`
     color: var(--brew-color-on-surface-variant);
   }
 
+  .tasting-note {
+    margin: 0;
+    font-size: 14px;
+    color: var(--brew-color-on-surface-variant);
+  }
+
   .section-title {
     margin: 4px 0 -8px;
     font-size: 13px;

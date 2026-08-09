@@ -13,6 +13,8 @@ import {
 } from "../../shared/stores/brew.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
+import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
+import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
 import { HomePageStyles } from "./home-page.styles";
 
 /** A real time-of-day greeting instead of a hardcoded one. */
@@ -88,14 +90,16 @@ export class HomePage extends SignalWatcher(LitElement) {
                       return html`
                         <brew-saved-card
                           href="/saved/${brew.id}"
-                          brew-type="${brew.brewType}"
+                          brew-type="${getBrewDisplayName(brew)}"
                           ratio="${brew.ratio}"
                           coffee="${brew.coffee}"
                           water="${brew.water}"
                           oz="${brew.oz}"
-                          avatar-initial="${getInitial(brew.brewType)}"
+                          avatar-initial="${getInitial(getBrewDisplayName(brew))}"
                           avatar-bg="${colors.background}"
                           avatar-fg="${colors.foreground}"
+                          .avatarIcon="${getBrewTypeIcon(brew.brewType, brew.icon)}"
+                          rating="${brew.rating ?? 0}"
                         ></brew-saved-card>
                       `;
                     })}

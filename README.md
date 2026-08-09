@@ -18,16 +18,16 @@ The project evolved across three iterations:
 
 ## 📸 Screenshots
 
-| Home | Brew Calculator | Saved Brews |
-| :---: | :---: | :---: |
+|              Home               |               Brew Calculator               |               Saved Brews               |
+| :-----------------------------: | :-----------------------------------------: | :-------------------------------------: |
 | ![Home](./screenshots/home.png) | ![Calculator](./screenshots/calculator.png) | ![Saved Brews](./screenshots/saved.png) |
 
-| Pour-over Timer | Brew Guide | WAC Recipes |
-| :---: | :---: | :---: |
+|          Pour-over Timer          |                   Brew Guide                    |                        WAC Recipes                        |
+| :-------------------------------: | :---------------------------------------------: | :-------------------------------------------------------: |
 | ![Timer](./screenshots/timer.png) | ![Guide Detail](./screenshots/guide-detail.png) | ![AeroPress Recipes](./screenshots/aeropress-recipes.png) |
 
-| More Options | V60 Recipes | Settings |
-| :---: | :---: | :---: |
+|          More Options           |                  V60 Recipes                  |                Settings                 |
+| :-----------------------------: | :-------------------------------------------: | :-------------------------------------: |
 | ![More](./screenshots/more.png) | ![V60 Recipes](./screenshots/v60-recipes.png) | ![Settings](./screenshots/settings.png) |
 
 ---
@@ -48,18 +48,18 @@ The project evolved across three iterations:
 
 BrewMe uses a small, modern frontend toolchain:
 
-| Tool | Purpose |
-| --- | --- |
-| **[Lit 3](https://lit.dev/)** | Core Web Components library using standard browser Shadow DOM. |
-| **[TypeScript](https://www.typescriptlang.org/)** | Type safety across the codebase (strict mode enabled). |
-| **[Vite](https://vitejs.dev/)** | Fast development server and production build bundler. |
-| **[@lit-labs/preact-signals](https://github.com/lit/lit/tree/main/packages/labs/preact-signals)** | Reactive, fine-grained state management signal stores. |
-| **[idb](https://github.com/jakearchibald/idb)** | Promise-based wrapper around IndexedDB for offline data persistence. |
-| **[@lit-labs/router](https://github.com/lit/lit/tree/main/packages/labs/router)** | Client-side routing with lazy-loaded view modules. |
-| **[vite-plugin-pwa](https://vite-pwa-org.netlify.app/)** | Service worker generation and Workbox precaching for PWA support. |
-| **[Playwright](https://playwright.dev/)** | Automated screenshot generation for documentation & CI/CD. |
-| **[Oxlint](https://github.com/oxc-project/oxc)** & **[Oxfmt](https://github.com/oxc-project/oxc)** | High-speed JavaScript and TypeScript linting and formatting. |
-| **[Vitest](https://vitest.dev/)** | Fast unit test runner with V8 code coverage. |
+| Tool                                                                                               | Purpose                                                              |
+| -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **[Lit 3](https://lit.dev/)**                                                                      | Core Web Components library using standard browser Shadow DOM.       |
+| **[TypeScript](https://www.typescriptlang.org/)**                                                  | Type safety across the codebase (strict mode enabled).               |
+| **[Vite](https://vitejs.dev/)**                                                                    | Fast development server and production build bundler.                |
+| **[@lit-labs/preact-signals](https://github.com/lit/lit/tree/main/packages/labs/preact-signals)**  | Reactive, fine-grained state management signal stores.               |
+| **[idb](https://github.com/jakearchibald/idb)**                                                    | Promise-based wrapper around IndexedDB for offline data persistence. |
+| **[@lit-labs/router](https://github.com/lit/lit/tree/main/packages/labs/router)**                  | Client-side routing with lazy-loaded view modules.                   |
+| **[vite-plugin-pwa](https://vite-pwa-org.netlify.app/)**                                           | Service worker generation and Workbox precaching for PWA support.    |
+| **[Playwright](https://playwright.dev/)**                                                          | Automated screenshot generation for documentation & CI/CD.           |
+| **[Oxlint](https://github.com/oxc-project/oxc)** & **[Oxfmt](https://github.com/oxc-project/oxc)** | High-speed JavaScript and TypeScript linting and formatting.         |
+| **[Vitest](https://vitest.dev/)**                                                                  | Fast unit test runner with V8 code coverage.                         |
 
 ---
 
@@ -107,16 +107,19 @@ npm run preview
 ### Testing & Code Quality
 
 Run unit tests with coverage:
+
 ```bash
 npm test
 ```
 
 Run linting checks:
+
 ```bash
 npm run lint
 ```
 
 Format the codebase:
+
 ```bash
 npm run fmt
 ```
@@ -124,6 +127,7 @@ npm run fmt
 ### Updating Screenshots
 
 Generate fresh app screenshots automatically using Playwright:
+
 ```bash
 npm run screenshots
 ```

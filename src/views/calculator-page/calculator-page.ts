@@ -21,18 +21,11 @@ import {
 } from "../../shared/stores/calculator.store";
 import { openSaveDialog } from "../../shared/stores/save-dialog.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
-import {
-  getAvatarColors,
-  getInitial,
-} from "../../shared/utilities/avatar-palette.utility";
-import {
-  SHARE_OUTCOME_MESSAGES,
-  shareBrew,
-} from "../../shared/utilities/share.utility";
+import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
+import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
+import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
+import { SHARE_OUTCOME_MESSAGES, type ShareOutcome } from "../../shared/utilities/share.utility";
 import { CalculatorPageStyles } from "./calculator-page.styles";
-
-/** Placeholder brew type for a share sent straight from the calculator, before it's been named/saved. */
-const UNSAVED_BREW_TYPE = "Custom Ratio";
 
 @customElement("calculator-page")
 export class CalculatorPage extends SignalWatcher(LitElement) {
@@ -55,23 +48,6 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
       this._shareStatusText = "";
     }, 2500);
   }
-
-  private _onShare = async (): Promise<void> => {
-    const coffee = coffeeSignal.value;
-    const water = Number.parseFloat(waterSignal.value);
-    const oz = Number.parseFloat(ozSignal.value);
-    const ratio = Number.parseFloat(ratioSignal.value);
-    if (coffee === null || Number.isNaN(water) || Number.isNaN(oz)) return;
-
-    const outcome = await shareBrew({
-      brewType: UNSAVED_BREW_TYPE,
-      ratio,
-      water,
-      coffee,
-      oz,
-    });
-    this._showStatus(SHARE_OUTCOME_MESSAGES[outcome]);
-  };
 
   render(): HTMLTemplateResult {
     const coffee = coffeeSignal.value;
@@ -96,10 +72,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
           ></brew-ratio-form>
 
           <div class="row actions">
-            <brew-button
-              variant="outlined"
-              full-width
-              @button-click="${resetCalculator}"
+            <brew-button variant="outlined" full-width @button-click="${resetCalculator}"
               >Reset</brew-button
             >
             <brew-button
@@ -115,25 +88,24 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             variant="text"
             full-width
             ?disabled="${!isValid}"
-            @button-click="${this._onShare}"
+            @button-click="${() => openSaveDialog({ shareAfterSave: true })}"
             >Share this brew</brew-button
           >
-          ${this._shareStatusText
-            ? html`<p class="share-status">${this._shareStatusText}</p>`
-            : null}
+          ${
+            this._shareStatusText
+              ? html`<p class="share-status">${this._shareStatusText}</p>`
+              : null
+          }
 
           <div class="ratio-tips">
             <div class="ratio-tips-header">
               <brew-icon name="info" size="20"></brew-icon>
               <span class="ratio-tips-title">Ratio tips</span>
             </div>
-            <p class="ratio-tips-body">
-              Lower ratio = stronger, more intense brew.
-            </p>
+            <p class="ratio-tips-body">Lower ratio = stronger, more intense brew.</p>
             <p class="ratio-tips-body">Higher ratio = weaker, lighter cup.</p>
             <p class="ratio-tips-body">
-              As always - Adjust to taste. If it tastes good, the math and
-              numbers are just numbers.
+              As always - Adjust to taste. If it tastes good, the math and numbers are just numbers.
             </p>
             <span class="ratio-tips-body">Brew Examples</span>
             <ul class="ratio-tips-body">
@@ -143,37 +115,44 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             </ul>
           </div>
 
-          ${recentBrews.length > 0
-            ? html`
-                <div class="section-header">
-                  <span class="section-title">Recent brews</span>
-                  <a class="see-all" href="/saved">See all</a>
-                </div>
+          ${
+            recentBrews.length > 0
+              ? html`
+                  <div class="section-header">
+                    <span class="section-title">Recent brews</span>
+                    <a class="see-all" href="/saved">See all</a>
+                  </div>
 
-                <div class="recent-row">
-                  ${recentBrews.map((brew) => {
-                    const colors = getAvatarColors(brew.id);
-                    return html`
-                      <brew-saved-card
-                        href="/saved/${brew.id}"
-                        brew-type="${brew.brewType}"
-                        ratio="${brew.ratio}"
-                        coffee="${brew.coffee}"
-                        water="${brew.water}"
-                        oz="${brew.oz}"
-                        avatar-initial="${getInitial(brew.brewType)}"
-                        avatar-bg="${colors.background}"
-                        avatar-fg="${colors.foreground}"
-                      ></brew-saved-card>
-                    `;
-                  })}
-                </div>
-              `
-            : null}
+                  <div class="recent-row">
+                    ${recentBrews.map((brew) => {
+                      const colors = getAvatarColors(brew.id);
+                      return html`
+                        <brew-saved-card
+                          href="/saved/${brew.id}"
+                          brew-type="${getBrewDisplayName(brew)}"
+                          ratio="${brew.ratio}"
+                          coffee="${brew.coffee}"
+                          water="${brew.water}"
+                          oz="${brew.oz}"
+                          avatar-initial="${getInitial(getBrewDisplayName(brew))}"
+                          avatar-bg="${colors.background}"
+                          avatar-fg="${colors.foreground}"
+                          .avatarIcon="${getBrewTypeIcon(brew.brewType, brew.icon)}"
+                          rating="${brew.rating ?? 0}"
+                        ></brew-saved-card>
+                      `;
+                    })}
+                  </div>
+                `
+              : null
+          }
         </div>
 
         <brew-bottom-nav active="calculate"></brew-bottom-nav>
-        <brew-save-sheet></brew-save-sheet>
+        <brew-save-sheet
+          @brew-share-outcome="${(e: CustomEvent<ShareOutcome>) =>
+            this._showStatus(SHARE_OUTCOME_MESSAGES[e.detail])}"
+        ></brew-save-sheet>
       </div>
     `;
   }

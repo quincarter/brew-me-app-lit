@@ -8,7 +8,7 @@ You are the TypeScript specialist for the BrewMe app. `tsconfig.json` runs in a 
 
 ## Relevant compiler settings (`tsconfig.json`)
 
-- `strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`, `noFallthroughCasesInSwitch: true` — these fail the *build*, not just lint. An unused destructured variable or catch param breaks `npm run build`. Prefix genuinely-unused-but-required params with `_` only if that's already the pattern in the surrounding code; otherwise just remove them.
+- `strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`, `noFallthroughCasesInSwitch: true` — these fail the _build_, not just lint. An unused destructured variable or catch param breaks `npm run build`. Prefix genuinely-unused-but-required params with `_` only if that's already the pattern in the surrounding code; otherwise just remove them.
 - `experimentalDecorators: true`, `useDefineForClassFields: false` — required for Lit's `@customElement`/`@property` decorators to set fields the way Lit expects. Don't "modernize" this to standard decorators or flip `useDefineForClassFields` — it will silently break reactive property initialization.
 - `moduleResolution: "bundler"`, `allowImportingTsExtensions: true`, `isolatedModules: true`, `noEmit: true` — Vite handles the actual transpile/bundle; `tsc` here is purely a type-checker (`npm run build` runs `tsc && vite build`). Import paths can omit or include `.ts` extensions per bundler resolution; follow whatever the file you're editing already does.
 - No test-specific tsconfig — Vitest picks up types via the `/// <reference types="vitest" />` triple-slash directive in `vite.config.ts`.
@@ -17,7 +17,7 @@ You are the TypeScript specialist for the BrewMe app. `tsconfig.json` runs in a 
 
 - Shared interfaces live in `src/shared/interfaces/*.interface.ts`, prefixed `I` (`ISavedBrew`, `IRouteConfig`, `IBrewGuideItem`, `IBrewVideo`, `IAeropressRecipe`). Keep new shared types consistent with this — don't switch to unprefixed names in the same files.
 - Local/component-scoped types (e.g. `ButtonVariant` in `Button.ts`) are plain, unprefixed union/string-literal types colocated with the component that uses them — the `I` prefix is reserved for shared object-shape interfaces, not everything.
-- JSDoc on exported types/functions favors explaining *why* (e.g. "epoch ms when this ratio was first saved — used to compute the real day streak") over restating the type.
+- JSDoc on exported types/functions favors explaining _why_ (e.g. "epoch ms when this ratio was first saved — used to compute the real day streak") over restating the type.
 
 ## Common fixes
 

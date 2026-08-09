@@ -1,8 +1,4 @@
-import type {
-  IBrewGlossaryTerm,
-  IBrewGuideItem,
-  IBrewVideo,
-} from "../interfaces/brew.interface";
+import type { IBrewGlossaryTerm, IBrewGuideItem, IBrewVideo } from "../interfaces/brew.interface";
 
 /** Brew type options offered when naming a saved ratio. */
 export const BREW_TYPES: string[] = [
@@ -29,8 +25,7 @@ const POUR_OVER_TIP_VIDEO: IBrewVideo = {
 const CHEMEX_VIDEOS: IBrewVideo[] = [
   {
     youtubeId: "4tQG_aMcCL0",
-    title:
-      "Chemex Brew Guide — How to Hack and Brew Incredible Coffee on the Chemex",
+    title: "Chemex Brew Guide — How to Hack and Brew Incredible Coffee on the Chemex",
     channel: "Lance Hedrick",
   },
   {
@@ -140,8 +135,7 @@ const COLD_BREW_VIDEOS: IBrewVideo[] = [
   },
   {
     youtubeId: "c1UbW3cKGe0",
-    title:
-      "The Cold Brew Recipe You Should Be Making (and it's tasty, obviously)",
+    title: "The Cold Brew Recipe You Should Be Making (and it's tasty, obviously)",
     channel: "Morgan Eckroth",
   },
   {
@@ -159,8 +153,7 @@ const COLD_BREW_VIDEOS: IBrewVideo[] = [
 const ESPRESSO_VIDEOS: IBrewVideo[] = [
   {
     youtubeId: "j-Hu4hF5PTM",
-    title:
-      "Guide to Making Great Espresso: Understanding Variables to Dial In Perfectly",
+    title: "Guide to Making Great Espresso: Understanding Variables to Dial In Perfectly",
     channel: "Lance Hedrick",
   },
   {
@@ -465,8 +458,7 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     externalLinks: [
       {
         label: "Clever Dripper",
-        description:
-          "See also: a very similar steep-then-release brewer, from Roastopedia",
+        description: "See also: a very similar steep-then-release brewer, from Roastopedia",
         url: "https://roastopedia.com/clever-dripper/",
       },
     ],

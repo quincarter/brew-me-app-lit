@@ -9,18 +9,21 @@ Whether you are fixing a bug, adding a new brew guide, improving accessibility, 
 ## 🛠️ Development Setup
 
 ### Prerequisites
+
 - **Node.js**: `v18.0.0` or higher
 - **npm**: `v9.0.0` or higher
 
 ### Getting Started
 
 1. **Fork & Clone the Repository**
+
    ```bash
    git clone https://github.com/your-username/brew-me-app-lit.git
    cd brew-me-app-lit
    ```
 
 2. **Install Dependencies**
+
    ```bash
    npm install
    ```
@@ -37,17 +40,17 @@ Whether you are fixing a bug, adding a new brew guide, improving accessibility, 
 
 BrewMe uses fast, modern tooling for linting, formatting, building, and testing:
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Starts the Vite development server with hot-reload and service worker support. |
-| `npm run build` | Runs TypeScript type checking (`tsc`) and builds for production via Vite. |
-| `npm run preview` | Serves the production build locally to inspect PWA functionality and production output. |
-| `npm run lint` | Runs `oxlint` to verify code quality and flag potential bugs. |
-| `npm run lint:fix` | Automatically fixes auto-fixable lint issues. |
-| `npm run fmt` | Formats code files using `oxfmt`. |
-| `npm run fmt:check` | Checks if code formatting complies with `oxfmt`. |
-| `npm test` | Runs the Vitest test suite with coverage report. |
-| `npm run screenshots` | Uses Playwright to automatically capture and update screenshots in `./screenshots/`. |
+| Command               | Description                                                                             |
+| --------------------- | --------------------------------------------------------------------------------------- |
+| `npm run dev`         | Starts the Vite development server with hot-reload and service worker support.          |
+| `npm run build`       | Runs TypeScript type checking (`tsc`) and builds for production via Vite.               |
+| `npm run preview`     | Serves the production build locally to inspect PWA functionality and production output. |
+| `npm run lint`        | Runs `oxlint` to verify code quality and flag potential bugs.                           |
+| `npm run lint:fix`    | Automatically fixes auto-fixable lint issues.                                           |
+| `npm run fmt`         | Formats code files using `oxfmt`.                                                       |
+| `npm run fmt:check`   | Checks if code formatting complies with `oxfmt`.                                        |
+| `npm test`            | Runs the Vitest test suite with coverage report.                                        |
+| `npm run screenshots` | Uses Playwright to automatically capture and update screenshots in `./screenshots/`.    |
 
 > [!IMPORTANT]
 > Always run `npm run build`, `npm run lint`, and `npm test` before creating a pull request. The build step will fail if any TypeScript type errors exist.
@@ -61,7 +64,7 @@ BrewMe uses fast, modern tooling for linting, formatting, building, and testing:
 Every reusable UI component consists of **three files**:
 
 1. **PascalCase Class File** (`Thing.ts`):
-   Contains the `LitElement` class implementation. Does *not* include the `@customElement` decorator or call `customElements.define`.
+   Contains the `LitElement` class implementation. Does _not_ include the `@customElement` decorator or call `customElements.define`.
 2. **kebab-case Registration File** (`brew-thing.ts`):
    Imports `Thing` and handles definition safely:
    ```ts
@@ -71,16 +74,16 @@ Every reusable UI component consists of **three files**:
      customElements.define("brew-thing", Thing);
    }
    ```
-   *Note: Always use the explicit `if` check to satisfy `oxlint` rules.*
+   _Note: Always use the explicit `if` check to satisfy `oxlint` rules._
 3. **Styles File** (`thing.styles.ts`):
    Exports `ThingStyles` using Lit's `css` tagged template, imported in `Thing.ts`'s `static styles`.
 
-*(Optional)* Large or complex components should include a local `README.md` documenting props, events, and slots.
+_(Optional)_ Large or complex components should include a local `README.md` documenting props, events, and slots.
 
 ### 2. View Architecture (`src/views/<name>/`)
 
 - Each screen is a view in `src/views/<name>/`.
-- Views *do* use the `@customElement` decorator since they are lazy-loaded dynamically by `@lit-labs/router` in `src/app-shell.ts`.
+- Views _do_ use the `@customElement` decorator since they are lazy-loaded dynamically by `@lit-labs/router` in `src/app-shell.ts`.
 - Route parameters are passed into the view element via a `routeParams` property.
 
 ### 3. State Management (`src/shared/stores/`)
@@ -108,7 +111,7 @@ State is managed using framework-agnostic Preact Signals (`@lit-labs/preact-sign
    ```bash
    git checkout -b feature/add-new-brew-guide
    ```
-2. **Commit Messages**: Write clear, descriptive commit messages describing *what* changed and *why*.
+2. **Commit Messages**: Write clear, descriptive commit messages describing _what_ changed and _why_.
 3. **Verification**: Verify type safety, linting, and unit tests:
    ```bash
    npm run build && npm run lint && npm test

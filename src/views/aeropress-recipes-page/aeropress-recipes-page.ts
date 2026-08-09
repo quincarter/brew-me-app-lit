@@ -5,19 +5,16 @@ import "../../components/chip/brew-chip";
 import "../../components/link-card/brew-link-card";
 import "../../components/recipe-card/brew-recipe-card";
 import "../../components/top-bar/brew-top-bar";
-import {
-  AEROPRESS_RECIPES,
-  WAC_RECIPES_SOURCE,
-} from "../../shared/data/aeropress-recipes.data";
+import { AEROPRESS_RECIPES, WAC_RECIPES_SOURCE } from "../../shared/data/aeropress-recipes.data";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { AeropressRecipesPageStyles } from "./aeropress-recipes-page.styles";
 
 const ALL_YEARS = "all";
 
 /** Descending list of the years present in the recipe archive. */
-const YEARS: number[] = [
-  ...new Set(AEROPRESS_RECIPES.map((recipe) => recipe.year)),
-].sort((a, b) => b - a);
+const YEARS: number[] = [...new Set(AEROPRESS_RECIPES.map((recipe) => recipe.year))].sort(
+  (a, b) => b - a,
+);
 
 @customElement("aeropress-recipes-page")
 export class AeropressRecipesPage extends LitElement {
@@ -48,9 +45,9 @@ export class AeropressRecipesPage extends LitElement {
 
         <div class="content">
           <p class="intro">
-            Winning recipes from the World AeroPress Championship. These are
-            competition entries dialled in for one specific coffee and roast —
-            treat them as starting points, not gospel.
+            Winning recipes from the World AeroPress Championship. These are competition entries
+            dialled in for one specific coffee and roast — treat them as starting points, not
+            gospel.
           </p>
 
           <brew-link-card
