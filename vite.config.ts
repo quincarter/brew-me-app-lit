@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+import { configDefaults } from "vitest/config";
 
 export default defineConfig({
   plugins: [
@@ -174,6 +175,10 @@ export default defineConfig({
   },
   test: {
     environment: "happy-dom",
+    // `e2e/**` holds Playwright specs (`test.describe`), run via `npm run
+    // test:e2e` - without this they'd also match Vitest's default test glob
+    // and fail to even load under the wrong test runner.
+    exclude: [...configDefaults.exclude, "e2e/**"],
     coverage: {
       exclude: ["**/node_modules", "**/vite.config.*", "**/vite-env.d.ts", "**/shared/data/**"],
       enabled: true,

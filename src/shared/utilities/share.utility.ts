@@ -1,6 +1,7 @@
 import { withBase } from "../configuration/base-path";
 import type { IShareableBrew } from "../interfaces/brew.interface";
 import { getBrewDisplayName } from "./brew-display.utility";
+import { formatRatio } from "./format-ratio.utility";
 
 /**
  * Reconstructs a brew from a `/share` link's query string. Returns null if
@@ -63,7 +64,7 @@ export const SHARE_OUTCOME_MESSAGES: Record<ShareOutcome, string> = {
  */
 export const shareBrew = async (brew: IShareableBrew): Promise<ShareOutcome> => {
   const url = buildShareUrl(brew);
-  const text = `${getBrewDisplayName(brew)} — ${brew.ratio}:1 (${brew.coffee}g coffee, ${brew.water}g water)`;
+  const text = `${getBrewDisplayName(brew)} — ${formatRatio(brew.ratio)} (${brew.coffee}g coffee, ${brew.water}g water)`;
 
   if (typeof navigator.share === "function") {
     try {

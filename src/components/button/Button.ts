@@ -28,6 +28,8 @@ export class Button extends LitElement {
   @property({ type: String }) tone: ButtonTone = "brand";
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property({ type: Boolean, attribute: "full-width" }) fullWidth = false;
+  /** A taller, more prominent pill for a screen's single primary CTA. */
+  @property({ type: Boolean }) large = false;
   @property({ type: String }) href = "";
 
   private _onClick = (event: Event): void => {
@@ -41,7 +43,7 @@ export class Button extends LitElement {
   };
 
   render(): HTMLTemplateResult {
-    const classes = `btn ${this.variant} ${this.tone} ${this.fullWidth ? "full-width" : ""}`;
+    const classes = `btn ${this.variant} ${this.tone} ${this.fullWidth ? "full-width" : ""} ${this.large ? "large" : ""}`;
     return this.href
       ? html`<a class="${classes}" href="${this.href}" @click="${this._onClick}"><slot></slot></a>`
       : html`

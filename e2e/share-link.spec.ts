@@ -14,8 +14,6 @@ test.describe("opening a shared brew link", () => {
     await expect(page.getByRole("button", { name: "Saved to your brews" })).toBeVisible();
 
     await page.locator("brew-bottom-nav").getByRole("link", { name: "Saved" }).click();
-    await expect(page.locator("brew-list-row .headline")).toHaveText(
-      "Sunday Morning Pour · 16:1",
-    );
+    await expect(page.locator("brew-list-row .headline")).toHaveText("Sunday Morning Pour · 1:16");
   });
 });

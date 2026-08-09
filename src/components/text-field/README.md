@@ -16,13 +16,14 @@ throughout the Calculator and Saved Ratio Detail screens.
 
 ## Properties
 
-| Property     | Attribute     | Type                 | Default  | Description                        |
-| ------------ | ------------- | -------------------- | -------- | ---------------------------------- |
-| `label`      | `label`       | `String`             | `""`     | Field label shown above the input. |
-| `type`       | `type`        | `"text" \| "number"` | `"text"` | Native input type.                 |
-| `value`      | `value`       | `String`             | `""`     | Current field value.               |
-| `suffixText` | `suffix-text` | `String`             | `""`     | Optional trailing text, e.g. `:1`. |
-| `name`       | `name`        | `String`             | `""`     | Native input name.                 |
+| Property     | Attribute     | Type                 | Default  | Description                              |
+| ------------ | ------------- | -------------------- | -------- | ---------------------------------------- |
+| `label`      | `label`       | `String`             | `""`     | Field label shown above the input.       |
+| `type`       | `type`        | `"text" \| "number"` | `"text"` | Native input type.                       |
+| `value`      | `value`       | `String`             | `""`     | Current field value.                     |
+| `prefixText` | `prefix-text` | `String`             | `""`     | Optional leading text, e.g. `$` or `1:`. |
+| `suffixText` | `suffix-text` | `String`             | `""`     | Optional trailing text, e.g. `:1`.       |
+| `name`       | `name`        | `String`             | `""`     | Native input name.                       |
 
 ## Events
 

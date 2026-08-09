@@ -36,6 +36,47 @@ export const HomePageStyles = css`
     margin-top: 2px;
   }
 
+  .brew-again-card {
+    margin: 12px 20px 0;
+    background: var(--brew-color-primary-container);
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .brew-again-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .brew-again-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brew-color-on-primary-container);
+    opacity: 0.75;
+  }
+
+  .brew-again-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brew-color-on-primary-container);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .brew-again-meta {
+    font-size: 12px;
+    color: var(--brew-color-on-primary-container);
+    opacity: 0.75;
+  }
+
   .actions {
     display: flex;
     gap: 12px;

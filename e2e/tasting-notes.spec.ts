@@ -4,7 +4,7 @@ import { saveBrewFromCalculator } from "./helpers";
 const rateAndAddNote = async (page: Page): Promise<void> => {
   await page.locator("brew-bottom-nav").getByRole("link", { name: "Saved" }).click();
   await page.locator("brew-list-row").click();
-  await page.getByRole("button", { name: "Edit ratio" }).click();
+  await page.getByRole("button", { name: "Edit" }).click();
   await page.locator("brew-star-rating[editable] .star").nth(3).click();
   await page.getByLabel("Tasting note", { exact: true }).fill("Bright and juicy");
   await page.getByRole("button", { name: "Save changes" }).click();
@@ -19,7 +19,7 @@ test.describe("rating and tasting notes on a saved brew", () => {
 
     await expect(page.locator("brew-star-rating .star.filled")).toHaveCount(4);
     await expect(page.locator("brew-star-rating .star")).toHaveCount(5);
-    await expect(page.locator(".tasting-note")).toHaveText("Bright and juicy");
+    await expect(page.locator(".tasting-note")).toHaveText('"Bright and juicy"');
 
     await page.locator("brew-bottom-nav").getByRole("link", { name: "Saved" }).click();
     await expect(page.locator("brew-list-row .star.filled")).toHaveCount(4);
@@ -34,7 +34,7 @@ test.describe("rating and tasting notes on a saved brew", () => {
     await saveBrewFromCalculator(page, { name: "Rated Brew", type: "V60" });
     await rateAndAddNote(page);
 
-    await page.getByRole("button", { name: "Edit ratio" }).click();
+    await page.getByRole("button", { name: "Edit" }).click();
     await page.locator("brew-star-rating[editable] .star").nth(3).click();
     await page.getByLabel("Tasting note", { exact: true }).fill("");
     await page.getByRole("button", { name: "Save changes" }).click();
@@ -53,7 +53,7 @@ test.describe("rating and tasting notes on a saved brew", () => {
     await saveBrewFromCalculator(page, { name: "Theme Check Brew", type: "V60" });
 
     await page.locator("brew-bottom-nav").getByRole("link", { name: "Saved" }).click();
-    await expect(page.locator("brew-list-row .headline")).toHaveText("Theme Check Brew · 16:1");
+    await expect(page.locator("brew-list-row .headline")).toHaveText("Theme Check Brew · 1:16");
 
     const before = await page.locator("html").getAttribute("data-theme");
     await page
@@ -63,6 +63,6 @@ test.describe("rating and tasting notes on a saved brew", () => {
     const after = await page.locator("html").getAttribute("data-theme");
     expect(after).not.toBe(before);
 
-    await expect(page.locator("brew-list-row .headline")).toHaveText("Theme Check Brew · 16:1");
+    await expect(page.locator("brew-list-row .headline")).toHaveText("Theme Check Brew · 1:16");
   });
 });

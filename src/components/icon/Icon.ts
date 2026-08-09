@@ -1,4 +1,4 @@
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import { type HTMLTemplateResult, html, LitElement, type SVGTemplateResult } from "lit";
 import { property } from "lit/decorators.js";
 import { IconStyles } from "./icon.styles";
 
@@ -29,7 +29,17 @@ export class Icon extends LitElement {
   @property({ type: Boolean })
   filled = false;
 
+  /** A custom Lit SVG icon (from `src/shared/icons/`) - takes precedence over `name` when set. */
+  @property({ type: Object })
+  svg: SVGTemplateResult | null = null;
+
   render(): HTMLTemplateResult {
+    if (this.svg) {
+      return html`<span class="icon-svg" style="width:${this.size}px;height:${this.size}px"
+        >${this.svg}</span
+      >`;
+    }
+
     return html`<span
       class="material-symbols-outlined"
       style="font-size:${this.size}px; font-variation-settings: 'FILL' ${this.filled ? 1 : 0}"

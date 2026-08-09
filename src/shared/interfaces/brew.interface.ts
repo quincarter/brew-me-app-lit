@@ -15,6 +15,8 @@ export interface ISavedBrew {
   rating?: number;
   /** Optional short tasting note, set via the Saved Ratio Detail edit flow. */
   tastingNote?: string;
+  /** Epoch ms when this brew was last re-brewed via "Brew again" - falls back to `createdAt` for ordering/display when unset. */
+  lastBrewedAt?: number;
 }
 
 /**
@@ -60,6 +62,8 @@ export interface IBrewGuideItem {
   grind: string;
   temp: string;
   ratioDefault: number;
+  /** Typical total brew time in seconds, used to drive the Timer screen's guided countdown - omitted for methods (e.g. Cold Brew) whose steep time is far too long for a countdown timer. */
+  brewTimeSeconds?: number;
   aiTips: string[];
   /** Hand-picked walkthroughs. Pour-over methods share a common set. */
   videos: IBrewVideo[];

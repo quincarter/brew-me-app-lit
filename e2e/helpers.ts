@@ -16,11 +16,11 @@ export const saveBrewFromCalculator = async (
 
   await page.goto("/calculate");
   await page.getByLabel("Water (g)", { exact: true }).fill(water);
-  await page.getByRole("button", { name: "Save ratio" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
 
   if (options.name !== undefined) {
     await page.getByLabel("Brew name", { exact: true }).fill(options.name);
   }
   await page.getByRole("button", { name: type, exact: true }).click();
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.locator("brew-save-sheet").getByRole("button", { name: "Save", exact: true }).click();
 };

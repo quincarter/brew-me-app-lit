@@ -23,9 +23,7 @@ export const SavedDetailPageStyles = css`
   }
 
   .ratio-hero {
-    background: var(--brew-color-primary-container);
-    border-radius: 24px;
-    padding: 24px;
+    padding: 8px 0 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -34,15 +32,20 @@ export const SavedDetailPageStyles = css`
 
   .ratio-label {
     font-size: 12px;
-    color: var(--brew-color-on-primary-container);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    color: var(--brew-color-on-surface-variant);
   }
 
   .ratio-value {
-    font-size: 40px;
-    font-weight: 600;
-    color: var(--brew-color-on-primary-container);
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--brew-color-primary);
+    line-height: 1;
+  }
+
+  .rating {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
   }
 
   .stat-row {
@@ -78,7 +81,13 @@ export const SavedDetailPageStyles = css`
   .tasting-note {
     margin: 0;
     font-size: 14px;
+    font-style: italic;
     color: var(--brew-color-on-surface-variant);
+  }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
   }
 
   .section-title {
@@ -95,15 +104,5 @@ export const SavedDetailPageStyles = css`
     text-align: center;
     font-size: 13px;
     color: var(--brew-color-on-surface-variant);
-  }
-
-  .delete-link {
-    all: unset;
-    align-self: center;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 10px 12px;
-    color: var(--brew-color-error);
   }
 `;

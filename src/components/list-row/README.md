@@ -9,7 +9,7 @@ router can intercept navigation.
 ```html
 <!-- with an initial avatar (saved brews list) -->
 <brew-list-row
-  headline="V60 · 16:1"
+  headline="V60 · 1:16"
   supporting="30g coffee · 480g water · 16.2oz"
   leading-initial="V"
   href="/saved/1"
@@ -26,13 +26,20 @@ router can intercept navigation.
 
 ## Properties
 
-| Property         | Attribute         | Type     | Default                                    | Description                                                                                         |
-| ---------------- | ----------------- | -------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| `headline`       | `headline`        | `String` | `""`                                       | Primary row text.                                                                                   |
-| `supporting`     | `supporting`      | `String` | `""`                                       | Optional secondary line.                                                                            |
-| `leadingIcon`    | `leading-icon`    | `String` | `""`                                       | Material Symbols name for an icon circle.                                                           |
-| `leadingInitial` | `leading-initial` | `String` | `""`                                       | Single character for an avatar (takes priority over `leadingIcon`).                                 |
-| `leadingBg`      | `leading-bg`      | `String` | `var(--brew-color-secondary-container)`    | Background color for the leading element.                                                           |
-| `leadingFg`      | `leading-fg`      | `String` | `var(--brew-color-on-secondary-container)` | Foreground color for the leading element.                                                           |
-| `href`           | `href`            | `String` | `""`                                       | Navigation target.                                                                                  |
-| `rating`         | `rating`          | `Number` | `0`                                        | Optional 1-5 star rating; renders a compact read-only indicator below the supporting text when > 0. |
+| Property         | Attribute         | Type      | Default                                    | Description                                                                                                               |
+| ---------------- | ----------------- | --------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `headline`       | `headline`        | `String`  | `""`                                       | Primary row text.                                                                                                         |
+| `supporting`     | `supporting`      | `String`  | `""`                                       | Optional secondary line.                                                                                                  |
+| `leadingIcon`    | `leading-icon`    | `String`  | `""`                                       | Material Symbols name for an icon circle.                                                                                 |
+| `leadingInitial` | `leading-initial` | `String`  | `""`                                       | Single character for an avatar (takes priority over `leadingIcon`).                                                       |
+| `leadingBg`      | `leading-bg`      | `String`  | `var(--brew-color-secondary-container)`    | Background color for the leading element.                                                                                 |
+| `leadingFg`      | `leading-fg`      | `String`  | `var(--brew-color-on-secondary-container)` | Foreground color for the leading element.                                                                                 |
+| `href`           | `href`            | `String`  | `""`                                       | Navigation target.                                                                                                        |
+| `rating`         | `rating`          | `Number`  | `0`                                        | Optional 1-5 star rating; renders a compact read-only indicator below the supporting text when > 0.                       |
+| `replayable`     | `replayable`      | `Boolean` | `false`                                    | Shows a trailing "replay" quick action (before the chevron) for "Brew again"; fires `replay-click` instead of navigating. |
+
+## Events
+
+| Event          | Type          | Description                                                                                                              |
+| -------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `replay-click` | `CustomEvent` | Fired when `replayable` is set and its trailing replay icon button is tapped. Row navigation is suppressed for this tap. |

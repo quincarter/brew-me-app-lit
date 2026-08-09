@@ -7,13 +7,23 @@ export const savedBrewsSignal = persistentSignal<ISavedBrew[]>([], { key: "saved
 
 export const totalBrewsSignal = computed(() => savedBrewsSignal.value.length);
 
-/** Number of most-recently-saved brews surfaced by recentSavedBrewsSignal. */
+/** Number of most-recently-active brews surfaced by recentSavedBrewsSignal. */
 const RECENT_BREWS_LIMIT = 4;
 
-/** The most recently saved brews, newest first, capped for "Recent brews" style sections. */
+/**
+ * The most recently *active* brews, newest first, capped for "Recent brews"
+ * style sections - ordered by `lastBrewedAt` (falling back to `createdAt`
+ * for a brew that's never been re-brewed), not by save order, so re-brewing
+ * an older saved ratio surfaces it here again.
+ */
 export const recentSavedBrewsSignal = computed(() =>
-  savedBrewsSignal.value.slice(-RECENT_BREWS_LIMIT).reverse(),
+  [...savedBrewsSignal.value]
+    .sort((a, b) => (b.lastBrewedAt ?? b.createdAt) - (a.lastBrewedAt ?? a.createdAt))
+    .slice(0, RECENT_BREWS_LIMIT),
 );
+
+/** The single most recently brewed saved brew, or null when nothing's saved yet - drives Home's featured "Brew again" card. */
+export const mostRecentlyBrewedSignal = computed(() => recentSavedBrewsSignal.value[0] ?? null);
 
 const dayKey = (timestamp: number): string => new Date(timestamp).toDateString();
 
@@ -56,6 +66,11 @@ export const updateSavedBrew = (id: number, patch: Partial<Omit<ISavedBrew, "id"
 
 export const deleteSavedBrew = (id: number): void => {
   savedBrewsSignal.value = savedBrewsSignal.value.filter((brew) => brew.id !== id);
+};
+
+/** Stamps a brew as brewed right now - used by "Brew again" so recency ordering reflects actual use, not just save order. */
+export const markBrewedNow = (id: number): void => {
+  updateSavedBrew(id, { lastBrewedAt: Date.now() });
 };
 
 /** Danger-zone reset: clears every saved ratio. Used by the Settings screen. */

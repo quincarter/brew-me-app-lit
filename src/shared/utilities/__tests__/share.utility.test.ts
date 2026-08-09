@@ -125,7 +125,7 @@ describe("share.utility", () => {
       expect(outcome).toBe("shared");
       expect(share).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: "Sunday morning pour — 16:1 (30g coffee, 480g water)",
+          text: "Sunday morning pour — 1:16 (30g coffee, 480g water)",
         }),
       );
     });
@@ -138,7 +138,7 @@ describe("share.utility", () => {
 
       expect(share).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: "Pour-over — 16:1 (30g coffee, 480g water)",
+          text: "Pour-over — 1:16 (30g coffee, 480g water)",
         }),
       );
     });

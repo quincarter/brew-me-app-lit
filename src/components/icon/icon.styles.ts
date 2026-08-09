@@ -6,6 +6,18 @@ export const IconStyles = css`
     color: inherit;
   }
 
+  .icon-svg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-svg svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
   .material-symbols-outlined {
     font-family: "Material Symbols Outlined";
     font-weight: normal;

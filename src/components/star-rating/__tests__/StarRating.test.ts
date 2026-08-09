@@ -15,11 +15,13 @@ describe("brew-star-rating", () => {
     element.remove();
   });
 
-  it("renders nothing when read-only and value is 0", () => {
-    expect(element.shadowRoot?.querySelector(".stars")).toBeNull();
+  it("renders 5 unfilled read-only stars when value is 0", () => {
+    const stars = element.shadowRoot?.querySelectorAll(".star");
+    expect(stars?.length).toBe(5);
+    expect(element.shadowRoot?.querySelectorAll(".star.filled").length).toBe(0);
   });
 
-  it("renders 5 read-only stars, none filled, when editable with value 0", async () => {
+  it("renders 5 tappable stars, none filled, when editable with value 0", async () => {
     element.editable = true;
     await element.updateComplete;
 

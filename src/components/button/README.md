@@ -12,17 +12,21 @@ extra wiring.
 <brew-button variant="outlined" full-width>Reset</brew-button>
 <brew-button variant="filled" href="/calculate">Go to Calculator</brew-button>
 <brew-button variant="outlined" tone="danger">Delete all data</brew-button>
+<brew-button variant="filled" full-width large
+  ><brew-icon name="timer"></brew-icon> Start guided timer</brew-button
+>
 ```
 
 ## Properties
 
-| Property    | Attribute    | Type                               | Default    | Description                                      |
-| ----------- | ------------ | ---------------------------------- | ---------- | ------------------------------------------------ |
-| `variant`   | `variant`    | `"filled" \| "outlined" \| "text"` | `"filled"` | Visual style of the button.                      |
-| `tone`      | `tone`       | `"brand" \| "danger"`              | `"brand"`  | `"danger"` swaps in the error color scheme.      |
-| `disabled`  | `disabled`   | `Boolean`                          | `false`    | Disables the button (ignored when `href` is set) |
-| `fullWidth` | `full-width` | `Boolean`                          | `false`    | Stretches the button to 100% width.              |
-| `href`      | `href`       | `String`                           | `""`       | When set, renders as a navigable `<a>`.          |
+| Property    | Attribute    | Type                               | Default    | Description                                                                                              |
+| ----------- | ------------ | ---------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------- |
+| `variant`   | `variant`    | `"filled" \| "outlined" \| "text"` | `"filled"` | Visual style of the button.                                                                              |
+| `tone`      | `tone`       | `"brand" \| "danger"`              | `"brand"`  | `"danger"` swaps in the error color scheme.                                                              |
+| `disabled`  | `disabled`   | `Boolean`                          | `false`    | Disables the button (ignored when `href` is set)                                                         |
+| `fullWidth` | `full-width` | `Boolean`                          | `false`    | Stretches the button to 100% width.                                                                      |
+| `large`     | `large`      | `Boolean`                          | `false`    | Taller, more prominent pill for a screen's single primary CTA (e.g. "Brew again", "Start guided timer"). |
+| `href`      | `href`       | `String`                           | `""`       | When set, renders as a navigable `<a>`.                                                                  |
 
 ## Events
 

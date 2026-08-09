@@ -44,21 +44,25 @@ export class RatioForm extends LitElement {
 
   private _emit(name: "ratio-change" | "water-change" | "oz-change", value: string): void {
     this.dispatchEvent(
-      new CustomEvent<string>(name, { detail: value, bubbles: true, composed: true }),
+      new CustomEvent<string>(name, {
+        detail: value,
+        bubbles: true,
+        composed: true,
+      }),
     );
   }
 
   render(): HTMLTemplateResult {
     return html`
       <brew-text-field
-        label="Water : Coffee ratio"
+        label="Coffee : Water ratio"
         type="number"
-        suffix-text=":1"
+        prefix-text="1:"
         .value="${this.ratio}"
         @value-change="${(e: CustomEvent<string>) => this._emit("ratio-change", e.detail)}"
       ></brew-text-field>
       <p class="hint">
-        Defaults to 16:1 for pour-over &amp; drip. Try 2:1 for espresso, 3–5:1 for cold brew.
+        Defaults to 1:16 for pour-over &amp; drip. Try 1:2 for espresso, 1:3–5 for cold brew.
       </p>
 
       <div class="row">

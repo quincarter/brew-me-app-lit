@@ -31,7 +31,7 @@ same markup.
 
 | Property | Attribute | Type             | Default | Description                                               |
 | -------- | --------- | ---------------- | ------- | --------------------------------------------------------- |
-| `ratio`  | `ratio`   | `String`         | `"16"`  | Current ratio field value (the `N` in `N:1`).             |
+| `ratio`  | `ratio`   | `String`         | `"16"`  | Current ratio field value (the `N` in `1:N`).             |
 | `water`  | `water`   | `String`         | `""`    | Current water (g) field value.                            |
 | `oz`     | `oz`      | `String`         | `""`    | Current cup size (oz) field value.                        |
 | `coffee` | -         | `number \| null` | `null`  | Computed coffee amount; hides the result box when `null`. |

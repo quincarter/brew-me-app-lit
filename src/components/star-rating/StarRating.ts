@@ -8,9 +8,9 @@ const STAR_POSITIONS = [1, 2, 3, 4, 5];
 /**
  * # Star Rating
  * A compact 1-5 star indicator for a saved brew's tasting rating. Read-only
- * by default; pass `editable` to render tappable stars instead. Renders
- * nothing when read-only and unrated - there's nothing to show for a brew
- * that hasn't been rated yet.
+ * by default; pass `editable` to render tappable stars instead. Always
+ * renders all 5 stars, even at `value` 0 (outline-only) - keeps rated and
+ * unrated rows/cards the same height so layouts don't jump around.
  * ## Usage
  * ```html
  * <brew-star-rating
@@ -32,13 +32,15 @@ export class StarRating extends LitElement {
   private _onStarClick(position: number): void {
     const next = position === this.value ? 0 : position;
     this.dispatchEvent(
-      new CustomEvent<number>("rating-change", { detail: next, bubbles: true, composed: true }),
+      new CustomEvent<number>("rating-change", {
+        detail: next,
+        bubbles: true,
+        composed: true,
+      }),
     );
   }
 
   render(): HTMLTemplateResult {
-    if (!this.editable && this.value === 0) return html``;
-
     return html`
       <span class="stars">
         ${STAR_POSITIONS.map((position) => {

@@ -6,7 +6,7 @@ test.describe("saving a brew from the Calculator", () => {
     await saveBrewFromCalculator(page, { name: "Sunday Morning Pour", type: "V60" });
 
     await page.locator("brew-bottom-nav").getByRole("link", { name: "Saved" }).click();
-    await expect(page.locator("brew-list-row .headline")).toHaveText("Sunday Morning Pour · 16:1");
+    await expect(page.locator("brew-list-row .headline")).toHaveText("Sunday Morning Pour · 1:16");
 
     await page.locator("brew-bottom-nav").getByRole("link", { name: "Home" }).click();
     await expect(page.locator("brew-saved-card .type")).toHaveText("Sunday Morning Pour");
@@ -16,7 +16,7 @@ test.describe("saving a brew from the Calculator", () => {
     await saveBrewFromCalculator(page, { type: "V60" });
 
     await page.locator("brew-bottom-nav").getByRole("link", { name: "Saved" }).click();
-    await expect(page.locator("brew-list-row .headline")).toHaveText("V60 · 16:1");
+    await expect(page.locator("brew-list-row .headline")).toHaveText("V60 · 1:16");
 
     await page.locator("brew-bottom-nav").getByRole("link", { name: "Home" }).click();
     await expect(page.locator("brew-saved-card .type")).toHaveText("V60");

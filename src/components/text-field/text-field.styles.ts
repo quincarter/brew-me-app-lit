@@ -55,6 +55,7 @@ export const TextFieldStyles = css`
     padding: 0;
   }
 
+  .prefix,
   .suffix {
     font-size: 14px;
     color: var(--brew-color-on-surface-variant);

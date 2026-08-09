@@ -10,6 +10,7 @@ export const ButtonStyles = css`
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     height: 40px;
     padding: 0 24px;
     border-radius: 20px;
@@ -28,6 +29,17 @@ export const ButtonStyles = css`
 
   .btn.full-width {
     width: 100%;
+  }
+
+  /* A more prominent pill for a screen's single primary CTA (e.g. "Brew
+   * again", "Start guided timer") - visually heavier than the standard
+   * 40px pill without introducing a whole new component. */
+  .btn.large {
+    height: 52px;
+    border-radius: 26px;
+    padding: 0 28px;
+    font-size: 15px;
+    font-weight: 600;
   }
 
   .btn.filled {

@@ -8,6 +8,7 @@ import { TextFieldStyles } from "./text-field.styles";
  * ## Usage
  * ```html
  * <brew-text-field label="Water (g)" type="number" .value="${value}" @value-change="${onChange}"></brew-text-field>
+ * <brew-text-field label="Price" prefix-text="$" type="number" .value="${value}" @value-change="${onChange}"></brew-text-field>
  * ```
  * @element brew-text-field
  * @fires value-change - `CustomEvent<string>` fired on input with the new value.
@@ -18,6 +19,7 @@ export class TextField extends LitElement {
   @property({ type: String }) label = "";
   @property({ type: String }) type: "text" | "number" = "text";
   @property({ type: String }) value = "";
+  @property({ type: String, attribute: "prefix-text" }) prefixText = "";
   @property({ type: String, attribute: "suffix-text" }) suffixText = "";
   @property({ type: String }) name = "";
 
@@ -39,6 +41,7 @@ export class TextField extends LitElement {
       <label class="field">
         <span class="label">${this.label}</span>
         <span class="control">
+          ${this.prefixText ? html`<span class="prefix">${this.prefixText}</span>` : nothing}
           <input
             class="input"
             name="${this.name || nothing}"

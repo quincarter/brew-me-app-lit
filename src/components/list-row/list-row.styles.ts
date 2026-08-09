@@ -51,4 +51,8 @@ export const ListRowStyles = css`
     color: var(--brew-color-on-surface-variant);
     flex-shrink: 0;
   }
+
+  brew-icon-button {
+    flex-shrink: 0;
+  }
 `;

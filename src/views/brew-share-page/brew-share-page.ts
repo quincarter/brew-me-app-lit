@@ -14,6 +14,7 @@ import { addSavedBrew, savedBrewsSignal } from "../../shared/stores/brew.store";
 import { primeCalculatorForBrew } from "../../shared/stores/calculator.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
+import { formatRatio } from "../../shared/utilities/format-ratio.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
 import {
   SHARE_OUTCOME_MESSAGES,
@@ -112,7 +113,7 @@ export class BrewSharePage extends SignalWatcher(LitElement) {
 
           <div class="ratio-hero">
             <div class="ratio-label">Ratio</div>
-            <div class="ratio-value">${brew.ratio}:1</div>
+            <div class="ratio-value">${formatRatio(brew.ratio)}</div>
           </div>
 
           <div class="stat-row">
