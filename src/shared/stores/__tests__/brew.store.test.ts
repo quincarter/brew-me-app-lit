@@ -12,6 +12,7 @@ import {
 } from "../brew.store";
 import {
   closePostSaveSheet,
+  postSaveSheetAlreadyOnDetailSignal,
   postSaveSheetBrewSignal,
   postSaveSheetOpenSignal,
 } from "../post-save-sheet.store";
@@ -118,6 +119,22 @@ describe("brew.store", () => {
       expect(postSaveSheetOpenSignal.value).toBe(true);
       expect(postSaveSheetBrewSignal.value?.id).toBe(saved.id);
       expect(postSaveSheetBrewSignal.value).toEqual(saved);
+    });
+
+    it("defaults the post-save sheet to not-already-on-detail", () => {
+      const saved = addSavedBrew(brew({ brewType: "Chemex" }));
+
+      brewAgain(saved);
+
+      expect(postSaveSheetAlreadyOnDetailSignal.value).toBe(false);
+    });
+
+    it("forwards alreadyOnDetail through to the post-save sheet", () => {
+      const saved = addSavedBrew(brew({ brewType: "Chemex" }));
+
+      brewAgain(saved, { alreadyOnDetail: true });
+
+      expect(postSaveSheetAlreadyOnDetailSignal.value).toBe(true);
     });
   });
 });

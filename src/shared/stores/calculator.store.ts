@@ -1,6 +1,14 @@
 import { signal } from "@lit-labs/preact-signals";
+import { BREW_STEPS_PRESETS } from "../data/brew-steps-presets.data";
 import type { IShareableBrew } from "../interfaces/brew.interface";
 import { coffeeForWater, gramsToOunces, ouncesToGrams } from "../utilities/ratio.utility";
+import {
+  brewStepsSignal,
+  clearBrewStepsState,
+  loadedRecipeSourceSignal,
+  selectBrewType,
+  selectedBrewTypeSignal,
+} from "./brew-steps.store";
 
 /**
  * Ephemeral calculator state. Deliberately *not* persisted (unlike
@@ -57,15 +65,35 @@ export const resetCalculator = (): void => {
   ratioSignal.value = "16";
   primedFromNameSignal.value = null;
   primedBrewTypeSignal.value = null;
+  // Also re-opens the brew-type chooser, matching a fresh visit to the Calculator.
+  clearBrewStepsState();
 };
 
-/** Primes the calculator with a guide's default ratio - used by "Calculate this ratio" on the guide detail screen. */
-export const primeCalculatorForRatio = (ratioDefault: number): void => {
+/**
+ * Primes the calculator with a guide's default ratio - used by "Calculate
+ * this ratio" on the guide detail screen. When `brewType` is known (the
+ * common case - the guide detail screen always knows which method it's
+ * showing), it's threaded straight into `selectBrewType` so the Calculator
+ * lands on the pre-filled form with that type's Brew Steps preset already
+ * seeded, instead of dead-ending on the brew-type chooser. The explicit
+ * `ratioDefault` still wins over whatever `selectBrewType` would otherwise
+ * imply, since it may differ from the type's own guide ratio hint.
+ * Omitting `brewType` keeps the old chooser-reopening behavior for callers
+ * that genuinely don't know a specific type.
+ */
+export const primeCalculatorForRatio = (ratioDefault: number, brewType?: string): void => {
   waterSignal.value = "";
   ozSignal.value = "";
   coffeeSignal.value = null;
-  ratioSignal.value = String(ratioDefault);
   primedBrewTypeSignal.value = null;
+  if (brewType) {
+    selectBrewType(brewType);
+  } else {
+    // No specific brew type is known here, so send the person back through
+    // the chooser rather than guessing one.
+    clearBrewStepsState();
+  }
+  ratioSignal.value = String(ratioDefault);
 };
 
 /** Primes the calculator with a shared brew's exact numbers - used by the Share screen's "Open in Calculator" action and by `brewAgain` below. */
@@ -75,6 +103,12 @@ export const primeCalculatorForBrew = (brew: IShareableBrew): void => {
   ozSignal.value = String(brew.oz);
   coffeeSignal.value = brew.coffee;
   primedBrewTypeSignal.value = brew.brewType;
+
+  selectedBrewTypeSignal.value = brew.brewType;
+  // A brew saved before this feature shipped has no `brewSteps` of its own -
+  // fall back to the type's canned preset (if any) so it still gets a card.
+  brewStepsSignal.value = brew.brewSteps ?? BREW_STEPS_PRESETS[brew.brewType] ?? null;
+  loadedRecipeSourceSignal.value = brew.recipeSource ?? null;
 };
 
 /** Clears just the "Loaded from" banner - does not reset the entered numbers, unlike `resetCalculator`. */

@@ -62,4 +62,48 @@ export const SavedDetailPageStyles = css`
     font-size: 13px;
     color: var(--brew-color-on-surface-variant);
   }
+
+  .primed-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--brew-color-primary);
+    border-radius: 14px;
+    padding: 10px 14px;
+    background: var(--brew-color-surface-container-high);
+    color: var(--brew-color-primary);
+  }
+
+  .primed-banner-text {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brew-color-on-surface);
+  }
+
+  button.primed-banner.recipe-banner {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    cursor: pointer;
+    border: 1px solid var(--brew-color-primary);
+    border-radius: 14px;
+    padding: 10px 14px;
+    background: var(--brew-color-surface-container-high);
+    color: var(--brew-color-primary);
+  }
+
+  button.primed-banner.recipe-banner:focus-visible {
+    outline: 2px solid var(--brew-color-primary);
+    outline-offset: 2px;
+  }
+
+  .title {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--brew-color-on-surface);
+  }
 `;

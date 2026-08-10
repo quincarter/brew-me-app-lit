@@ -2,15 +2,37 @@ import { SignalWatcher } from "@lit-labs/preact-signals";
 import { html, LitElement, nothing, type HTMLTemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
+import "../../components/bottom-sheet/brew-bottom-sheet";
+import "../../components/brew-steps-card/brew-steps-card";
 import "../../components/button/brew-button";
 import "../../components/icon-button/brew-icon-button";
 import "../../components/icon/brew-icon";
 import "../../components/ratio-form/brew-ratio-form";
+import "../../components/recipe-card/brew-recipe-card";
+import "../../components/recipe-picker-sheet/brew-recipe-picker-sheet";
 import "../../components/save-sheet/brew-save-sheet";
 import "../../components/saved-card/brew-saved-card";
 import "../../components/top-bar/brew-top-bar";
+import "../../components/type-picker/brew-type-picker";
+import { AEROPRESS_RECIPES } from "../../shared/data/aeropress-recipes.data";
 import { REFRESH_ICON, SHARE_ICON } from "../../shared/icons/icons";
-import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
+import type {
+  IAeropressRecipe,
+  IBrewStepsConfig,
+  ISavedBrew,
+} from "../../shared/interfaces/brew.interface";
+import {
+  QUICK_CALCULATOR,
+  brewStepsSignal,
+  loadAeropressRecipeIntoCalculator,
+  loadedRecipeSourceSignal,
+  reopenBrewTypeChooser,
+  resetBrewStepsToPreset,
+  selectBrewType,
+  selectedBrewTypeSignal,
+  updateBrewStepsConfig,
+} from "../../shared/stores/brew-steps.store";
+import { addCustomBrewType, allBrewTypesSignal } from "../../shared/stores/brew-types.store";
 import { brewAgain, recentSavedBrewsSignal } from "../../shared/stores/brew.store";
 import {
   coffeeSignal,
@@ -32,6 +54,7 @@ import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palet
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
 import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
+import { isRecipeModified } from "../../shared/utilities/recipe-modified.utility";
 import { SHARE_OUTCOME_MESSAGES, type ShareOutcome } from "../../shared/utilities/share.utility";
 import { CalculatorPageStyles } from "./calculator-page.styles";
 
@@ -40,6 +63,9 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
   static styles = [CalculatorPageStyles, responsiveScreenStyles];
 
   @state() private _shareStatusText = "";
+  @state() private _stepsEditing = false;
+  @state() private _recipePickerOpen = false;
+  @state() private _originalRecipeOpen = false;
 
   private _statusTimeout: ReturnType<typeof setTimeout> | undefined;
 
@@ -57,12 +83,118 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
     }, 2500);
   }
 
+  private _onChooserTypeAdd = (event: CustomEvent<string>): void => {
+    const added = addCustomBrewType(event.detail);
+    if (added) selectBrewType(added);
+  };
+
+  private _onChangeType = (): void => {
+    // A lighter reset than resetCalculator() - just re-opens the chooser,
+    // leaving any entered numbers alone.
+    reopenBrewTypeChooser();
+  };
+
+  private _onRecipeSelect = (event: CustomEvent<IAeropressRecipe>): void => {
+    loadAeropressRecipeIntoCalculator(event.detail);
+    this._recipePickerOpen = false;
+  };
+
+  private _renderChooser(): HTMLTemplateResult {
+    return html`
+      <div class="screen">
+        <brew-top-bar title="Calculator"></brew-top-bar>
+        <div class="content">
+          <p class="chooser-intro">What are you brewing?</p>
+          <brew-button
+            variant="filled"
+            full-width
+            large
+            @button-click="${() => selectBrewType(QUICK_CALCULATOR)}"
+            ><brew-icon name="calculate" size="18"></brew-icon> Quick calculator</brew-button
+          >
+
+          <div class="chooser-divider"><span>or pick a method</span></div>
+
+          <brew-type-picker
+            .types="${allBrewTypesSignal.value}"
+            selected=""
+            @type-select="${(e: CustomEvent<string>) => selectBrewType(e.detail)}"
+            @type-add="${this._onChooserTypeAdd}"
+          ></brew-type-picker>
+        </div>
+        <brew-bottom-nav active="calculate"></brew-bottom-nav>
+      </div>
+    `;
+  }
+
+  private _renderRecipeBanner(): HTMLTemplateResult | typeof nothing {
+    const source = loadedRecipeSourceSignal.value;
+    if (!source) return nothing;
+
+    const modified = isRecipeModified(
+      {
+        ratio: ratioSignal.value,
+        water: waterSignal.value,
+        coffee: coffeeSignal.value,
+        steps: brewStepsSignal.value?.steps ?? [],
+      },
+      source,
+    );
+
+    return html`
+      <button
+        class="primed-banner recipe-banner"
+        type="button"
+        @click="${() => {
+          this._originalRecipeOpen = true;
+        }}"
+      >
+        <brew-icon name="menu_book" size="18"></brew-icon>
+        <span class="primed-banner-text"
+          >${
+            modified
+              ? html`Modified from ${source.label} — tap to see the original`
+              : html`Pulled from ${source.label}`
+          }</span
+        >
+      </button>
+    `;
+  }
+
+  private _renderOriginalRecipeSheet(): HTMLTemplateResult | typeof nothing {
+    const source = loadedRecipeSourceSignal.value;
+    if (!this._originalRecipeOpen || !source) return nothing;
+    const original = AEROPRESS_RECIPES.find((recipe) => recipe.id === source.recipeId);
+
+    return html`
+      <brew-bottom-sheet
+        open
+        label="Original recipe"
+        @sheet-scrim-click="${() => {
+          this._originalRecipeOpen = false;
+        }}"
+      >
+        <div class="title">Original recipe</div>
+        ${
+          original
+            ? html`<brew-recipe-card .recipe="${original}" start-open></brew-recipe-card>`
+            : html`<p>This recipe is no longer available.</p>`
+        }
+      </brew-bottom-sheet>
+    `;
+  }
+
   render(): HTMLTemplateResult {
+    const selectedType = selectedBrewTypeSignal.value;
+    if (selectedType === null) return this._renderChooser();
+
     const coffee = coffeeSignal.value;
     const water = waterSignal.value;
     const oz = ozSignal.value;
     const isValid = Boolean(water && oz && coffee);
     const recentBrews = recentSavedBrewsSignal.value;
+    const isQuickCalculator = selectedType === QUICK_CALCULATOR;
+    const brewSteps = isQuickCalculator ? null : brewStepsSignal.value;
 
     return html`
       <div class="screen">
@@ -87,6 +219,19 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
                 `
               : nothing
           }
+          ${
+            isQuickCalculator
+              ? nothing
+              : html`
+                  <div class="type-chip-row">
+                    <span class="type-chip">${selectedType}</span>
+                    <brew-button variant="text" @button-click="${this._onChangeType}"
+                      >Change</brew-button
+                    >
+                  </div>
+                `
+          }
+          ${isQuickCalculator ? nothing : this._renderRecipeBanner()}
 
           <brew-ratio-form
             ratio="${ratioSignal.value}"
@@ -97,6 +242,29 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             @water-change="${(e: CustomEvent<string>) => setWater(e.detail)}"
             @oz-change="${(e: CustomEvent<string>) => setOz(e.detail)}"
           ></brew-ratio-form>
+
+          ${
+            brewSteps
+              ? html`
+                  <brew-steps-card
+                    .config="${brewSteps}"
+                    ?editing="${this._stepsEditing}"
+                    @config-change="${(e: CustomEvent<IBrewStepsConfig>) =>
+                      updateBrewStepsConfig(e.detail)}"
+                    @reset-to-preset="${resetBrewStepsToPreset}"
+                  >
+                    <brew-button
+                      slot="actions"
+                      variant="text"
+                      @button-click="${() => {
+                        this._stepsEditing = !this._stepsEditing;
+                      }}"
+                      >${this._stepsEditing ? "Done" : "Edit"}</brew-button
+                    >
+                  </brew-steps-card>
+                `
+              : nothing
+          }
 
           <div class="row actions">
             <brew-button variant="outlined" full-width @button-click="${resetCalculator}"
@@ -129,6 +297,21 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             this._shareStatusText
               ? html`<p class="share-status">${this._shareStatusText}</p>`
               : null
+          }
+          ${
+            selectedType === "Aeropress"
+              ? html`
+                  <brew-button
+                    variant="outlined"
+                    full-width
+                    @button-click="${() => {
+                      this._recipePickerOpen = true;
+                    }}"
+                    ><brew-icon name="menu_book" size="18"></brew-icon> Load a WAC
+                    recipe</brew-button
+                  >
+                `
+              : nothing
           }
 
           <div class="ratio-tips">
@@ -194,6 +377,20 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             navigateTo("/timer");
           }}"
         ></brew-save-sheet>
+        ${
+          isQuickCalculator
+            ? nothing
+            : html`
+                <brew-recipe-picker-sheet
+                  ?open="${this._recipePickerOpen}"
+                  @recipe-select="${this._onRecipeSelect}"
+                  @sheet-scrim-click="${() => {
+                    this._recipePickerOpen = false;
+                  }}"
+                ></brew-recipe-picker-sheet>
+                ${this._renderOriginalRecipeSheet()}
+              `
+        }
       </div>
     `;
   }

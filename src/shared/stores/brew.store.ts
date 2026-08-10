@@ -81,9 +81,9 @@ export const markBrewedNow = (id: number): void => {
  * guided timer or view the brew's detail - without routing back through
  * Save, which would create a duplicate entry instead of updating this one.
  */
-export const brewAgain = (brew: ISavedBrew): void => {
+export const brewAgain = (brew: ISavedBrew, options?: { alreadyOnDetail?: boolean }): void => {
   markBrewedNow(brew.id);
-  openPostSaveSheet(brew);
+  openPostSaveSheet(brew, options);
 };
 
 /** Danger-zone reset: clears every saved ratio. Used by the Settings screen. */

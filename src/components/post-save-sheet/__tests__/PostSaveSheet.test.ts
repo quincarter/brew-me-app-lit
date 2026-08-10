@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { ISavedBrew } from "../../../shared/interfaces/brew.interface";
 import {
+  editBeforeBrewingIdSignal,
+  postSaveSheetAlreadyOnDetailSignal,
   postSaveSheetBrewSignal,
   postSaveSheetOpenSignal,
 } from "../../../shared/stores/post-save-sheet.store";
@@ -24,6 +26,8 @@ describe("brew-post-save-sheet", () => {
   beforeEach(async () => {
     postSaveSheetOpenSignal.value = false;
     postSaveSheetBrewSignal.value = null;
+    postSaveSheetAlreadyOnDetailSignal.value = false;
+    editBeforeBrewingIdSignal.value = null;
     resetTimer();
     primedRecipeSignal.value = null;
     window.history.pushState({}, "", "/calculate");
@@ -116,7 +120,7 @@ describe("brew-post-save-sheet", () => {
 
     const detailButton = Array.from(
       element.shadowRoot?.querySelectorAll(".actions brew-button") ?? [],
-    ).find((button) => button.textContent?.includes("Go to brew detail"));
+    ).find((button) => button.textContent?.replace(/\s+/g, " ").includes("Go to brew detail"));
     expect(detailButton).not.toBeUndefined();
 
     const innerButton = detailButton?.shadowRoot?.querySelector("button");
@@ -134,7 +138,7 @@ describe("brew-post-save-sheet", () => {
 
     const timerButton = Array.from(
       element.shadowRoot?.querySelectorAll(".actions brew-button") ?? [],
-    ).find((button) => button.textContent?.includes("Start guided timer"));
+    ).find((button) => button.textContent?.replace(/\s+/g, " ").includes("Start guided timer"));
     expect(timerButton).not.toBeUndefined();
 
     const innerButton = timerButton?.shadowRoot?.querySelector("button");
@@ -150,5 +154,44 @@ describe("brew-post-save-sheet", () => {
     });
     expect(window.location.pathname).toBe("/timer");
     expect(postSaveSheetOpenSignal.value).toBe(false);
+  });
+
+  it("shows 'Go to brew detail' by default, and 'Edit before brewing' instead when opened from that brew's own detail screen", async () => {
+    postSaveSheetBrewSignal.value = brew;
+    postSaveSheetOpenSignal.value = true;
+    await element.updateComplete;
+
+    const buttonTexts = () =>
+      Array.from(element.shadowRoot?.querySelectorAll(".actions brew-button") ?? []).map((b) =>
+        b.textContent?.replace(/\s+/g, " ").trim(),
+      );
+    expect(buttonTexts()).toContain("Go to brew detail");
+    expect(buttonTexts()).not.toContain("Edit before brewing");
+
+    postSaveSheetAlreadyOnDetailSignal.value = true;
+    await element.updateComplete;
+
+    expect(buttonTexts()).not.toContain("Go to brew detail");
+    expect(buttonTexts()).toContain("Edit before brewing");
+  });
+
+  it("requests an edit-before-brewing and closes the sheet without navigating, when 'Edit before brewing' is clicked", async () => {
+    postSaveSheetBrewSignal.value = brew;
+    postSaveSheetOpenSignal.value = true;
+    postSaveSheetAlreadyOnDetailSignal.value = true;
+    await element.updateComplete;
+
+    const editButton = Array.from(
+      element.shadowRoot?.querySelectorAll(".actions brew-button") ?? [],
+    ).find((button) => button.textContent?.replace(/\s+/g, " ").includes("Edit before brewing"));
+    expect(editButton).not.toBeUndefined();
+
+    const innerButton = editButton?.shadowRoot?.querySelector("button");
+    innerButton?.click();
+    await element.updateComplete;
+
+    expect(editBeforeBrewingIdSignal.value).toBe(brew.id);
+    expect(postSaveSheetOpenSignal.value).toBe(false);
+    expect(window.location.pathname).toBe("/calculate");
   });
 });
