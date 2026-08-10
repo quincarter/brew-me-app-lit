@@ -1,6 +1,6 @@
-import { svg } from "lit";
+import { svg, SVGTemplateResult } from "lit";
 
-export const V60_ICON = svg`
+export const V60_ICON: SVGTemplateResult = svg`
 <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 5h12l-5 10h-2L6 5Z"></path>
           <path d="M8 5l3 10M10 5l1.3 10M14 5l-1.3 10M16 5l-3 10"></path>

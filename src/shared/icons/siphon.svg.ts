@@ -1,6 +1,6 @@
-import { svg } from "lit";
+import { svg, SVGTemplateResult } from "lit";
 
-export const SIPHON_ICON = svg`
+export const SIPHON_ICON: SVGTemplateResult = svg`
 <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <rect x="8" y="20" width="8" height="1.3" rx="0.4"></rect>
           <circle cx="12" cy="15.5" r="4"></circle>

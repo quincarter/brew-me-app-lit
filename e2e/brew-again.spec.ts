@@ -19,7 +19,7 @@ test.describe("brewing a saved brew again", () => {
     await expect(page.getByLabel("Water (g)", { exact: true })).toHaveValue("300");
   });
 
-  test("Start guided timer navigates to /timer with a counting-down V60 recipe caption", async ({
+  test("Start guided timer routes through the save sheet, then navigates to /timer with a counting-down V60 recipe caption", async ({
     page,
   }) => {
     await saveBrewFromCalculator(page, { name: "Sunday Morning Pour", type: "V60", water: "300" });
@@ -32,6 +32,16 @@ test.describe("brewing a saved brew again", () => {
       .click();
 
     await page.getByRole("button", { name: "Start guided timer" }).click();
+
+    await expect(page.locator("brew-save-sheet .title")).toHaveText(
+      "Name this brew to start your guided brew",
+    );
+    await page.getByLabel("Brew name", { exact: true }).fill("Sunday Morning Pour");
+    await page.getByRole("button", { name: "V60", exact: true }).click();
+    await page
+      .locator("brew-save-sheet")
+      .getByRole("button", { name: "Save & Start Timer" })
+      .click();
 
     await expect(page).toHaveURL("/timer");
     await expect(page.locator(".recipe-caption-name")).toHaveText("Sunday Morning Pour · 1:16");

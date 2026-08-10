@@ -98,6 +98,11 @@ export const SettingsPageStyles = css`
     justify-content: flex-end;
   }
 
+  .data-actions {
+    display: flex;
+    gap: 8px;
+  }
+
   .divider {
     height: 1px;
     background: var(--brew-color-outline-variant);
@@ -114,6 +119,12 @@ export const SettingsPageStyles = css`
   .row-label {
     font-size: 16px;
     color: var(--brew-color-on-surface);
+  }
+
+  .status-text {
+    margin: -6px 0 0;
+    font-size: 13px;
+    color: var(--brew-color-on-surface-variant);
   }
 
   .danger-zone {

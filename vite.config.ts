@@ -159,6 +159,20 @@ export default defineConfig({
             form_factor: "narrow",
             label: "Settings",
           },
+          {
+            src: "screenshots/home-with-data.png",
+            sizes: "824x1830",
+            type: "image/png",
+            form_factor: "narrow",
+            label: "Home screen (with saved brews)",
+          },
+          {
+            src: "screenshots/saved-with-data.png",
+            sizes: "824x1830",
+            type: "image/png",
+            form_factor: "narrow",
+            label: "Saved brews (populated)",
+          },
         ],
       },
       devOptions: {

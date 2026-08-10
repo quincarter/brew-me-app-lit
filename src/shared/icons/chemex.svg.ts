@@ -1,6 +1,6 @@
-import { svg } from "lit";
+import { svg, SVGTemplateResult } from "lit";
 
-export const CHEMEX_ICON = svg`<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+export const CHEMEX_ICON: SVGTemplateResult = svg`<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 4h12l-3 6h-6L6 4Z"></path>
           <rect x="9" y="10" width="6" height="2"></rect>
           <rect x="9" y="12" width="6" height="2"></rect>

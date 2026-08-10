@@ -1,6 +1,6 @@
-import { svg } from "lit";
+import { svg, SVGTemplateResult } from "lit";
 
-export const AEROPRESS_ICON = svg`<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+export const AEROPRESS_ICON: SVGTemplateResult = svg`<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <rect x="9" y="1" width="6" height="2"></rect>
           <rect x="10.7" y="3" width="2.6" height="3"></rect>
           <rect x="8" y="6" width="8" height="9" rx="1"></rect>

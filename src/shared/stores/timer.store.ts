@@ -1,5 +1,8 @@
 import { signal } from "@lit-labs/preact-signals";
+import { BREW_GUIDE } from "../data/brew-content.data";
+import type { ISavedBrew } from "../interfaces/brew.interface";
 import type { IPrimedRecipe } from "../interfaces/timer.interface";
+import { getBrewDisplayName } from "../utilities/brew-display.utility";
 
 /**
  * Module-level (not component-level) timer state, so the pour-over countdown
@@ -52,6 +55,18 @@ export const primeTimerForRecipe = (recipe: IPrimedRecipe): void => {
   resetTimer();
   primedRecipeSignal.value = recipe;
   guidedModeSignal.value = recipe.targetSeconds !== null ? "countdown" : "countup";
+};
+
+/** Primes the timer from an already-saved brew - looks up its guide entry (if any) for the guided target duration, same lookup the Calculator's guided-timer flow used to do inline. */
+export const primeTimerForSavedBrew = (brew: ISavedBrew): void => {
+  const guide = BREW_GUIDE.find((item) => item.name === brew.brewType);
+  primeTimerForRecipe({
+    name: getBrewDisplayName(brew),
+    coffee: brew.coffee,
+    water: brew.water,
+    ratio: brew.ratio,
+    targetSeconds: guide?.brewTimeSeconds ?? null,
+  });
 };
 
 /** Switches a guided brew between counting down to its target and counting up like a plain stopwatch. */

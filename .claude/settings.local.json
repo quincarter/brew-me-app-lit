@@ -21,7 +21,15 @@
       "Bash(npx vitest *)",
       "Bash(npm ls *)",
       "Bash(npm install *)",
-      "Bash(cat)"
+      "Bash(cat)",
+      "Bash(git -C /Users/quincarter/Documents/Dev/brew-me-app-lit status --porcelain src/components/avatar/__tests__/Avatar.test.ts)",
+      "Bash(git -C /Users/quincarter/Documents/Dev/brew-me-app-lit status --porcelain)",
+      "Bash(xargs cat)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(npx playwright *)",
+      "Bash(rm -f /tmp/debug.spec.ts; git status --short | grep -i zzz)",
+      "Bash(xargs -I{} basename {})",
+      "Bash(echo \"EXIT: $?\")"
     ]
   }
 }

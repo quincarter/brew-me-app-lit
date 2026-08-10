@@ -1,6 +1,6 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement, query, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
 import "../../components/icon/brew-icon";
@@ -17,6 +17,7 @@ import {
 import { deleteAllSavedBrews } from "../../shared/stores/brew.store";
 import { isDarkThemeSignal, setDarkTheme } from "../../shared/stores/theme.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
+import { exportAppData, importAppData } from "../../shared/utilities/export-data.utility";
 import { refreshApp } from "../../shared/utilities/register-service-worker.utility";
 import { SettingsPageStyles } from "./settings-page.styles";
 
@@ -27,6 +28,69 @@ export class SettingsPage extends SignalWatcher(LitElement) {
   @state() private _addingType = false;
   @state() private _typeDraft = "";
   @state() private _confirmingDelete = false;
+  @state() private _statusText = "";
+  @state() private _confirmingImport = false;
+  @state() private _pendingImportFile: File | null = null;
+
+  @query("input[type='file']") private _fileInput!: HTMLInputElement;
+
+  private _statusTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    clearTimeout(this._statusTimeout);
+  }
+
+  private _showStatus(text: string): void {
+    clearTimeout(this._statusTimeout);
+    this._statusText = text;
+    if (!text) return;
+    this._statusTimeout = setTimeout(() => {
+      this._statusText = "";
+    }, 2500);
+  }
+
+  private _onExportData = async (): Promise<void> => {
+    try {
+      await exportAppData();
+      this._showStatus("Exported!");
+    } catch {
+      this._showStatus("Couldn't export — try again.");
+    }
+  };
+
+  private _onChooseImportFile = (): void => {
+    this._fileInput.click();
+  };
+
+  private _onImportFileSelected = (event: Event): void => {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    target.value = "";
+    if (!file) return;
+
+    this._pendingImportFile = file;
+    this._confirmingImport = true;
+  };
+
+  private _cancelImport = (): void => {
+    this._pendingImportFile = null;
+    this._confirmingImport = false;
+  };
+
+  private _confirmImport = async (): Promise<void> => {
+    if (!this._pendingImportFile) return;
+
+    try {
+      await importAppData(this._pendingImportFile);
+      this._showStatus("Imported! Reloading…");
+      window.location.reload();
+    } catch {
+      this._showStatus("Couldn't import — check the file and try again.");
+      this._pendingImportFile = null;
+      this._confirmingImport = false;
+    }
+  };
 
   private _startAddType = (): void => {
     this._addingType = true;
@@ -131,6 +195,43 @@ export class SettingsPage extends SignalWatcher(LitElement) {
             ready. If you don't see it but suspect there's an update, force a refresh here.
           </p>
           <brew-button variant="outlined" @button-click="${refreshApp}">Refresh app</brew-button>
+
+          <div class="divider"></div>
+          <div class="section-title">Data</div>
+          <p class="section-hint">Download everything saved on this device as a JSON file.</p>
+          <div class="data-actions">
+            <brew-button variant="outlined" @button-click="${this._onExportData}"
+              >Export data</brew-button
+            >
+            <brew-button variant="outlined" @button-click="${this._onChooseImportFile}"
+              >Import data</brew-button
+            >
+          </div>
+          <input
+            type="file"
+            accept="application/json,.json"
+            hidden
+            @change="${this._onImportFileSelected}"
+          />
+          ${
+            this._confirmingImport && this._pendingImportFile
+              ? html`
+                  <p class="section-hint">
+                    Importing "${this._pendingImportFile.name}" replaces all data on this device
+                    with the contents of this file. This can't be undone.
+                  </p>
+                  <div class="add-actions">
+                    <brew-button variant="text" @button-click="${this._cancelImport}"
+                      >Cancel</brew-button
+                    >
+                    <brew-button variant="filled" @button-click="${this._confirmImport}"
+                      >Yes, import and replace</brew-button
+                    >
+                  </div>
+                `
+              : null
+          }
+          ${this._statusText ? html`<p class="status-text">${this._statusText}</p>` : null}
 
           <div class="divider"></div>
           <div class="danger-zone">

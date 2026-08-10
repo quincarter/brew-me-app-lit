@@ -40,7 +40,9 @@ describe("brew-avatar", () => {
     await element.updateComplete;
 
     const avatar = element.shadowRoot?.querySelector(".avatar");
-    expect(avatar?.querySelector("svg[data-testid='mock-icon']")).not.toBeNull();
+    expect(
+      avatar?.querySelector("svg[data-testid='mock-icon']"),
+    ).not.toBeNull();
     expect(avatar?.textContent?.trim()).not.toBe("V");
   });
 });

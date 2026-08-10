@@ -1,0 +1,94 @@
+{
+  "exportedAt": "2026-08-10T02:51:45.429Z",
+  "app": "brew-me",
+  "data": {
+    "custom-brew-types": [
+      "Nitro Cold Brew"
+    ],
+    "saved-brews": [
+      {
+        "brewType": "Chemex",
+        "ratio": 16,
+        "water": 500,
+        "coffee": 31.25,
+        "oz": 17.64,
+        "id": 1786128256329,
+        "createdAt": 1786128256329,
+        "lastBrewedAt": 1786312514504,
+        "rating": 4,
+        "tastingNote": "Fruity and tea like"
+      },
+      {
+        "brewType": "Nitro Cold Brew",
+        "ratio": 8,
+        "water": 3402,
+        "coffee": 425.25,
+        "oz": 120,
+        "id": 1786129468354,
+        "createdAt": 1786129468354,
+        "rating": 5
+      },
+      {
+        "brewType": "Chemex",
+        "ratio": 16,
+        "water": 425,
+        "coffee": 26.56,
+        "oz": 14.99,
+        "id": 1786149114383,
+        "createdAt": 1786149114383,
+        "lastBrewedAt": 1786311114288,
+        "rating": 3
+      },
+      {
+        "brewType": "Chemex",
+        "name": "Quin's Chemex",
+        "ratio": 16,
+        "water": 600,
+        "coffee": 37.5,
+        "oz": 21.16,
+        "id": 1786313927094,
+        "createdAt": 1786313927094
+      },
+      {
+        "brewType": "Clever Dripper",
+        "name": "TEst Save before timer",
+        "ratio": 16,
+        "water": 123,
+        "coffee": 7.69,
+        "oz": 4.34,
+        "id": 1786326686866,
+        "createdAt": 1786326686866,
+        "lastBrewedAt": 1786326703916
+      },
+      {
+        "brewType": "Kalita Wave",
+        "name": "Test",
+        "ratio": 16,
+        "water": 123,
+        "coffee": 7.69,
+        "oz": 4.34,
+        "id": 1786326734914,
+        "createdAt": 1786326734914
+      },
+      {
+        "brewType": "Hario Switch",
+        "ratio": 16,
+        "water": 123,
+        "coffee": 7.69,
+        "oz": 4.34,
+        "id": 1786327438879,
+        "createdAt": 1786327438879,
+        "lastBrewedAt": 1786327550869
+      },
+      {
+        "brewType": "Drip",
+        "ratio": 16,
+        "water": 123,
+        "coffee": 7.69,
+        "oz": 4.34,
+        "id": 1786327555857,
+        "createdAt": 1786327555857
+      }
+    ]
+  }
+}

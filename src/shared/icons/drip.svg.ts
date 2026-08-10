@@ -1,6 +1,6 @@
-import { svg } from "lit";
+import { svg, SVGTemplateResult } from "lit";
 
-export const DRIP_ICON = svg`
+export const DRIP_ICON: SVGTemplateResult = svg`
 <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8.5 2c-.5 1.2-.5 2.4 0 4"></path>
           <path d="M11 2c-.5 1.2-.5 2.4 0 4"></path>

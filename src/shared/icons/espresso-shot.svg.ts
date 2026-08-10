@@ -1,6 +1,6 @@
-import { svg } from "lit";
+import { svg, SVGTemplateResult } from "lit";
 
-export const ESPRESSO_SHOT_ICON = svg`<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+export const ESPRESSO_SHOT_ICON: SVGTemplateResult = svg`<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 4h8l-1 3H9L8 4Z"></path>
           <rect x="10.5" y="7" width="3" height="1" rx="0.3"></rect>
           <path d="M10.5 8v1.3M13.5 8v1.3"></path>

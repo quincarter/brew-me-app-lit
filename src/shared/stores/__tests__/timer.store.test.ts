@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import type { ISavedBrew } from "../../interfaces/brew.interface";
 import type { IPrimedRecipe } from "../../interfaces/timer.interface";
 import {
   guidedModeSignal,
   primedRecipeSignal,
   primeTimerForRecipe,
+  primeTimerForSavedBrew,
   resetTimer,
   setGuidedMode,
   setGuidedTargetSeconds,
@@ -62,6 +64,79 @@ describe("timer.store", () => {
       primeTimerForRecipe(recipeWithoutTarget);
 
       expect(guidedModeSignal.value).toBe("countup");
+    });
+  });
+
+  describe("primeTimerForSavedBrew", () => {
+    it("uses the matching BREW_GUIDE entry's brewTimeSeconds as the target, and the brew's display name when no custom name is set", () => {
+      const brew: ISavedBrew = {
+        id: 1,
+        brewType: "V60",
+        ratio: 16,
+        water: 320,
+        coffee: 20,
+        oz: 11,
+        createdAt: Date.now(),
+      };
+
+      primeTimerForSavedBrew(brew);
+
+      expect(primedRecipeSignal.value).toEqual({
+        name: "V60",
+        coffee: 20,
+        water: 320,
+        ratio: 16,
+        targetSeconds: 210,
+      });
+    });
+
+    it("falls back to the custom name over the brewType when one is set", () => {
+      const brew: ISavedBrew = {
+        id: 2,
+        brewType: "V60",
+        name: "Sunday morning pour",
+        ratio: 16,
+        water: 320,
+        coffee: 20,
+        oz: 11,
+        createdAt: Date.now(),
+      };
+
+      primeTimerForSavedBrew(brew);
+
+      expect(primedRecipeSignal.value?.name).toBe("Sunday morning pour");
+    });
+
+    it("sets targetSeconds to null when the brewType has no matching guide entry", () => {
+      const brew: ISavedBrew = {
+        id: 3,
+        brewType: "My Weird Method",
+        ratio: 15,
+        water: 300,
+        coffee: 20,
+        oz: 10,
+        createdAt: Date.now(),
+      };
+
+      primeTimerForSavedBrew(brew);
+
+      expect(primedRecipeSignal.value?.targetSeconds).toBeNull();
+    });
+
+    it("sets targetSeconds to null when the matching guide entry has no brewTimeSeconds (e.g. Cold Brew)", () => {
+      const brew: ISavedBrew = {
+        id: 4,
+        brewType: "Cold Brew",
+        ratio: 4,
+        water: 800,
+        coffee: 200,
+        oz: 27,
+        createdAt: Date.now(),
+      };
+
+      primeTimerForSavedBrew(brew);
+
+      expect(primedRecipeSignal.value?.targetSeconds).toBeNull();
     });
   });
 

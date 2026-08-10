@@ -35,13 +35,17 @@ export class Icon extends LitElement {
 
   render(): HTMLTemplateResult {
     if (this.svg) {
-      return html`<span class="icon-svg" style="width:${this.size}px;height:${this.size}px"
+      return html`<span
+        class="icon-svg"
+        aria-hidden="true"
+        style="width:${this.size}px;height:${this.size}px"
         >${this.svg}</span
       >`;
     }
 
     return html`<span
       class="material-symbols-outlined"
+      aria-hidden="true"
       style="font-size:${this.size}px; font-variation-settings: 'FILL' ${this.filled ? 1 : 0}"
       >${this.name}</span
     >`;

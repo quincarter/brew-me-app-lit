@@ -4,6 +4,14 @@ export interface ISaveBrewOptions {
   name?: string;
   type?: string;
   water?: string;
+  /**
+   * Leaves the post-save confirmation sheet open instead of dismissing it -
+   * set true when a test wants to interact with it (e.g. its "Go to brew
+   * detail" / "Start guided timer" actions). Defaults to false so every
+   * other caller lands back on a plain Calculator screen, matching this
+   * helper's pre-post-save-sheet behavior.
+   */
+  keepPostSaveSheetOpen?: boolean;
 }
 
 /** Fills out the Calculator screen and drives the plain (non-share) Save sheet flow to completion. */
@@ -23,4 +31,8 @@ export const saveBrewFromCalculator = async (
   }
   await page.getByRole("button", { name: type, exact: true }).click();
   await page.locator("brew-save-sheet").getByRole("button", { name: "Save", exact: true }).click();
+
+  if (!options.keepPostSaveSheetOpen) {
+    await page.locator("brew-post-save-sheet").getByRole("button", { name: "Close" }).click();
+  }
 };

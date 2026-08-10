@@ -6,6 +6,7 @@ import "../../components/button/brew-button";
 import "../../components/icon/brew-icon";
 import "../../components/link-card/brew-link-card";
 import "../../components/ratio-form/brew-ratio-form";
+import "../../components/ratio-summary/brew-ratio-summary";
 import "../../components/star-rating/brew-star-rating";
 import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
@@ -20,7 +21,6 @@ import { DELETE_ICON, EDIT_ICON, REPLAY_ICON, SHARE_ICON } from "../../shared/ic
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
 import { BREW_ICON_MAP, normalizeBrewIconKey } from "../../shared/utilities/brew-icon.utility";
-import { formatRatio } from "../../shared/utilities/format-ratio.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
 import { coffeeForWater, gramsToOunces, ouncesToGrams } from "../../shared/utilities/ratio.utility";
 import { SHARE_OUTCOME_MESSAGES, shareBrew } from "../../shared/utilities/share.utility";
@@ -219,25 +219,12 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                   ></brew-text-field>
                 `
               : html`
-                  <div class="ratio-hero">
-                    <div class="ratio-value">${formatRatio(brew.ratio)}</div>
-                    <div class="ratio-label">Coffee to water ratio</div>
-                  </div>
-
-                  <div class="stat-row">
-                    <div class="stat">
-                      <div class="stat-value">${brew.coffee}g</div>
-                      <div class="stat-label">coffee</div>
-                    </div>
-                    <div class="stat">
-                      <div class="stat-value">${brew.water}g</div>
-                      <div class="stat-label">water</div>
-                    </div>
-                    <div class="stat">
-                      <div class="stat-value">${brew.oz}oz</div>
-                      <div class="stat-label">cup size</div>
-                    </div>
-                  </div>
+                  <brew-ratio-summary
+                    ratio="${brew.ratio}"
+                    coffee="${brew.coffee}"
+                    water="${brew.water}"
+                    oz="${brew.oz}"
+                  ></brew-ratio-summary>
 
                   <div class="rating">
                     <brew-star-rating

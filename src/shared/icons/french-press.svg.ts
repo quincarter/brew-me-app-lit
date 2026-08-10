@@ -1,6 +1,6 @@
-import { svg } from "lit";
+import { svg, SVGTemplateResult } from "lit";
 
-export const FRENCH_PRESS_ICON = svg`
+export const FRENCH_PRESS_ICON: SVGTemplateResult = svg`
 <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <rect x="7" y="7" width="10" height="12" rx="1"></rect>
           <path d="M8 7h8"></path>

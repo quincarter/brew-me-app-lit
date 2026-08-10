@@ -1,7 +1,14 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteAllSavedBrews, savedBrewsSignal } from "../brew.store";
-import { resetCalculator, setWater } from "../calculator.store";
+import {
+  coffeeSignal,
+  ozSignal,
+  ratioSignal,
+  resetCalculator,
+  setWater,
+  waterSignal,
+} from "../calculator.store";
 import {
   cancelSaveDialog,
   confirmSave,
@@ -10,10 +17,10 @@ import {
   pendingBrewNameSignal,
   pendingBrewTypeSignal,
   saveDialogOpenSignal,
+  saveIntentSignal,
   selectPendingBrewIcon,
   selectPendingBrewType,
   setPendingBrewName,
-  shareAfterSaveSignal,
 } from "../save-dialog.store";
 
 describe("save-dialog.store", () => {
@@ -24,15 +31,15 @@ describe("save-dialog.store", () => {
     pendingBrewTypeSignal.value = null;
     pendingBrewNameSignal.value = "";
     pendingBrewIconSignal.value = "";
-    shareAfterSaveSignal.value = false;
+    saveIntentSignal.value = "save";
   });
 
   describe("openSaveDialog", () => {
-    it("opens the sheet in non-share mode by default", () => {
+    it("opens the sheet in plain save mode by default", () => {
       openSaveDialog();
 
       expect(saveDialogOpenSignal.value).toBe(true);
-      expect(shareAfterSaveSignal.value).toBe(false);
+      expect(saveIntentSignal.value).toBe("save");
     });
 
     it("clears any previously pending type and name", () => {
@@ -54,21 +61,35 @@ describe("save-dialog.store", () => {
       expect(pendingBrewIconSignal.value).toBe("");
     });
 
-    it("sets shareAfterSave when requested", () => {
-      openSaveDialog({ shareAfterSave: true });
+    it("sets the intent to share when requested", () => {
+      openSaveDialog({ intent: "share" });
 
-      expect(shareAfterSaveSignal.value).toBe(true);
+      expect(saveIntentSignal.value).toBe("share");
+    });
+
+    it("sets the intent to guided-timer when requested", () => {
+      openSaveDialog({ intent: "guided-timer" });
+
+      expect(saveIntentSignal.value).toBe("guided-timer");
     });
   });
 
   describe("cancelSaveDialog", () => {
-    it("closes the sheet and resets shareAfterSave", () => {
-      openSaveDialog({ shareAfterSave: true });
+    it("closes the sheet and resets the intent back to save", () => {
+      openSaveDialog({ intent: "share" });
 
       cancelSaveDialog();
 
       expect(saveDialogOpenSignal.value).toBe(false);
-      expect(shareAfterSaveSignal.value).toBe(false);
+      expect(saveIntentSignal.value).toBe("save");
+    });
+
+    it("resets a guided-timer intent back to save too", () => {
+      openSaveDialog({ intent: "guided-timer" });
+
+      cancelSaveDialog();
+
+      expect(saveIntentSignal.value).toBe("save");
     });
   });
 
@@ -101,28 +122,31 @@ describe("save-dialog.store", () => {
     it("returns null and saves nothing when no brew type is pending", async () => {
       setWater("480");
 
-      const outcome = await confirmSave();
+      const result = await confirmSave();
 
-      expect(outcome).toBeNull();
+      expect(result).toBeNull();
       expect(savedBrewsSignal.value).toHaveLength(0);
     });
 
     it("returns null and saves nothing when there's no computed coffee amount", async () => {
       selectPendingBrewType("Pour-over");
 
-      const outcome = await confirmSave();
+      const result = await confirmSave();
 
-      expect(outcome).toBeNull();
+      expect(result).toBeNull();
       expect(savedBrewsSignal.value).toHaveLength(0);
     });
 
-    it("saves the brew with an undefined name when left blank, and returns null outside share mode", async () => {
+    it("saves the brew with an undefined name when left blank, and returns intent 'save' with no share outcome", async () => {
       setWater("480");
       selectPendingBrewType("Pour-over");
 
-      const outcome = await confirmSave();
+      const result = await confirmSave();
 
-      expect(outcome).toBeNull();
+      expect(result).not.toBeNull();
+      expect(result?.intent).toBe("save");
+      expect(result?.shareOutcome).toBeNull();
+      expect(result?.savedBrew).toBe(savedBrewsSignal.value[0]);
       expect(savedBrewsSignal.value).toHaveLength(1);
       expect(savedBrewsSignal.value[0]?.name).toBeUndefined();
       expect(savedBrewsSignal.value[0]?.brewType).toBe("Pour-over");
@@ -167,7 +191,7 @@ describe("save-dialog.store", () => {
       expect(savedBrewsSignal.value[0]?.icon).toBeUndefined();
     });
 
-    it("closes the sheet and resets the calculator after saving", async () => {
+    it("closes the sheet and resets the intent back to save after saving", async () => {
       setWater("480");
       selectPendingBrewType("Pour-over");
       saveDialogOpenSignal.value = true;
@@ -175,10 +199,22 @@ describe("save-dialog.store", () => {
       await confirmSave();
 
       expect(saveDialogOpenSignal.value).toBe(false);
-      expect(shareAfterSaveSignal.value).toBe(false);
+      expect(saveIntentSignal.value).toBe("save");
     });
 
-    describe("with shareAfterSave enabled", () => {
+    it("resets the calculator's entered numbers after a plain save", async () => {
+      setWater("480");
+      selectPendingBrewType("Pour-over");
+
+      await confirmSave();
+
+      expect(waterSignal.value).toBe("");
+      expect(ozSignal.value).toBe("");
+      expect(coffeeSignal.value).toBeNull();
+      expect(ratioSignal.value).toBe("16");
+    });
+
+    describe("with the share intent", () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
 
       beforeEach(() => {
@@ -190,16 +226,62 @@ describe("save-dialog.store", () => {
         vi.unstubAllGlobals();
       });
 
-      it("returns a ShareOutcome instead of null", async () => {
+      it("returns intent 'share' with a shareOutcome instead of null", async () => {
         setWater("480");
         selectPendingBrewType("Pour-over");
-        openSaveDialog({ shareAfterSave: true });
+        openSaveDialog({ intent: "share" });
         selectPendingBrewType("Pour-over");
 
-        const outcome = await confirmSave();
+        const result = await confirmSave();
 
-        expect(outcome).toBe("copied");
+        expect(result?.intent).toBe("share");
+        expect(result?.shareOutcome).toBe("copied");
         expect(writeText).toHaveBeenCalledTimes(1);
+      });
+
+      it("resets the calculator's entered numbers after a share save", async () => {
+        setWater("480");
+        openSaveDialog({ intent: "share" });
+        selectPendingBrewType("Pour-over");
+
+        await confirmSave();
+
+        expect(waterSignal.value).toBe("");
+        expect(ozSignal.value).toBe("");
+        expect(coffeeSignal.value).toBeNull();
+        expect(ratioSignal.value).toBe("16");
+      });
+    });
+
+    describe("with the guided-timer intent", () => {
+      it("returns intent 'guided-timer' without calling share", async () => {
+        const writeText = vi.fn().mockResolvedValue(undefined);
+        vi.stubGlobal("navigator", { ...navigator, share: undefined, clipboard: { writeText } });
+
+        setWater("480");
+        openSaveDialog({ intent: "guided-timer" });
+        selectPendingBrewType("Pour-over");
+
+        const result = await confirmSave();
+
+        expect(result?.intent).toBe("guided-timer");
+        expect(result?.shareOutcome).toBeNull();
+        expect(writeText).not.toHaveBeenCalled();
+
+        vi.unstubAllGlobals();
+      });
+
+      it("does not reset the calculator's entered numbers, to avoid a blank-field flash before the /timer navigation resolves", async () => {
+        setWater("480");
+        openSaveDialog({ intent: "guided-timer" });
+        selectPendingBrewType("Pour-over");
+
+        await confirmSave();
+
+        expect(waterSignal.value).toBe("480");
+        expect(ozSignal.value).not.toBe("");
+        expect(coffeeSignal.value).not.toBeNull();
+        expect(ratioSignal.value).toBe("16");
       });
     });
   });
