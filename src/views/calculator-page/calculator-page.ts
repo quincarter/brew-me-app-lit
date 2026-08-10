@@ -72,7 +72,6 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
     const oz = ozSignal.value;
     const isValid = Boolean(water && oz && coffee);
     const recentBrews = recentSavedBrewsSignal.value;
-    const ratioNumber = Number.parseFloat(ratioSignal.value);
 
     return html`
       <div class="screen">
@@ -105,12 +104,6 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             @water-change="${(e: CustomEvent<string>) => setWater(e.detail)}"
             @oz-change="${(e: CustomEvent<string>) => setOz(e.detail)}"
           ></brew-ratio-form>
-
-          ${!Number.isNaN(ratioNumber) && ratioNumber
-            ? html`<span class="ratio-chip"
-                >Ratio ${formatRatio(ratioNumber)}</span
-              >`
-            : nothing}
 
           <div class="row actions">
             <brew-button
