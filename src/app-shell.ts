@@ -7,10 +7,12 @@ import { AppShellStyles } from "./app-shell.styles";
 import "./components/install-prompt/brew-install-prompt";
 import "./components/post-save-sheet/brew-post-save-sheet";
 import "./components/theme-toggle/brew-theme-toggle";
+import "./components/tour-overlay/brew-tour-overlay";
 import "./components/update-prompt/brew-update-prompt";
 import { withBase } from "./shared/configuration/base-path";
 import { routes } from "./shared/configuration/routes";
 import { initInstallPromptListener } from "./shared/stores/install-prompt.store";
+import { maybeAutoStartTour } from "./shared/stores/tour.store";
 import { registerServiceWorker } from "./shared/utilities/register-service-worker.utility";
 
 // Attach the beforeinstallprompt/appinstalled listeners as early as possible
@@ -45,6 +47,10 @@ export class AppShell extends LitElement {
     })),
   );
 
+  firstUpdated(): void {
+    maybeAutoStartTour();
+  }
+
   render(): HTMLTemplateResult {
     return html`
       <brew-theme-toggle></brew-theme-toggle>
@@ -52,6 +58,7 @@ export class AppShell extends LitElement {
       <brew-install-prompt></brew-install-prompt>
       <brew-update-prompt></brew-update-prompt>
       <brew-post-save-sheet></brew-post-save-sheet>
+      <brew-tour-overlay></brew-tour-overlay>
     `;
   }
 }

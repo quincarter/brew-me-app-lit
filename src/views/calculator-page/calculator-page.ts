@@ -109,6 +109,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             variant="filled"
             full-width
             large
+            data-tour="quick-calculator-button"
             @button-click="${() => selectBrewType(QUICK_CALCULATOR)}"
             ><brew-icon name="calculate" size="18"></brew-icon> Quick calculator</brew-button
           >

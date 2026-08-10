@@ -76,6 +76,7 @@ export class TypePicker extends LitElement {
             <brew-chip
               label="${name}"
               ?selected="${name === this.selected}"
+              data-tour="${name === "V60" ? "type-v60" : nothing}"
               @chip-click="${() => this._selectType(name)}"
             ></brew-chip>
           `,

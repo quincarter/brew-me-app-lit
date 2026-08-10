@@ -86,7 +86,7 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
               : nothing
           }
 
-          <div class="stat-row">
+          <div class="stat-row" data-tour="guide-stats">
             <div class="stat">
               <div class="stat-value">${guide.ratioHint}</div>
               <div class="stat-label">ratio</div>

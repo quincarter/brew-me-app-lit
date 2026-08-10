@@ -1,5 +1,5 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/list-row/brew-list-row";
@@ -7,6 +7,7 @@ import "../../components/stat-tile/brew-stat-tile";
 import "../../components/top-bar/brew-top-bar";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
 import { streakDaysSignal, totalBrewsSignal } from "../../shared/stores/brew.store";
+import { startTour } from "../../shared/stores/tour.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { MorePageStyles } from "./more-page.styles";
@@ -14,6 +15,11 @@ import { MorePageStyles } from "./more-page.styles";
 @customElement("more-page")
 export class MorePage extends SignalWatcher(LitElement) {
   static styles = [MorePageStyles, responsiveScreenStyles];
+
+  private _onTakeTourClick = (event: Event): void => {
+    event.preventDefault();
+    startTour();
+  };
 
   render(): HTMLTemplateResult {
     return html`
@@ -46,6 +52,18 @@ export class MorePage extends SignalWatcher(LitElement) {
           ></brew-list-row>
 
           <div class="divider"></div>
+          <div class="section-title">Help</div>
+          <brew-list-row
+            headline="Take the tour"
+            supporting="Replay the BrewMe walkthrough"
+            leading-icon="explore"
+            leading-bg="var(--brew-color-primary-container)"
+            leading-fg="var(--brew-color-on-primary-container)"
+            href="/more"
+            @click="${this._onTakeTourClick}"
+          ></brew-list-row>
+
+          <div class="divider"></div>
           <div class="section-title">Brewing tools</div>
           <brew-list-row
             headline="Pour-over Timer"
@@ -73,13 +91,14 @@ export class MorePage extends SignalWatcher(LitElement) {
           ></brew-list-row>
 
           <div class="divider"></div>
-          <div class="section-title">Brew method guide</div>
+          <div class="section-title" data-tour="more-guides-section">Brew method guide</div>
           ${BREW_GUIDE.map(
-            (guide) => html`
+            (guide, index) => html`
               <brew-list-row
                 headline="${guide.name}"
                 supporting="${guide.ratioHint} · ${guide.grind} grind"
                 leading-initial="${getInitial(guide.name)}"
+                data-tour="${index === 0 ? "more-guide-row" : nothing}"
                 href="/more/guide/${guide.id}"
               ></brew-list-row>
             `,
