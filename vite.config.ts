@@ -173,6 +173,13 @@ export default defineConfig({
             form_factor: "narrow",
             label: "Saved brews (populated)",
           },
+          {
+            src: "screenshots/timer-with-recipe.png",
+            sizes: "824x1830",
+            type: "image/png",
+            form_factor: "narrow",
+            label: "Guided timer with recipe",
+          },
         ],
       },
       devOptions: {

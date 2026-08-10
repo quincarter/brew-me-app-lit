@@ -3,6 +3,7 @@ import { BREW_GUIDE } from "../data/brew-content.data";
 import { BREW_STEPS_PRESETS } from "../data/brew-steps-presets.data";
 import type { ISavedBrew } from "../interfaces/brew.interface";
 import type { IPrimedRecipe } from "../interfaces/timer.interface";
+import { computeTotalStepSeconds } from "../utilities/brew-step-progress.utility";
 import { getBrewDisplayName } from "../utilities/brew-display.utility";
 
 /**
@@ -60,22 +61,28 @@ export const clearPrimedRecipe = (): void => {
 /** Primes the timer with a recipe from the Calculator's "Start guided timer" action, and restarts the clock at 0. */
 export const primeTimerForRecipe = (recipe: IPrimedRecipe): void => {
   resetTimer();
-  primedRecipeSignal.value = recipe;
-  guidedModeSignal.value = recipe.targetSeconds !== null ? "countdown" : "countup";
+  const stepTotal = computeTotalStepSeconds(recipe.steps);
+  const targetSeconds = stepTotal ?? recipe.targetSeconds;
+  const primed = { ...recipe, targetSeconds };
+  primedRecipeSignal.value = primed;
+  guidedModeSignal.value = targetSeconds !== null ? "countdown" : "countup";
 };
 
 /** Primes the timer from an already-saved brew - looks up its guide entry (if any) for the guided target duration and title, same lookup the Calculator's guided-timer flow used to do inline. */
 export const primeTimerForSavedBrew = (brew: ISavedBrew): void => {
   const guide = BREW_GUIDE.find((item) => item.name === brew.brewType);
+  const steps = brew.brewSteps?.steps ?? BREW_STEPS_PRESETS[brew.brewType]?.steps ?? null;
+  const stepTotal = computeTotalStepSeconds(steps);
+  const targetSeconds = stepTotal ?? guide?.brewTimeSeconds ?? null;
+
   primeTimerForRecipe({
     name: getBrewDisplayName(brew),
     brewType: guide ? brew.brewType : null,
     coffee: brew.coffee,
     water: brew.water,
     ratio: brew.ratio,
-    targetSeconds: guide?.brewTimeSeconds ?? null,
-    // A brew saved before the step-sequence feature shipped has no `brewSteps` of its own - fall back to the type's canned preset (if any), same fallback `primeCalculatorForBrew` uses.
-    steps: brew.brewSteps?.steps ?? BREW_STEPS_PRESETS[brew.brewType]?.steps ?? null,
+    targetSeconds,
+    steps,
   });
 };
 

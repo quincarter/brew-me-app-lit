@@ -82,6 +82,19 @@ async function capture() {
     await page.screenshot({ path: outputPath, fullPage: false });
   }
 
+  console.log("Capturing timer-with-recipe.png (guided timer with AeroPress recipe)...");
+  await page.goto(`${baseUrl}/saved`, { waitUntil: "networkidle" });
+  await page.getByText("Jibbi Little · 2022").click();
+  await page.waitForTimeout(500);
+  await page.getByRole("button", { name: "Brew again" }).click();
+  await page.waitForTimeout(500);
+  await page.getByRole("button", { name: "Start guided timer" }).click();
+  await page.waitForTimeout(500);
+  await page.screenshot({
+    path: path.join(screenshotsDir, "timer-with-recipe.png"),
+    fullPage: false,
+  });
+
   console.log("Screenshots captured successfully!");
   await browser.close();
   await server.close();

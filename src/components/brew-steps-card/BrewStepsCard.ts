@@ -304,7 +304,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
 
     const totalSeconds = timed.reduce((sum, step) => sum + step.seconds, 0);
     const progressPercent =
-      this.elapsedSeconds !== null && totalSeconds > 0
+      !this.editing && this.elapsedSeconds !== null && totalSeconds > 0
         ? Math.min(100, (this.elapsedSeconds / totalSeconds) * 100)
         : null;
 
@@ -477,6 +477,79 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
     `;
   }
 
+  private _renderCondensedCue(
+    steps: IBrewStep[],
+    progress: IBrewStepProgress[] | null,
+  ): HTMLTemplateResult | typeof nothing {
+    if (steps.length === 0) return nothing;
+
+    const activeRow = progress?.find((row) => row.status === "active");
+    if (activeRow) {
+      const step = activeRow.step;
+      const remainingSeconds =
+        step.kind === "timed" && typeof step.seconds === "number" && this.elapsedSeconds !== null
+          ? Math.max(0, step.seconds - (this.elapsedSeconds - activeRow.startSeconds))
+          : null;
+      const pillText =
+        step.kind === "timed"
+          ? remainingSeconds !== null
+            ? `${formatSeconds(remainingSeconds)} left`
+            : "Now"
+          : (step.value ?? "");
+
+      return html`
+        <div class="condensed-cue">
+          <div class="cue-text">
+            <span class="cue-label">${step.label}</span>
+            ${step.note ? html`<span class="cue-note">${step.note}</span>` : nothing}
+          </div>
+          ${pillText ? html`<span class="pill pill-${step.kind}">${pillText}</span>` : nothing}
+        </div>
+      `;
+    }
+
+    const hasTimed = steps.some((s) => s.kind === "timed");
+    const totalTimedSeconds = steps
+      .filter(
+        (s): s is IBrewStep & { seconds: number } =>
+          s.kind === "timed" && typeof s.seconds === "number",
+      )
+      .reduce((sum, s) => sum + s.seconds, 0);
+
+    if (hasTimed && this.elapsedSeconds !== null && this.elapsedSeconds >= totalTimedSeconds) {
+      return html`
+        <div class="condensed-cue">
+          <div class="cue-text">
+            <span class="cue-label">All steps complete</span>
+          </div>
+          <span class="pill pill-timed">Done</span>
+        </div>
+      `;
+    }
+
+    const firstStep = steps.find((s) => s.kind === "timed") ?? steps[0];
+    if (!firstStep) return nothing;
+
+    const durationText =
+      firstStep.kind === "timed" && typeof firstStep.seconds === "number"
+        ? formatSeconds(firstStep.seconds)
+        : (firstStep.value ?? "");
+
+    return html`
+      <div class="condensed-cue">
+        <div class="cue-text">
+          <span class="cue-label">${firstStep.label}</span>
+          ${firstStep.note ? html`<span class="cue-note">${firstStep.note}</span>` : nothing}
+        </div>
+        ${
+          durationText
+            ? html`<span class="pill pill-${firstStep.kind}">${durationText}</span>`
+            : nothing
+        }
+      </div>
+    `;
+  }
+
   render(): HTMLTemplateResult {
     if (!this.config) return html``;
     const steps = this.config.steps;
@@ -505,10 +578,20 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
         </div>
 
         ${
+          !this.editing
+            ? html`
+                <div class="condensed-body">
+                  ${this._renderTimeline(steps)}
+                  ${!this._expanded ? this._renderCondensedCue(steps, progress) : nothing}
+                </div>
+              `
+            : nothing
+        }
+        ${
           this._expanded
             ? html`
                 <div class="body">
-                  ${this.editing ? nothing : this._renderTimeline(steps)}
+                  ${this.editing ? this._renderTimeline(steps) : nothing}
                   <div class="steps">
                     ${displaySteps.map((step) =>
                       this.editing
