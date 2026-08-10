@@ -81,7 +81,7 @@ export const BrewStepsCardStyles = css`
     color: var(--brew-color-on-surface-variant);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: break-spaces;
   }
 
   .timeline {
