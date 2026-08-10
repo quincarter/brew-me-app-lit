@@ -115,8 +115,8 @@ describe("settings-page", () => {
     vi.mocked(exportAppData).mockResolvedValue(undefined);
 
     clickExportButton();
-    await vi.waitUntil(() =>
-      element.shadowRoot?.querySelector(".status-text")?.textContent?.trim() === "Exported!",
+    await vi.waitUntil(
+      () => element.shadowRoot?.querySelector(".status-text")?.textContent?.trim() === "Exported!",
     );
 
     expect(element.shadowRoot?.querySelector(".status-text")?.textContent?.trim()).toBe(
@@ -175,8 +175,8 @@ describe("settings-page", () => {
 
     await selectImportFile(file);
 
-    const hint = Array.from(element.shadowRoot?.querySelectorAll(".section-hint") ?? []).find(
-      (p) => p.textContent?.includes("my-export.json"),
+    const hint = Array.from(element.shadowRoot?.querySelectorAll(".section-hint") ?? []).find((p) =>
+      p.textContent?.includes("my-export.json"),
     );
     expect(hint).not.toBeUndefined();
     expect(confirmImportButton()).not.toBeUndefined();

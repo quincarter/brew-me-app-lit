@@ -38,18 +38,14 @@ export class Button extends LitElement {
       return;
     }
     if (!this.href) {
-      this.dispatchEvent(
-        new CustomEvent("button-click", { bubbles: true, composed: true }),
-      );
+      this.dispatchEvent(new CustomEvent("button-click", { bubbles: true, composed: true }));
     }
   };
 
   render(): HTMLTemplateResult {
     const classes = `btn ${this.variant} ${this.tone} ${this.fullWidth ? "full-width" : ""} ${this.large ? "large" : ""}`;
     return this.href
-      ? html`<a class="${classes}" href="${this.href}" @click="${this._onClick}"
-          ><slot></slot
-        ></a>`
+      ? html`<a class="${classes}" href="${this.href}" @click="${this._onClick}"><slot></slot></a>`
       : html`
           <button
             class="${classes}"

@@ -2,8 +2,6 @@ import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { property } from "lit/decorators.js";
 import "../text-field/brew-text-field";
 import { RatioFormStyles } from "./ratio-form.styles";
-import { ratioSignal } from "../../shared/stores/calculator.store";
-import { formatRatio } from "../../shared/utilities/format-ratio.utility";
 
 /**
  * # Ratio Form
@@ -44,10 +42,7 @@ export class RatioForm extends LitElement {
   @property({ type: String }) oz = "";
   @property({ type: Number }) coffee: number | null = null;
 
-  private _emit(
-    name: "ratio-change" | "water-change" | "oz-change",
-    value: string,
-  ): void {
+  private _emit(name: "ratio-change" | "water-change" | "oz-change", value: string): void {
     this.dispatchEvent(
       new CustomEvent<string>(name, {
         detail: value,
@@ -64,12 +59,10 @@ export class RatioForm extends LitElement {
         type="number"
         prefix-text="1:"
         .value="${this.ratio}"
-        @value-change="${(e: CustomEvent<string>) =>
-          this._emit("ratio-change", e.detail)}"
+        @value-change="${(e: CustomEvent<string>) => this._emit("ratio-change", e.detail)}"
       ></brew-text-field>
       <p class="hint">
-        Defaults to 1:16 for pour-over &amp; drip. Try 1:2 for espresso, 1:3–5
-        for cold brew.
+        Defaults to 1:16 for pour-over &amp; drip. Try 1:2 for espresso, 1:3–5 for cold brew.
       </p>
 
       <div class="row">
@@ -77,27 +70,27 @@ export class RatioForm extends LitElement {
           label="Water (g)"
           type="number"
           .value="${this.water}"
-          @value-change="${(e: CustomEvent<string>) =>
-            this._emit("water-change", e.detail)}"
+          @value-change="${(e: CustomEvent<string>) => this._emit("water-change", e.detail)}"
         ></brew-text-field>
         <brew-text-field
           label="Cup size (oz)"
           type="number"
           .value="${this.oz}"
-          @value-change="${(e: CustomEvent<string>) =>
-            this._emit("oz-change", e.detail)}"
+          @value-change="${(e: CustomEvent<string>) => this._emit("oz-change", e.detail)}"
         ></brew-text-field>
       </div>
       <p class="hint">These two fields update each other automatically.</p>
 
-      ${this.coffee !== null
-        ? html`
-            <div class="result">
-              <div class="result-label">Coffee needed</div>
-              <div class="result-value">${this.coffee}g</div>
-            </div>
-          `
-        : nothing}
+      ${
+        this.coffee !== null
+          ? html`
+              <div class="result">
+                <div class="result-label">Coffee needed</div>
+                <div class="result-value">${this.coffee}g</div>
+              </div>
+            `
+          : nothing
+      }
     `;
   }
 }

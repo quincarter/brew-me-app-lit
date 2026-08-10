@@ -92,7 +92,11 @@ export class SaveSheet extends SignalWatcher(LitElement) {
           ? "Name this brew to share it"
           : "Name this brew";
     const confirmLabel =
-      intent === "guided-timer" ? "Save & Start Timer" : intent === "share" ? "Save & Share" : "Save";
+      intent === "guided-timer"
+        ? "Save & Start Timer"
+        : intent === "share"
+          ? "Save & Share"
+          : "Save";
 
     return html`
       <brew-bottom-sheet ?open="${saveDialogOpenSignal.value}" label="${title}">

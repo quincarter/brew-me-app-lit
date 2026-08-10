@@ -86,9 +86,7 @@ describe("brew-post-save-sheet", () => {
     postSaveSheetOpenSignal.value = true;
     await element.updateComplete;
 
-    const closeButton = element.shadowRoot?.querySelector(
-      'brew-icon-button[aria-label="Close"]',
-    );
+    const closeButton = element.shadowRoot?.querySelector('brew-icon-button[aria-label="Close"]');
     expect(closeButton).not.toBeNull();
     const innerButton = closeButton?.shadowRoot?.querySelector("button");
     innerButton?.click();

@@ -2,9 +2,7 @@
   "exportedAt": "2026-08-10T02:51:45.429Z",
   "app": "brew-me",
   "data": {
-    "custom-brew-types": [
-      "Nitro Cold Brew"
-    ],
+    "custom-brew-types": ["Nitro Cold Brew"],
     "saved-brews": [
       {
         "brewType": "Chemex",
