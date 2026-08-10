@@ -168,6 +168,22 @@ export interface IAeropressRecipe {
   doseGrams: number;
   /** Total input water across the whole recipe (brew water + any bypass/dilution), not just what touches the grounds. */
   totalWaterGrams: number;
+  /**
+   * Hand-curated timed brew sequence derived from this recipe's prose
+   * `steps` - lets the Calculator's Brew Steps card and the Timer screen
+   * show real phases (Bloom, Pour, Press, ...) instead of a flat dump of
+   * every prose line as an untimed note. Like `doseGrams`/`totalWaterGrams`,
+   * curated once by hand rather than parsed at runtime: source wording for
+   * durations is too inconsistent ("for 20 seconds", "over 1:00", rate
+   * ranges like "1.0–2.0 g/s") to parse reliably, and a live timer showing a
+   * wrong duration is worse than a plain note. Only an instruction with an
+   * explicit, unambiguous duration in the source becomes `kind: "timed"`;
+   * everything else (rates, ranges, taste-to-preference dilution) stays
+   * `kind: "note"` rather than guess. Omitted only for a recipe that hasn't
+   * been curated yet - `loadAeropressRecipeIntoCalculator` falls back to the
+   * flat prose dump in that case.
+   */
+  timedSteps?: IBrewStep[];
 }
 
 /** One named expert or brand's V60 recipe, transcribed from an external source. */

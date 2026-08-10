@@ -1,5 +1,11 @@
 import { computed } from "@lit-labs/preact-signals";
-import type { IShareableBrew, ISavedBrew } from "../interfaces/brew.interface";
+import type { IAeropressRecipe, IShareableBrew, ISavedBrew } from "../interfaces/brew.interface";
+import {
+  getAeropressRecipeLabel,
+  getAeropressRecipeRatio,
+  getAeropressRecipeSteps,
+} from "../utilities/aeropress-recipe.utility";
+import { gramsToOunces } from "../utilities/ratio.utility";
 import { persistentSignal } from "./persistent-signal";
 import { openPostSaveSheet } from "./post-save-sheet.store";
 
@@ -84,6 +90,41 @@ export const markBrewedNow = (id: number): void => {
 export const brewAgain = (brew: ISavedBrew, options?: { alreadyOnDetail?: boolean }): void => {
   markBrewedNow(brew.id);
   openPostSaveSheet(brew, options);
+};
+
+/**
+ * The "Brew this recipe now" action on the WAC Recipes screen: saves a
+ * curated AeroPress recipe as a brand-new brew (auto-filled numbers, its
+ * curated step sequence, and recipe provenance for the "Pulled from"
+ * banner), then opens the post-save sheet so the user can jump straight
+ * into a guided timer or view the new brew's detail screen. Mirrors
+ * `brewAgain`'s "update, then show the post-save sheet" shape, but for a
+ * recipe that's never been brewed in this app before rather than an
+ * existing saved brew.
+ */
+export const brewAeropressRecipeNow = (recipe: IAeropressRecipe): void => {
+  const ratio = getAeropressRecipeRatio(recipe);
+  const steps = getAeropressRecipeSteps(recipe);
+
+  const savedBrew = addSavedBrew({
+    brewType: "Aeropress",
+    name: `${recipe.competitor} · ${recipe.year}`,
+    ratio,
+    water: recipe.totalWaterGrams,
+    coffee: recipe.doseGrams,
+    oz: gramsToOunces(recipe.totalWaterGrams),
+    brewSteps: { steps },
+    recipeSource: {
+      recipeId: recipe.id,
+      label: getAeropressRecipeLabel(recipe),
+      ratio,
+      water: recipe.totalWaterGrams,
+      coffee: recipe.doseGrams,
+      steps,
+    },
+  });
+
+  openPostSaveSheet(savedBrew);
 };
 
 /** Danger-zone reset: clears every saved ratio. Used by the Settings screen. */

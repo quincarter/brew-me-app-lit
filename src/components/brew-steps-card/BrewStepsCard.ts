@@ -2,10 +2,12 @@ import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing, type PropertyValues } from "lit";
 import { property, state } from "lit/decorators.js";
 import type { IBrewStep, IBrewStepsConfig } from "../../shared/interfaces/brew.interface";
+import type { IBrewStepProgress } from "../../shared/interfaces/timer.interface";
 import {
   addCustomStepLabel,
   knownStepLabelsSignal,
 } from "../../shared/stores/custom-step-labels.store";
+import { getBrewStepProgress } from "../../shared/utilities/brew-step-progress.utility";
 import { formatSeconds } from "../../shared/utilities/format-time.utility";
 import { moveItem } from "../../shared/utilities/reorder.utility";
 import "../button/brew-button";
@@ -73,6 +75,12 @@ const composedClosest = (start: Element | null, selector: string): HTMLElement |
  * `editing` come from the consumer (`brew-steps.store` on the Calculator,
  * local `_edit*` state on Saved Detail), and every edit is reported via one
  * `config-change` event rather than being applied here.
+ *
+ * Passing `elapsedSeconds` (the Timer screen's live use) switches the
+ * read-only view into a progress display: each timed row is marked
+ * done/active/upcoming, the active row's pill counts down instead of
+ * showing its total duration, and the timeline gets an elapsed-position
+ * marker. Ignored while `editing`.
  * ## Usage
  * ```html
  * <brew-steps-card
@@ -97,6 +105,8 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   @property({ type: Boolean, reflect: true }) editing = false;
   /** Seeds the initial expanded state only; after mount the toggle owns it (same convention as `brew-recipe-card`). */
   @property({ type: Boolean, attribute: "start-open" }) startOpen = false;
+  /** When set (and not `editing`), each timed row is shown as done/active/upcoming against this many elapsed seconds, and the timeline gets a progress marker - the Timer screen's live "honor the brew steps" view. Null renders the plain static card used on the Calculator/Saved Detail. */
+  @property({ type: Number, attribute: "elapsed-seconds" }) elapsedSeconds: number | null = null;
 
   @state() private _expanded = false;
   @state() private _addingCustomLabelForRowId: string | null = null;
@@ -292,6 +302,12 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
     );
     if (timed.length === 0) return nothing;
 
+    const totalSeconds = timed.reduce((sum, step) => sum + step.seconds, 0);
+    const progressPercent =
+      this.elapsedSeconds !== null && totalSeconds > 0
+        ? Math.min(100, (this.elapsedSeconds / totalSeconds) * 100)
+        : null;
+
     return html`
       <div class="timeline">
         ${timed.map(
@@ -303,23 +319,47 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
             ></span>
           `,
         )}
+        ${
+          progressPercent !== null
+            ? html`<span class="timeline-progress" style="left:${progressPercent}%"></span>`
+            : nothing
+        }
       </div>
     `;
   }
 
-  private _renderReadRow(step: IBrewStep): HTMLTemplateResult {
+  private _renderReadRow(
+    step: IBrewStep,
+    progressRow: IBrewStepProgress | null,
+  ): HTMLTemplateResult {
+    const status = progressRow?.status ?? null;
+    const remainingSeconds =
+      status === "active" && this.elapsedSeconds !== null && typeof step.seconds === "number"
+        ? // `elapsedSeconds` is total time since the timer started, not time
+          // within this step - subtract the step's own cumulative start
+          // offset first, or every step but the first would show a
+          // remaining time that's short by however long the prior steps took.
+          Math.max(0, step.seconds - (this.elapsedSeconds - (progressRow?.startSeconds ?? 0)))
+        : null;
     const pillText =
       step.kind === "timed"
         ? typeof step.seconds === "number"
-          ? formatSeconds(step.seconds)
+          ? remainingSeconds !== null
+            ? `${formatSeconds(remainingSeconds)} left`
+            : formatSeconds(step.seconds)
           : "Now"
         : (step.value ?? "");
     // Only note rows can carry long free-text prose (timed rows only ever
-    // render a formatted duration or "Now").
+    // render a formatted duration, remaining time, or "Now").
     const isLongNoteValue = step.kind === "note" && this._isLongNoteValue(pillText);
 
     return html`
-      <div class="step-row">
+      <div class="step-row ${status ? `step-${status}` : ""}">
+        ${
+          status === "done"
+            ? html`<brew-icon class="step-check" name="check_circle" size="18"></brew-icon>`
+            : nothing
+        }
         <div class="step-text">
           <span class="step-label">${step.label}</span>
           ${step.note ? html`<span class="step-note">${step.note}</span>` : nothing}
@@ -442,6 +482,11 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
     const steps = this.config.steps;
     // Dragging only happens in edit mode; outside it, this is just `steps`.
     const displaySteps = this.editing ? (this._previewSteps ?? steps) : steps;
+    // Live done/active/upcoming status only applies to the static read view - editing shows the plain preset-agnostic form instead.
+    const progress =
+      !this.editing && this.elapsedSeconds !== null
+        ? getBrewStepProgress(steps, this.elapsedSeconds)
+        : null;
 
     return html`
       <div class="card ${this._expanded ? "expanded" : ""}">
@@ -466,7 +511,12 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
                   ${this.editing ? nothing : this._renderTimeline(steps)}
                   <div class="steps">
                     ${displaySteps.map((step) =>
-                      this.editing ? this._renderEditRow(step) : this._renderReadRow(step),
+                      this.editing
+                        ? this._renderEditRow(step)
+                        : this._renderReadRow(
+                            step,
+                            progress?.find((row) => row.step.id === step.id) ?? null,
+                          ),
                     )}
                   </div>
                   ${

@@ -16,6 +16,13 @@ const baseSteps: IBrewStep[] = [
 
 const baseConfig: IBrewStepsConfig = { steps: baseSteps };
 
+const progressSteps: IBrewStep[] = [
+  { id: "p1", label: "Bloom", kind: "timed", seconds: 30 },
+  { id: "p2", label: "Pour", kind: "timed", seconds: 45 },
+  { id: "p3", label: "Draw down", kind: "timed", seconds: null },
+];
+const progressConfig: IBrewStepsConfig = { steps: progressSteps };
+
 describe("brew-steps-card", () => {
   let element: BrewStepsCard;
 
@@ -136,6 +143,101 @@ describe("brew-steps-card", () => {
       const row = element.shadowRoot?.querySelector(".step-row");
       expect(row?.querySelector(".pill")).toBeNull();
       expect(row?.querySelector(".step-note-value")?.textContent?.trim()).toBe("Metal disc");
+    });
+  });
+
+  describe("elapsedSeconds progress view (read-only, non-editing)", () => {
+    beforeEach(async () => {
+      await mount();
+      element.config = progressConfig;
+      await element.updateComplete;
+    });
+
+    it("does not add step-status classes or a check icon when elapsedSeconds is null (Calculator/Saved Detail usage)", () => {
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      rows?.forEach((row) => {
+        expect(row.classList.contains("step-done")).toBe(false);
+        expect(row.classList.contains("step-active")).toBe(false);
+        expect(row.classList.contains("step-upcoming")).toBe(false);
+      });
+      expect(element.shadowRoot?.querySelector(".step-check")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".timeline-progress")).toBeNull();
+    });
+
+    it("marks earlier timed rows done (with a check icon) and the current row active, at elapsed time within the second step's window", async () => {
+      element.elapsedSeconds = 50;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows?.[0]?.classList.contains("step-done")).toBe(true);
+      expect(rows?.[0]?.querySelector(".step-check")).not.toBeNull();
+      expect(rows?.[1]?.classList.contains("step-active")).toBe(true);
+      expect(rows?.[1]?.querySelector(".step-check")).toBeNull();
+      expect(rows?.[2]?.classList.contains("step-upcoming")).toBe(true);
+    });
+
+    it("shows the active row's pill as remaining time 'left' instead of its total duration", async () => {
+      element.elapsedSeconds = 40;
+      await element.updateComplete;
+
+      // 40s elapsed, second step ("Pour", 45s) starts at 30s -> 10s in, 35s left.
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows?.[1]?.querySelector(".pill")?.textContent?.trim()).toBe("00:35 left");
+    });
+
+    it("still shows the plain total duration for a done row's pill, not remaining time", async () => {
+      element.elapsedSeconds = 50;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows?.[0]?.querySelector(".pill")?.textContent?.trim()).toBe("00:30");
+    });
+
+    it("marks the whole remaining window's active step exactly at its start-second boundary, with full time left", async () => {
+      element.elapsedSeconds = 30;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows?.[0]?.classList.contains("step-done")).toBe(true);
+      expect(rows?.[1]?.classList.contains("step-active")).toBe(true);
+      expect(rows?.[1]?.querySelector(".pill")?.textContent?.trim()).toBe("00:45 left");
+    });
+
+    it("marks a trailing null-duration timed step active once reached, showing 'Now' rather than a countdown", async () => {
+      element.elapsedSeconds = 200;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows?.[0]?.classList.contains("step-done")).toBe(true);
+      expect(rows?.[1]?.classList.contains("step-done")).toBe(true);
+      expect(rows?.[2]?.classList.contains("step-active")).toBe(true);
+      expect(rows?.[2]?.querySelector(".pill")?.textContent?.trim()).toBe("Now");
+    });
+
+    it("renders a timeline-progress marker once elapsedSeconds is set and there's at least one positive-duration timed step", async () => {
+      element.elapsedSeconds = 10;
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".timeline-progress")).not.toBeNull();
+    });
+
+    it("renders no timeline-progress marker when there are no positive-duration timed steps, even with elapsedSeconds set", async () => {
+      element.config = { steps: [baseSteps[2]] };
+      element.elapsedSeconds = 10;
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".timeline")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".timeline-progress")).toBeNull();
+    });
+
+    it("ignores elapsedSeconds while editing - no step-status classes, check icon, 'left' pill, or timeline marker", async () => {
+      element.elapsedSeconds = 40;
+      element.editing = true;
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".step-row")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-check")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".timeline-progress")).toBeNull();
     });
   });
 

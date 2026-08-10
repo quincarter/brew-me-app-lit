@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import type { ISavedBrew } from "../../interfaces/brew.interface";
+import { BREW_STEPS_PRESETS } from "../../data/brew-steps-presets.data";
+import type { IBrewStep, ISavedBrew } from "../../interfaces/brew.interface";
 import type { IPrimedRecipe } from "../../interfaces/timer.interface";
 import {
+  clearPrimedRecipe,
   guidedModeSignal,
   primedRecipeSignal,
   primeTimerForRecipe,
@@ -15,18 +17,22 @@ import {
 
 const recipe: IPrimedRecipe = {
   name: "V60",
+  brewType: "V60",
   coffee: 20,
   water: 300,
   ratio: 15,
   targetSeconds: 180,
+  steps: BREW_STEPS_PRESETS.V60.steps,
 };
 
 const recipeWithoutTarget: IPrimedRecipe = {
   name: "Cold Brew",
+  brewType: "Cold Brew",
   coffee: 100,
   water: 800,
   ratio: 8,
   targetSeconds: null,
+  steps: null,
 };
 
 describe("timer.store", () => {
@@ -83,10 +89,12 @@ describe("timer.store", () => {
 
       expect(primedRecipeSignal.value).toEqual({
         name: "V60",
+        brewType: "V60",
         coffee: 20,
         water: 320,
         ratio: 16,
         targetSeconds: 210,
+        steps: BREW_STEPS_PRESETS.V60.steps,
       });
     });
 
@@ -107,7 +115,7 @@ describe("timer.store", () => {
       expect(primedRecipeSignal.value?.name).toBe("Sunday morning pour");
     });
 
-    it("sets targetSeconds to null when the brewType has no matching guide entry", () => {
+    it("sets targetSeconds and brewType to null when the brewType has no matching guide entry", () => {
       const brew: ISavedBrew = {
         id: 3,
         brewType: "My Weird Method",
@@ -121,6 +129,7 @@ describe("timer.store", () => {
       primeTimerForSavedBrew(brew);
 
       expect(primedRecipeSignal.value?.targetSeconds).toBeNull();
+      expect(primedRecipeSignal.value?.brewType).toBeNull();
     });
 
     it("sets targetSeconds to null when the matching guide entry has no brewTimeSeconds (e.g. Cold Brew)", () => {
@@ -137,6 +146,61 @@ describe("timer.store", () => {
       primeTimerForSavedBrew(brew);
 
       expect(primedRecipeSignal.value?.targetSeconds).toBeNull();
+      // Cold Brew has a BREW_GUIDE entry (so brewType/title still resolve) but no BREW_STEPS_PRESETS entry.
+      expect(primedRecipeSignal.value?.brewType).toBe("Cold Brew");
+      expect(primedRecipeSignal.value?.steps).toBeNull();
+    });
+
+    it("uses the saved brew's own brewSteps over the type's canned preset when both exist", () => {
+      const customSteps: IBrewStep[] = [
+        { id: "custom-1", label: "Bloom", kind: "timed", seconds: 40 },
+      ];
+      const brew: ISavedBrew = {
+        id: 5,
+        brewType: "V60",
+        ratio: 16,
+        water: 320,
+        coffee: 20,
+        oz: 11,
+        createdAt: Date.now(),
+        brewSteps: { steps: customSteps },
+      };
+
+      primeTimerForSavedBrew(brew);
+
+      expect(primedRecipeSignal.value?.steps).toEqual(customSteps);
+    });
+
+    it("falls back to the type's canned preset when the saved brew has no brewSteps of its own", () => {
+      const brew: ISavedBrew = {
+        id: 6,
+        brewType: "Aeropress",
+        ratio: 15,
+        water: 250,
+        coffee: 17,
+        oz: 8,
+        createdAt: Date.now(),
+      };
+
+      primeTimerForSavedBrew(brew);
+
+      expect(primedRecipeSignal.value?.steps).toEqual(BREW_STEPS_PRESETS.Aeropress.steps);
+    });
+
+    it("sets steps to null when neither the brew nor its type has a step sequence", () => {
+      const brew: ISavedBrew = {
+        id: 7,
+        brewType: "My Weird Method",
+        ratio: 15,
+        water: 300,
+        coffee: 20,
+        oz: 10,
+        createdAt: Date.now(),
+      };
+
+      primeTimerForSavedBrew(brew);
+
+      expect(primedRecipeSignal.value?.steps).toBeNull();
     });
   });
 
@@ -191,6 +255,26 @@ describe("timer.store", () => {
 
     it("leaves an unprimed timer unprimed", () => {
       resetTimer();
+
+      expect(primedRecipeSignal.value).toBeNull();
+    });
+  });
+
+  describe("clearPrimedRecipe", () => {
+    it("unprimes the recipe and restarts the elapsed clock, dropping back to the idle base stopwatch", () => {
+      primeTimerForRecipe(recipe);
+      timerSecondsSignal.value = 42;
+      timerRunningSignal.value = true;
+
+      clearPrimedRecipe();
+
+      expect(primedRecipeSignal.value).toBeNull();
+      expect(timerSecondsSignal.value).toBe(0);
+      expect(timerRunningSignal.value).toBe(false);
+    });
+
+    it("is a no-op on an already-unprimed timer beyond restarting the clock", () => {
+      clearPrimedRecipe();
 
       expect(primedRecipeSignal.value).toBeNull();
     });

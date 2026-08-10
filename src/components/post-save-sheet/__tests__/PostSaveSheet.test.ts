@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { ISavedBrew } from "../../../shared/interfaces/brew.interface";
+import { BREW_STEPS_PRESETS } from "../../../shared/data/brew-steps-presets.data";
 import {
   editBeforeBrewingIdSignal,
   postSaveSheetAlreadyOnDetailSignal,
@@ -147,10 +148,12 @@ describe("brew-post-save-sheet", () => {
 
     expect(primedRecipeSignal.value).toEqual({
       name: "V60",
+      brewType: "V60",
       coffee: 20,
       water: 320,
       ratio: 16,
       targetSeconds: 210,
+      steps: BREW_STEPS_PRESETS.V60.steps,
     });
     expect(window.location.pathname).toBe("/timer");
     expect(postSaveSheetOpenSignal.value).toBe(false);

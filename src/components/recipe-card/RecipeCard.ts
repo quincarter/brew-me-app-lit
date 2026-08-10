@@ -1,6 +1,7 @@
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { property, state } from "lit/decorators.js";
 import type { IAeropressRecipe } from "../../shared/interfaces/brew.interface";
+import "../button/brew-button";
 import "../icon/brew-icon";
 import { RecipeCardStyles } from "./recipe-card.styles";
 
@@ -10,8 +11,12 @@ const PLACE_LABEL: Record<number, string> = { 1: "1st", 2: "2nd", 3: "3rd" };
  * # Recipe Card
  * An expandable card for a single World AeroPress Championship recipe:
  * collapsed it shows the placing, competitor and year; expanded it reveals
- * the full setup table and numbered method.
+ * the full setup table, numbered method, and a "Brew this recipe now"
+ * action. A *controlled* component like `brew-steps-card`/`brew-list-row`:
+ * it doesn't save anything itself - the consumer (the WAC Recipes screen)
+ * owns what "brew this now" actually does.
  * @element brew-recipe-card
+ * @fires brew-now - `CustomEvent<IAeropressRecipe>` fired with this card's recipe when "Brew this recipe now" is activated.
  */
 export class RecipeCard extends LitElement {
   static styles = [RecipeCardStyles];
@@ -37,6 +42,16 @@ export class RecipeCard extends LitElement {
 
   private _toggle = (): void => {
     this._expanded = !this._expanded;
+  };
+
+  private _onBrewNow = (): void => {
+    this.dispatchEvent(
+      new CustomEvent<IAeropressRecipe>("brew-now", {
+        detail: this.recipe,
+        bubbles: true,
+        composed: true,
+      }),
+    );
   };
 
   render(): HTMLTemplateResult {
@@ -82,6 +97,11 @@ export class RecipeCard extends LitElement {
                   </ol>
 
                   ${note ? html`<p class="note">${note}</p>` : nothing}
+
+                  <brew-button variant="filled" full-width @button-click="${this._onBrewNow}"
+                    ><brew-icon name="coffee" size="18"></brew-icon> Brew this recipe
+                    now</brew-button
+                  >
                 </div>
               `
             : nothing

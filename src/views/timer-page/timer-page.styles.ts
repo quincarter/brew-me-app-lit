@@ -19,7 +19,12 @@ export const TimerPageStyles = css`
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    /* "safe" falls back to start-alignment once content (e.g. a long guided
+     * recipe's Brew Steps card) overflows the viewport - plain "center"
+     * keeps the flex line centered even then, pushing part of it (usually
+     * the dial, being first) above the scrollable area with no way to
+     * scroll up into it. */
+    justify-content: safe center;
     gap: 28px;
     padding: 20px;
   }
@@ -28,6 +33,10 @@ export const TimerPageStyles = css`
     box-sizing: border-box;
     width: 220px;
     height: 220px;
+    /* Never let the column's main-axis shrink logic compress this - it's a
+     * circle and must keep a 1:1 aspect ratio regardless of how much other
+     * content (like a long Brew Steps card) is competing for space. */
+    flex-shrink: 0;
     border-radius: 50%;
     background: var(--brew-color-primary-container);
     display: flex;
@@ -104,6 +113,14 @@ export const TimerPageStyles = css`
     display: flex;
     gap: 20px;
     align-items: center;
+  }
+
+  .idle-actions {
+    width: 100%;
+    max-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
   .spacer {
