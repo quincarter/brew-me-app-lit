@@ -42,7 +42,7 @@ export class HomePage extends SignalWatcher(LitElement) {
     const relativeLower = relative.charAt(0).toLowerCase() + relative.slice(1);
 
     return html`
-      <a class="brew-again-card" href="/saved/${brew.id}">
+      <a class="brew-again-card" data-tour="brew-again-card" href="/saved/${brew.id}">
         <brew-avatar
           initial="${getInitial(getBrewDisplayName(brew))}"
           background="var(--brew-color-surface)"

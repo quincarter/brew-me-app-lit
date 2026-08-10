@@ -1,9 +1,9 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing, type PropertyValues } from "lit";
 import { state } from "lit/decorators.js";
-import { TOUR_STEPS } from "../../shared/data/tour-steps.data";
 import type { ITourStep } from "../../shared/interfaces/tour.interface";
 import {
+  activeTourStepsSignal,
   advanceTour,
   currentTourStepSignal,
   isFirstTourStepSignal,
@@ -87,10 +87,11 @@ export class TourOverlay extends SignalWatcher(LitElement) {
   }
 
   private _renderControls(step: ITourStep): HTMLTemplateResult {
+    const steps = activeTourStepsSignal.value;
     return html`
       <div class="controls">
         <div class="progress">
-          ${TOUR_STEPS.map(
+          ${steps.map(
             (_step, index) => html`
               <span class="dot ${index === tourStepIndexSignal.value ? "active" : ""}"></span>
             `,

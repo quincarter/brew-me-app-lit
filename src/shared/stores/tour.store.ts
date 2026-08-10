@@ -1,6 +1,6 @@
 import { computed, signal } from "@lit-labs/preact-signals";
 import { withBase } from "../configuration/base-path";
-import { TOUR_STEPS } from "../data/tour-steps.data";
+import { getTourSteps } from "../data/tour-steps.data";
 import { navigateTo } from "../utilities/navigation.utility";
 import { needsRefreshSignal } from "../utilities/register-service-worker.utility";
 import { canShowInstallPromptSignal } from "./install-prompt.store";
@@ -13,8 +13,11 @@ export const tourSeenSignal = signal<boolean>(readSeenState());
 /** True while the tour overlay is actively showing a step. */
 export const tourActiveSignal = signal<boolean>(false);
 
-/** Index into `TOUR_STEPS` for the step currently being shown. */
+/** Index into the active step list for the step currently being shown. */
 export const tourStepIndexSignal = signal<number>(0);
+
+/** Active step list dynamically generated based on current app data (e.g. including Brew Again step if present). */
+export const activeTourStepsSignal = computed(() => getTourSteps());
 
 /** True when either the custom install prompt or the PWA update/refresh banner is currently visible on screen. */
 export const isPromptVisibleSignal = computed(
@@ -24,7 +27,7 @@ export const isPromptVisibleSignal = computed(
 /** The step object for the current index, or `null` when the tour isn't active or a prompt banner is showing on screen. */
 export const currentTourStepSignal = computed(() =>
   tourActiveSignal.value && !isPromptVisibleSignal.value
-    ? (TOUR_STEPS[tourStepIndexSignal.value] ?? null)
+    ? (activeTourStepsSignal.value[tourStepIndexSignal.value] ?? null)
     : null,
 );
 
@@ -33,7 +36,7 @@ export const isFirstTourStepSignal = computed(() => tourStepIndexSignal.value ==
 
 /** Whether the primary button's label doubles as "finish" (see the last step's "Start brewing" CTA). */
 export const isLastTourStepSignal = computed(
-  () => tourStepIndexSignal.value === TOUR_STEPS.length - 1,
+  () => tourStepIndexSignal.value === activeTourStepsSignal.value.length - 1,
 );
 
 function readSeenState(): boolean {
@@ -41,7 +44,8 @@ function readSeenState(): boolean {
 }
 
 function goToStep(index: number): void {
-  const step = TOUR_STEPS[index];
+  const steps = activeTourStepsSignal.value;
+  const step = steps[index];
   if (!step) return;
 
   step.beforeEnter?.();
@@ -66,7 +70,8 @@ export const startTour = (): void => {
 /** Advances to the next step, or ends the tour if this was the last one. */
 export const advanceTour = (): void => {
   const next = tourStepIndexSignal.value + 1;
-  if (next >= TOUR_STEPS.length) {
+  const steps = activeTourStepsSignal.value;
+  if (next >= steps.length) {
     endTour();
     return;
   }
