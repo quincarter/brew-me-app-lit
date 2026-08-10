@@ -1,3 +1,4 @@
+import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TOUR_STEPS } from "../../../shared/data/tour-steps.data";
 import { tourActiveSignal, tourStepIndexSignal } from "../../../shared/stores/tour.store";

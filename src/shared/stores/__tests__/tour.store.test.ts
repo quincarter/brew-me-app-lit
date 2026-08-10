@@ -1,3 +1,4 @@
+import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { withBase } from "../../configuration/base-path";
 import { TOUR_STEPS } from "../../data/tour-steps.data";
@@ -6,12 +7,14 @@ import {
   needsRefreshSignal,
 } from "../../utilities/register-service-worker.utility";
 import { selectedBrewTypeSignal } from "../brew-steps.store";
+import { savedBrewsSignal } from "../brew.store";
 import {
   deferredInstallPromptSignal,
   installPromptSnoozedSignal,
   isStandaloneSignal,
 } from "../install-prompt.store";
 import {
+  activeTourStepsSignal,
   advanceTour,
   currentTourStepSignal,
   endTour,
@@ -34,6 +37,7 @@ describe("tour.store", () => {
 
   beforeEach(() => {
     localStorage.clear();
+    savedBrewsSignal.value = [];
     tourActiveSignal.value = false;
     tourStepIndexSignal.value = 0;
     tourSeenSignal.value = false;
@@ -255,11 +259,38 @@ describe("tour.store", () => {
     });
 
     it("is true for isLastTourStepSignal only at the final index", () => {
-      tourStepIndexSignal.value = TOUR_STEPS.length - 2;
+      const steps = activeTourStepsSignal.value;
+      tourStepIndexSignal.value = steps.length - 2;
       expect(isLastTourStepSignal.value).toBe(false);
 
-      tourStepIndexSignal.value = TOUR_STEPS.length - 1;
+      tourStepIndexSignal.value = steps.length - 1;
       expect(isLastTourStepSignal.value).toBe(true);
+    });
+  });
+
+  describe("activeTourStepsSignal", () => {
+    it("omits the home-brew-again step when there are no saved brews", () => {
+      savedBrewsSignal.value = [];
+      const stepIds = activeTourStepsSignal.value.map((s) => s.id);
+      expect(stepIds).not.toContain("home-brew-again");
+      expect(stepIds[0]).toBe("home-welcome");
+    });
+
+    it("prepends the home-brew-again step when a recent brew exists", () => {
+      savedBrewsSignal.value = [
+        {
+          id: 123,
+          brewType: "Chemex",
+          coffee: 30,
+          water: 480,
+          ratio: 16,
+          oz: 16.2,
+          createdAt: Date.now(),
+        },
+      ];
+      const stepIds = activeTourStepsSignal.value.map((s) => s.id);
+      expect(stepIds[0]).toBe("home-brew-again");
+      expect(stepIds[1]).toBe("home-welcome");
     });
   });
 });
