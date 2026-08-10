@@ -1,8 +1,15 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { IShareableBrew } from "../../interfaces/brew.interface";
+import type { IAeropressRecipe, IShareableBrew } from "../../interfaces/brew.interface";
+import {
+  getAeropressRecipeLabel,
+  getAeropressRecipeRatio,
+  getAeropressRecipeSteps,
+} from "../../utilities/aeropress-recipe.utility";
+import { gramsToOunces } from "../../utilities/ratio.utility";
 import {
   addSavedBrew,
+  brewAeropressRecipeNow,
   brewAgain,
   deleteAllSavedBrews,
   markBrewedNow,
@@ -23,6 +30,19 @@ const brew = (overrides: Partial<IShareableBrew> = {}): IShareableBrew => ({
   water: 480,
   coffee: 30,
   oz: 16.93,
+  ...overrides,
+});
+
+const aeropressRecipe = (overrides: Partial<IAeropressRecipe> = {}): IAeropressRecipe => ({
+  id: "test-recipe",
+  year: 2021,
+  place: 1,
+  competitor: "Test Competitor",
+  country: "Testland",
+  setup: { Position: "Inverted", Dose: "18g" },
+  steps: ["Pour 100g of water.", "At 30s, stir gently."],
+  doseGrams: 18,
+  totalWaterGrams: 270,
   ...overrides,
 });
 
@@ -135,6 +155,57 @@ describe("brew.store", () => {
       brewAgain(saved, { alreadyOnDetail: true });
 
       expect(postSaveSheetAlreadyOnDetailSignal.value).toBe(true);
+    });
+  });
+
+  describe("brewAeropressRecipeNow", () => {
+    it("adds a new saved brew with numbers/name/brewType derived from the recipe", () => {
+      const recipe = aeropressRecipe();
+
+      brewAeropressRecipeNow(recipe);
+
+      expect(savedBrewsSignal.value).toHaveLength(1);
+      const saved = savedBrewsSignal.value[0];
+      expect(saved.brewType).toBe("Aeropress");
+      expect(saved.name).toBe("Test Competitor · 2021");
+      expect(saved.ratio).toBe(getAeropressRecipeRatio(recipe));
+      expect(saved.water).toBe(recipe.totalWaterGrams);
+      expect(saved.coffee).toBe(recipe.doseGrams);
+      expect(saved.oz).toBe(gramsToOunces(recipe.totalWaterGrams));
+    });
+
+    it("sets brewSteps and recipeSource on the saved brew from the recipe's curated steps", () => {
+      const recipe = aeropressRecipe();
+      const expectedSteps = getAeropressRecipeSteps(recipe);
+
+      brewAeropressRecipeNow(recipe);
+
+      const saved = savedBrewsSignal.value[0];
+      expect(saved.brewSteps).toEqual({ steps: expectedSteps });
+      expect(saved.recipeSource).toEqual({
+        recipeId: recipe.id,
+        label: getAeropressRecipeLabel(recipe),
+        ratio: getAeropressRecipeRatio(recipe),
+        water: recipe.totalWaterGrams,
+        coffee: recipe.doseGrams,
+        steps: expectedSteps,
+      });
+    });
+
+    it("opens the post-save sheet with that exact new brew", () => {
+      const recipe = aeropressRecipe();
+
+      brewAeropressRecipeNow(recipe);
+
+      const saved = savedBrewsSignal.value[0];
+      expect(postSaveSheetOpenSignal.value).toBe(true);
+      expect(postSaveSheetBrewSignal.value).toEqual(saved);
+    });
+
+    it("does not mark the post-save sheet as already-on-detail", () => {
+      brewAeropressRecipeNow(aeropressRecipe());
+
+      expect(postSaveSheetAlreadyOnDetailSignal.value).toBe(false);
     });
   });
 });

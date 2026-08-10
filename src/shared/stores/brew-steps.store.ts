@@ -2,11 +2,15 @@ import { signal } from "@lit-labs/preact-signals";
 import { BREW_STEPS_PRESETS } from "../data/brew-steps-presets.data";
 import type {
   IAeropressRecipe,
-  IBrewStep,
   IBrewStepsConfig,
   ILoadedRecipeSource,
 } from "../interfaces/brew.interface";
-import { gramsToOunces, round2 } from "../utilities/ratio.utility";
+import {
+  getAeropressRecipeLabel,
+  getAeropressRecipeRatio,
+  getAeropressRecipeSteps,
+} from "../utilities/aeropress-recipe.utility";
+import { gramsToOunces } from "../utilities/ratio.utility";
 import { coffeeSignal, ozSignal, ratioSignal, waterSignal } from "./calculator.store";
 
 /**
@@ -54,40 +58,25 @@ export const resetBrewStepsToPreset = (): void => {
   brewStepsSignal.value = type ? (BREW_STEPS_PRESETS[type] ?? null) : null;
 };
 
-const PLACE_LABEL: Record<number, string> = { 1: "1st", 2: "2nd", 3: "3rd" };
-
 /**
  * Loads a curated WAC AeroPress recipe into the calculator: auto-fills
  * ratio/water/coffee from its hand-authored `doseGrams`/`totalWaterGrams`,
- * and snapshots its `setup`/`steps` prose as the Brew Steps card's rows so
+ * and snapshots its `setup`/step sequence as the Brew Steps card's rows so
  * the whole recipe (not just the numbers) is captured for reference.
  */
 export const loadAeropressRecipeIntoCalculator = (recipe: IAeropressRecipe): void => {
-  const ratio = round2(recipe.totalWaterGrams / recipe.doseGrams);
+  const ratio = getAeropressRecipeRatio(recipe);
   ratioSignal.value = String(ratio);
   waterSignal.value = String(recipe.totalWaterGrams);
   ozSignal.value = String(gramsToOunces(recipe.totalWaterGrams));
   coffeeSignal.value = recipe.doseGrams;
 
-  const setupSteps: IBrewStep[] = Object.entries(recipe.setup).map(([key, value]) => ({
-    id: `${recipe.id}-setup-${key}`,
-    label: key,
-    kind: "note",
-    value,
-  }));
-  const proseSteps: IBrewStep[] = recipe.steps.map((step, index) => ({
-    id: `${recipe.id}-step-${index}`,
-    label: `Step ${index + 1}`,
-    kind: "note",
-    value: step,
-    seconds: null,
-  }));
-  const steps = [...setupSteps, ...proseSteps];
+  const steps = getAeropressRecipeSteps(recipe);
 
   brewStepsSignal.value = { steps };
   loadedRecipeSourceSignal.value = {
     recipeId: recipe.id,
-    label: `${recipe.competitor} · ${recipe.year}, ${PLACE_LABEL[recipe.place] ?? `${recipe.place}th`} place`,
+    label: getAeropressRecipeLabel(recipe),
     ratio,
     water: recipe.totalWaterGrams,
     coffee: recipe.doseGrams,

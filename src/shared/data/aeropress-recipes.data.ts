@@ -39,6 +39,30 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // 70g bypass + 100g brew water, all served - no further dilution mentioned.
     doseGrams: 18,
     totalWaterGrams: 170,
+    timedSteps: [
+      {
+        id: "2025-1-pour",
+        label: "Pour & wet grounds",
+        kind: "timed",
+        seconds: 25,
+        note: "Pour 100g water, wetting all grounds",
+      },
+      {
+        id: "2025-1-stir",
+        label: "Stir",
+        kind: "timed",
+        seconds: 25,
+        note: "Stir N-S-N-S then W-E-W-E",
+      },
+      {
+        id: "2025-1-press",
+        label: "Press",
+        kind: "timed",
+        seconds: 20,
+        note: "Press gently for about 20 seconds",
+      },
+      { id: "2025-1-serve", label: "Serve", kind: "timed", seconds: null, note: "Serve" },
+    ],
   },
   {
     id: "2025-2",
@@ -67,6 +91,28 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // Explicit final beverage weight given in the steps.
     doseGrams: 18,
     totalWaterGrams: 152,
+    timedSteps: [
+      {
+        id: "2025-2-pour-stir",
+        label: "Pour & stir",
+        kind: "timed",
+        seconds: 90,
+        note: "Pour 100g water circular, stir 5x N-S-W-E, cap and expel air",
+      },
+      {
+        id: "2025-2-flip-press",
+        label: "Flip & press",
+        kind: "timed",
+        seconds: null,
+        note: "Flip, one controlled swirl, press 1.0–2.0 g/s until output reaches 66g",
+      },
+      {
+        id: "2025-2-dilute",
+        label: "Dilute & serve",
+        kind: "note",
+        value: "Dilute to 152g, cool to ~54°C, serve",
+      },
+    ],
   },
   {
     id: "2025-3",
@@ -98,6 +144,68 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // 208ml total pour (spiral to 65ml, then rest up to 208ml) + 12ml dilution.
     doseGrams: 16,
     totalWaterGrams: 220,
+    timedSteps: [
+      {
+        id: "2025-3-pour-1",
+        label: "First pour",
+        kind: "note",
+        value: "Spiral pour inward-outward-inward to 65ml",
+      },
+      {
+        id: "2025-3-wait-1",
+        label: "Wait",
+        kind: "timed",
+        seconds: 20,
+        note: "Wait before the second pour",
+      },
+      {
+        id: "2025-3-pour-2",
+        label: "Second pour",
+        kind: "note",
+        value: "Heavy centre pour to 208ml",
+      },
+      {
+        id: "2025-3-wait-2",
+        label: "Wait & cap",
+        kind: "timed",
+        seconds: 10,
+        note: "Wait, then attach the filter cap",
+      },
+      {
+        id: "2025-3-invert",
+        label: "Invert & swirl",
+        kind: "note",
+        value: "Squeeze out air, invert, swirl 4–5 times aggressively",
+      },
+      {
+        id: "2025-3-settle",
+        label: "Settle",
+        kind: "timed",
+        seconds: 10,
+        note: "Let the grounds settle before plunging",
+      },
+      {
+        id: "2025-3-plunge",
+        label: "Plunge",
+        kind: "timed",
+        seconds: 60,
+        note: "Plunge immediately, consistently, over 1 minute",
+      },
+      {
+        id: "2025-3-dilute",
+        label: "Dilute",
+        kind: "note",
+        value: "Add 12ml of room-temperature water at 87ppm",
+      },
+      {
+        id: "2025-3-cool",
+        label: "Cool & swirl",
+        kind: "timed",
+        seconds: 30,
+        note: "Swirl the carafe with lid open, gently blowing to cool",
+      },
+      { id: "2025-3-serve", label: "Serve", kind: "timed", seconds: null, note: "Pour and serve" },
+    ],
   },
   {
     id: "2024-1",
@@ -129,6 +237,56 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // 50g + 50g pour, then a final dilution range (130-135g total, then +20-30g) - midpoint estimate.
     doseGrams: 18,
     totalWaterGrams: 158,
+    timedSteps: [
+      {
+        id: "2024-1-pour-1",
+        label: "First pour",
+        kind: "note",
+        value: "Pour ~50g water via melodrip (about 5–6 seconds)",
+      },
+      { id: "2024-1-bloom", label: "Bloom", kind: "timed", seconds: 30, note: "Let it bloom" },
+      {
+        id: "2024-1-pour-2",
+        label: "Second pour",
+        kind: "note",
+        value: "Pour another ~50g water (about 5–6 seconds)",
+      },
+      {
+        id: "2024-1-stir",
+        label: "Stir",
+        kind: "timed",
+        seconds: 10,
+        note: "Stir lightly N-S-E-W",
+      },
+      {
+        id: "2024-1-cap",
+        label: "Cap & degas",
+        kind: "timed",
+        seconds: 10,
+        note: "At 1:20, cap and gently remove air",
+      },
+      {
+        id: "2024-1-swirl",
+        label: "Swirl & place on server",
+        kind: "timed",
+        seconds: 5,
+        note: "At 1:30, swirl and place on your server before pressing at 1:35",
+      },
+      {
+        id: "2024-1-press",
+        label: "Press",
+        kind: "timed",
+        seconds: null,
+        // 30-40s is a range, not an explicit duration - null (an open-ended "now" marker) rather than a guessed midpoint.
+        note: "Press gently to a full output of roughly 76–79g over 30–40 seconds",
+      },
+      {
+        id: "2024-1-dilute",
+        label: "Dilute & serve",
+        kind: "note",
+        value: "Add warm water to 130–135g, then 20–30g room-temperature water",
+      },
+    ],
   },
   {
     id: "2024-2",
@@ -155,6 +313,34 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // 60g bloom + up to 190g second pour, + 10g final dilution.
     doseGrams: 18,
     totalWaterGrams: 200,
+    timedSteps: [
+      {
+        id: "2024-2-bloom",
+        label: "Bloom",
+        kind: "timed",
+        seconds: 40,
+        note: "Pour 60ml room-temperature water to bloom (starts the timer), stir 8 times",
+      },
+      {
+        id: "2024-2-pour-2",
+        label: "Second pour",
+        kind: "note",
+        value: "Pour 95°C water up to 190ml",
+      },
+      {
+        id: "2024-2-press",
+        label: "Flip & press",
+        kind: "timed",
+        seconds: 30,
+        note: "At 1:30 flip and press until 2:00",
+      },
+      {
+        id: "2024-2-dilute",
+        label: "Dilute & serve",
+        kind: "note",
+        value: "Dilute with 10ml room-temperature water, serve",
+      },
+    ],
   },
   {
     id: "2024-3",
@@ -182,6 +368,41 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // 50g + 100g pour, + 30g final dilution.
     doseGrams: 18,
     totalWaterGrams: 180,
+    timedSteps: [
+      {
+        id: "2024-3-pour-1",
+        label: "First pour & stir",
+        kind: "note",
+        value: "Add 50ml 80°C water, stir gently in a circle 5 times",
+      },
+      {
+        id: "2024-3-bloom",
+        label: "Bloom",
+        kind: "timed",
+        seconds: 60,
+        note: "Let the coffee bloom (rinse and seat filters while waiting)",
+      },
+      {
+        id: "2024-3-pour-2",
+        label: "Second pour & stir",
+        kind: "note",
+        value:
+          "Add 100ml 75°C water, secure cap, release half the air, stir carefully in a circle 20 times",
+      },
+      {
+        id: "2024-3-press",
+        label: "Flip & press",
+        kind: "timed",
+        seconds: 30,
+        note: "At 1:30 flip and press slowly",
+      },
+      {
+        id: "2024-3-dilute",
+        label: "Dilute & serve",
+        kind: "note",
+        value: "Add 30ml room-temperature water to balance the cup",
+      },
+    ],
   },
   {
     id: "2023-1",
@@ -210,6 +431,52 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // Total dose 16g + 2g = 18g; water poured/bypassed cumulatively to a final 155g.
     doseGrams: 18,
     totalWaterGrams: 155,
+    timedSteps: [
+      {
+        id: "2023-1-pour",
+        label: "Pour",
+        kind: "timed",
+        seconds: 30,
+        note: "Pour hot water to 100g over 16g coffee",
+      },
+      {
+        id: "2023-1-stir-1",
+        label: "Stir & wait",
+        kind: "timed",
+        seconds: 15,
+        // The stir itself is only the first 5s of this window - the rest is
+        // an unstated wait until the next explicit marker (0:45).
+        note: "At 0:30, stir for 5 seconds with one side of a chopstick, then wait",
+      },
+      {
+        id: "2023-1-add-coffee",
+        label: "Add coffee",
+        kind: "timed",
+        seconds: 10,
+        note: "At 0:45, add another 2g of coffee",
+      },
+      {
+        id: "2023-1-stir-2",
+        label: "Stir & prep",
+        kind: "timed",
+        seconds: 40,
+        note: "At 0:55, stir again, then raise the plunger to remove excess air and close the cap",
+      },
+      {
+        id: "2023-1-press",
+        label: "Flip & press",
+        kind: "timed",
+        seconds: 30,
+        note: "Flip carefully, press from 1:35 for about 30 seconds (yield ~75g)",
+      },
+      {
+        id: "2023-1-bypass",
+        label: "Bypass & serve",
+        kind: "note",
+        value:
+          "Bypass with room-temperature water to 115g, then hot water to about 155g; taste and serve",
+      },
+    ],
   },
   {
     id: "2022-1",
@@ -239,6 +506,42 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // 94g pour, bypassed with 90°C water to a final 150g.
     doseGrams: 18,
     totalWaterGrams: 150,
+    timedSteps: [
+      {
+        id: "2022-1-pour-stir",
+        label: "Pour & stir",
+        kind: "timed",
+        seconds: 80,
+        note: "Pour 94ml water, stir gently 35 times",
+      },
+      {
+        id: "2022-1-cap",
+        label: "Cap & degas",
+        kind: "timed",
+        seconds: 10,
+        note: "At 1:20, screw on the cap and press out remaining air",
+      },
+      {
+        id: "2022-1-flip",
+        label: "Flip",
+        kind: "timed",
+        seconds: 10,
+        note: "At 1:30, flip the AeroPress",
+      },
+      {
+        id: "2022-1-press",
+        label: "Press",
+        kind: "timed",
+        seconds: 30,
+        note: "Press for 30 seconds (1:40–2:10), yielding about 58–64g of concentrate",
+      },
+      {
+        id: "2022-1-bypass",
+        label: "Bypass & serve",
+        kind: "note",
+        value: "Bypass with 90°C water to 150g total (aim for a TDS of 1.3–1.35), serve",
+      },
+    ],
   },
   {
     id: "2021-1",
@@ -268,6 +571,59 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // Pour builds cumulatively to 200g by 0:30; no further dilution mentioned.
     doseGrams: 18,
     totalWaterGrams: 200,
+    timedSteps: [
+      {
+        id: "2021-1-pour-1",
+        label: "First pour",
+        kind: "timed",
+        seconds: 10,
+        note: "Add 50g water at 80°C",
+      },
+      {
+        id: "2021-1-stir-1",
+        label: "Stir",
+        kind: "timed",
+        seconds: 5,
+        note: "Stir very gently 3 times back and forth",
+      },
+      {
+        id: "2021-1-pour-2",
+        label: "Second pour",
+        kind: "timed",
+        seconds: 15,
+        note: "Pour from 50g up to 200g at 80°C",
+      },
+      { id: "2021-1-brew", label: "Brew", kind: "timed", seconds: 20, note: "Let it brew" },
+      {
+        id: "2021-1-stir-2",
+        label: "Stir",
+        kind: "timed",
+        seconds: 10,
+        note: "Stir very gently 3 more times",
+      },
+      {
+        id: "2021-1-cap",
+        label: "Cap & brew",
+        kind: "timed",
+        seconds: 40,
+        note: "Push out excess air, attach the filter cap, brew until 1:40 (place the pitcher on top at 1:35)",
+      },
+      {
+        id: "2021-1-press",
+        label: "Flip & press",
+        kind: "timed",
+        seconds: 20,
+        note: "At 1:40 flip and press right away",
+      },
+      {
+        id: "2021-1-cool",
+        label: "Cool",
+        kind: "timed",
+        seconds: 30,
+        note: "Swirl to cool, then pour from height into another pitcher",
+      },
+      { id: "2021-1-serve", label: "Serve", kind: "timed", seconds: null, note: "Serve" },
+    ],
   },
   {
     id: "2019-1",
@@ -296,6 +652,43 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // Approximate: ~60g concentrate pressed from the 100g pour, diluted to her stated 120g final addition.
     doseGrams: 30,
     totalWaterGrams: 180,
+    timedSteps: [
+      {
+        id: "2019-1-pour",
+        label: "Pour",
+        kind: "timed",
+        seconds: 10,
+        note: "Pour 100g water over 10 seconds",
+      },
+      {
+        id: "2019-1-stir",
+        label: "Stir",
+        kind: "timed",
+        seconds: 10,
+        note: "Stir firmly 20 times",
+      },
+      {
+        id: "2019-1-cap",
+        label: "Cap & degas",
+        kind: "timed",
+        seconds: 20,
+        note: "Fit the filter cap, gently press out excess air",
+      },
+      {
+        id: "2019-1-press",
+        label: "Flip & press",
+        kind: "timed",
+        seconds: null,
+        note: "At 40 seconds, flip and press out all the coffee (about 60g of extract)",
+      },
+      {
+        id: "2019-1-dilute",
+        label: "Dilute & serve",
+        kind: "note",
+        value:
+          "Add 100g water to the extract, then more to taste (Wendelien landed on 120g); cool to about 60°C",
+      },
+    ],
   },
   {
     id: "2018-1",
@@ -322,6 +715,36 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // 100g pour + 60g/40g top-up.
     doseGrams: 34.9,
     totalWaterGrams: 200,
+    timedSteps: [
+      {
+        id: "2018-1-pour",
+        label: "Pour",
+        kind: "timed",
+        seconds: 30,
+        note: "Pour 100g water over 30 seconds",
+      },
+      {
+        id: "2018-1-stir",
+        label: "Stir",
+        kind: "timed",
+        seconds: 30,
+        note: "Stir vigorously but carefully with wooden chopsticks",
+      },
+      {
+        id: "2018-1-press",
+        label: "Flip & press",
+        kind: "timed",
+        seconds: 30,
+        note: "Cap, flip, press into a glass server",
+      },
+      {
+        id: "2018-1-topup",
+        label: "Top up & serve",
+        kind: "note",
+        value:
+          "Top up with 60g of 85°C water and 40g of room-temperature water; do not preheat the serving vessel",
+      },
+    ],
   },
   {
     id: "2017-1",
@@ -348,6 +771,30 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // ~90g concentrate + midpoint of the 160-200g final dilution range.
     doseGrams: 35,
     totalWaterGrams: 270,
+    timedSteps: [
+      { id: "2017-1-pour", label: "Pour", kind: "timed", seconds: 15, note: "Add 150g of water" },
+      { id: "2017-1-stir", label: "Stir", kind: "timed", seconds: 20, note: "Stir continuously" },
+      {
+        id: "2017-1-cap",
+        label: "Cap & wait",
+        kind: "timed",
+        seconds: 30,
+        note: "At 0:35, fit the filter cap with a pre-wet filter",
+      },
+      {
+        id: "2017-1-press",
+        label: "Flip & press",
+        kind: "timed",
+        seconds: 30,
+        note: "At 1:05, flip and start pressing; stop at 1:35 (about 90ml concentrate, ~4.5% TDS)",
+      },
+      {
+        id: "2017-1-dilute",
+        label: "Dilute & serve",
+        kind: "note",
+        value: "Add 160–200g of hot water and enjoy",
+      },
+    ],
   },
   {
     id: "2016-1",
@@ -373,6 +820,36 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // 150g pour + midpoint of the 100-120g to-taste dilution range.
     doseGrams: 35,
     totalWaterGrams: 260,
+    timedSteps: [
+      {
+        id: "2016-1-pour",
+        label: "Pour",
+        kind: "timed",
+        seconds: 15,
+        note: "Pour 150g water over 15 seconds",
+      },
+      { id: "2016-1-stir", label: "Stir", kind: "timed", seconds: 15, note: "Stir" },
+      {
+        id: "2016-1-cap",
+        label: "Cap & wait",
+        kind: "timed",
+        seconds: 30,
+        note: "Put the lid on and wait",
+      },
+      {
+        id: "2016-1-press",
+        label: "Invert & plunge",
+        kind: "timed",
+        seconds: null,
+        note: "Invert the AeroPress, give it a swirl and plunge",
+      },
+      {
+        id: "2016-1-dilute",
+        label: "Dilute & serve",
+        kind: "note",
+        value: "Add 100–120g of water to taste",
+      },
+    ],
   },
   {
     id: "2015-1",
@@ -400,6 +877,36 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // Matches setup.Water directly - the only entry that states a total.
     doseGrams: 20,
     totalWaterGrams: 230,
+    // Each duration below is exactly what its prose step states (wiggle
+    // 15s + bloom 30s + second pour 10s + press 45s = 100s) - the source's
+    // own setup["Total time"] of "1:35" (95s) doesn't quite reconcile with
+    // that sum, but there's no basis in the prose to shave 5s off any one
+    // step, so the discrepancy is left as-is rather than force a false fit.
+    timedSteps: [
+      { id: "2015-1-pour", label: "Pour", kind: "note", value: "Add 60g of water at 79°C" },
+      {
+        id: "2015-1-wiggle",
+        label: "Wiggle",
+        kind: "timed",
+        seconds: 15,
+        note: "Turbulent wiggle",
+      },
+      {
+        id: "2015-1-bloom",
+        label: "Bloom",
+        kind: "timed",
+        seconds: 30,
+        note: "Allow the coffee to bloom",
+      },
+      {
+        id: "2015-1-pour-2",
+        label: "Second pour",
+        kind: "timed",
+        seconds: 10,
+        note: "Add the rest of the water",
+      },
+      { id: "2015-1-press", label: "Press", kind: "timed", seconds: 45, note: "Press down slowly" },
+    ],
   },
   {
     id: "2014-1",
@@ -429,5 +936,35 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
     // 40g + 210g = 250g, matching setup.Water; input water, not netted for the slurry left behind.
     doseGrams: 16.5,
     totalWaterGrams: 250,
+    timedSteps: [
+      { id: "2014-1-pour", label: "Pour", kind: "note", value: "Add 40g of water at 78°C" },
+      {
+        id: "2014-1-bloom",
+        label: "Bloom",
+        kind: "timed",
+        seconds: 25,
+        note: "Allow the coffee to bloom",
+      },
+      {
+        id: "2014-1-pour-2",
+        label: "Stir & second pour",
+        kind: "note",
+        value: "Stir five times, add 210g of water and stir once",
+      },
+      {
+        id: "2014-1-press",
+        label: "Press",
+        kind: "timed",
+        seconds: 75,
+        note: "Press down very slowly",
+      },
+      {
+        id: "2014-1-serve",
+        label: "Serve",
+        kind: "timed",
+        seconds: null,
+        note: "Leave about 45g of slurry in the AeroPress; serve",
+      },
+    ],
   },
 ];

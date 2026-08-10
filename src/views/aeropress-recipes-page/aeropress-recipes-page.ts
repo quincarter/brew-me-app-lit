@@ -6,6 +6,8 @@ import "../../components/link-card/brew-link-card";
 import "../../components/recipe-card/brew-recipe-card";
 import "../../components/top-bar/brew-top-bar";
 import { AEROPRESS_RECIPES, WAC_RECIPES_SOURCE } from "../../shared/data/aeropress-recipes.data";
+import type { IAeropressRecipe } from "../../shared/interfaces/brew.interface";
+import { brewAeropressRecipeNow } from "../../shared/stores/brew.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { AeropressRecipesPageStyles } from "./aeropress-recipes-page.styles";
 
@@ -85,6 +87,8 @@ export class AeropressRecipesPage extends LitElement {
                 <brew-recipe-card
                   .recipe="${recipe}"
                   ?start-open="${recipes.length === 1}"
+                  @brew-now="${(e: CustomEvent<IAeropressRecipe>) =>
+                    brewAeropressRecipeNow(e.detail)}"
                 ></brew-recipe-card>
               `,
             )}

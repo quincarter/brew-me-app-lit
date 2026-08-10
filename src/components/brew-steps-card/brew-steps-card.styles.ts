@@ -49,11 +49,22 @@ export const BrewStepsCardStyles = css`
   }
 
   .timeline {
+    position: relative;
     display: flex;
     height: 10px;
     border-radius: 6px;
     overflow: hidden;
     background: var(--brew-color-surface-container-highest);
+  }
+
+  /* Live elapsed-time marker over the proportional segments - only rendered when a consumer (the Timer screen) sets elapsedSeconds. */
+  .timeline-progress {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 2px;
+    background: var(--brew-color-on-surface);
+    box-shadow: 0 0 0 2px var(--brew-color-surface);
   }
 
   .timeline-segment {
@@ -97,6 +108,26 @@ export const BrewStepsCardStyles = css`
     display: flex;
     align-items: center;
     gap: 12px;
+  }
+
+  /* "done"/"active"/"upcoming" only render when a consumer sets elapsedSeconds (the Timer screen) - the plain static card (Calculator/Saved Detail) never sets these classes. */
+  .step-row.step-done .step-label {
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .step-row.step-active .step-label {
+    color: var(--brew-color-primary);
+    font-weight: 700;
+  }
+
+  .step-row.step-active .pill-timed {
+    background: var(--brew-color-primary);
+    color: var(--brew-color-on-primary);
+  }
+
+  .step-check {
+    flex-shrink: 0;
+    color: var(--brew-color-primary);
   }
 
   .step-text {

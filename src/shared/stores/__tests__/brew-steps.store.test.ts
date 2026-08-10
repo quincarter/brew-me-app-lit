@@ -2,6 +2,7 @@ import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { AEROPRESS_RECIPES } from "../../data/aeropress-recipes.data";
 import { BREW_STEPS_PRESETS } from "../../data/brew-steps-presets.data";
+import type { IAeropressRecipe } from "../../interfaces/brew.interface";
 import { gramsToOunces, round2 } from "../../utilities/ratio.utility";
 import {
   QUICK_CALCULATOR,
@@ -128,12 +129,13 @@ describe("brew-steps.store", () => {
       expect(coffeeSignal.value).toBe(recipe.doseGrams);
     });
 
-    it("builds note rows from setup then prose steps, and populates loadedRecipeSourceSignal", () => {
+    it("builds note rows from setup, then the recipe's curated timed steps, and populates loadedRecipeSourceSignal", () => {
+      if (!recipe.timedSteps) throw new Error("expected the 2025-1 fixture to have timedSteps");
       loadAeropressRecipeIntoCalculator(recipe);
 
       const setupKeys = Object.keys(recipe.setup);
       const steps = brewStepsSignal.value?.steps ?? [];
-      expect(steps).toHaveLength(setupKeys.length + recipe.steps.length);
+      expect(steps).toHaveLength(setupKeys.length + recipe.timedSteps.length);
 
       setupKeys.forEach((key, index) => {
         const step = steps[index];
@@ -142,13 +144,9 @@ describe("brew-steps.store", () => {
         expect(step?.value).toBe(recipe.setup[key]);
       });
 
-      recipe.steps.forEach((prose, index) => {
-        const step = steps[setupKeys.length + index];
-        expect(step?.label).toBe(`Step ${index + 1}`);
-        expect(step?.kind).toBe("note");
-        expect(step?.value).toBe(prose);
-        expect(step?.seconds).toBeNull();
-      });
+      expect(steps.slice(setupKeys.length)).toEqual(recipe.timedSteps);
+      // At least one curated step is a real timed phase, not just a flat prose dump.
+      expect(recipe.timedSteps.some((step) => step.kind === "timed" && step.seconds)).toBe(true);
 
       const source = loadedRecipeSourceSignal.value;
       expect(source).not.toBeNull();
@@ -158,6 +156,39 @@ describe("brew-steps.store", () => {
       expect(source?.water).toBe(recipe.totalWaterGrams);
       expect(source?.coffee).toBe(recipe.doseGrams);
       expect(source?.steps).toEqual(steps);
+    });
+
+    it("falls back to a flat prose-note dump for a recipe with no curated timedSteps", () => {
+      const uncuratedRecipe: IAeropressRecipe = {
+        id: "uncurated-1",
+        year: 2099,
+        place: 1,
+        competitor: "Test Competitor",
+        country: "Testland",
+        setup: { Dose: "20g" },
+        steps: ["Pour water.", "Press."],
+        doseGrams: 20,
+        totalWaterGrams: 300,
+      };
+
+      loadAeropressRecipeIntoCalculator(uncuratedRecipe);
+
+      const steps = brewStepsSignal.value?.steps ?? [];
+      expect(steps).toHaveLength(1 + uncuratedRecipe.steps.length);
+      expect(steps[1]).toEqual({
+        id: "uncurated-1-step-0",
+        label: "Step 1",
+        kind: "note",
+        value: "Pour water.",
+        seconds: null,
+      });
+      expect(steps[2]).toEqual({
+        id: "uncurated-1-step-1",
+        label: "Step 2",
+        kind: "note",
+        value: "Press.",
+        seconds: null,
+      });
     });
 
     it("formats 2nd/3rd/other places distinctly from 1st", () => {
