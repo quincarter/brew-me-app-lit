@@ -1,5 +1,5 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/list-row/brew-list-row";
@@ -91,13 +91,14 @@ export class MorePage extends SignalWatcher(LitElement) {
           ></brew-list-row>
 
           <div class="divider"></div>
-          <div class="section-title">Brew method guide</div>
+          <div class="section-title" data-tour="more-guides-section">Brew method guide</div>
           ${BREW_GUIDE.map(
-            (guide) => html`
+            (guide, index) => html`
               <brew-list-row
                 headline="${guide.name}"
                 supporting="${guide.ratioHint} · ${guide.grind} grind"
                 leading-initial="${getInitial(guide.name)}"
+                data-tour="${index === 0 ? "more-guide-row" : nothing}"
                 href="/more/guide/${guide.id}"
               ></brew-list-row>
             `,

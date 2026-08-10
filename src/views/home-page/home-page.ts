@@ -86,7 +86,7 @@ export class HomePage extends SignalWatcher(LitElement) {
 
           ${mostRecent ? this._renderBrewAgainCard(mostRecent) : nothing}
 
-          <div class="actions">
+          <div class="actions" data-tour="home-actions">
             <brew-action-tile
               icon="calculate"
               label="Calculate"

@@ -60,7 +60,7 @@ describe("brew-tour-overlay", () => {
     await mount();
 
     const step = TOUR_STEPS[homeWelcomeIndex];
-    expect(element.shadowRoot?.querySelector(".scrim.centered")).not.toBeNull();
+    expect(element.shadowRoot?.querySelector(".scrim.bottom-anchored")).not.toBeNull();
     expect(element.shadowRoot?.querySelector(".title")?.textContent).toBe(step.title);
     expect(element.shadowRoot?.querySelector(".body")?.textContent).toBe(step.body);
   });
@@ -154,7 +154,7 @@ describe("brew-tour-overlay", () => {
     await flushSpotlightActivation();
 
     expect(element.shadowRoot?.querySelector(".cutout")).toBeNull();
-    expect(element.shadowRoot?.querySelector(".scrim.centered")).not.toBeNull();
+    expect(element.shadowRoot?.querySelector(".scrim.bottom-anchored")).not.toBeNull();
     expect(element.shadowRoot?.querySelector(".card")).not.toBeNull();
   });
 });

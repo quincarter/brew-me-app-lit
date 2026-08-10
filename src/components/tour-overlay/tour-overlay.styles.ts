@@ -15,39 +15,43 @@ export const TourOverlayStyles = css`
     display: flex;
   }
 
-  .scrim.centered {
-    align-items: center;
+  .scrim.bottom-anchored {
+    align-items: flex-end;
     justify-content: center;
     padding: 24px;
+    padding-bottom: 80px;
     box-sizing: border-box;
-    background: rgba(32, 27, 19, 0.55);
+    background: rgba(15, 12, 9, 0.35);
   }
 
-  /*
-   * No background here on purpose - the real element underneath shows
-   * through the cutout. The div still needs to exist to capture clicks so
-   * the tour stays "look-only" while it's active.
-   */
   .cutout {
     position: fixed;
     border-radius: 16px;
-    box-shadow: 0 0 0 9999px rgba(32, 27, 19, 0.55);
-    pointer-events: auto;
+    box-shadow: 0 0 0 9999px rgba(15, 12, 9, 0.35);
+    border: 2px solid var(--brew-color-primary);
+    outline: 3px solid rgba(212, 137, 26, 0.3);
+    pointer-events: none;
     transition:
-      top 0.2s ease,
-      left 0.2s ease,
-      width 0.2s ease,
-      height 0.2s ease;
+      top 0.25s cubic-bezier(0.2, 0, 0, 1),
+      left 0.25s cubic-bezier(0.2, 0, 0, 1),
+      width 0.25s cubic-bezier(0.2, 0, 0, 1),
+      height 0.25s cubic-bezier(0.2, 0, 0, 1);
   }
 
   .card {
     background: var(--brew-color-surface-container-high);
     border-radius: 20px;
-    padding: 24px;
+    padding: 20px 24px;
     max-width: 360px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--brew-color-outline-variant);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
     position: relative;
     pointer-events: auto;
+  }
+
+  .bottom-card {
+    width: 100%;
+    max-width: 360px;
   }
 
   .spotlight-card {

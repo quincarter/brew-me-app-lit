@@ -112,8 +112,8 @@ export class TourOverlay extends SignalWatcher(LitElement) {
 
   private _renderSlide(step: ITourStep): HTMLTemplateResult {
     return html`
-      <div class="scrim centered">
-        <div class="card" role="dialog" aria-label="${step.title}">
+      <div class="scrim bottom-anchored">
+        <div class="card bottom-card" role="dialog" aria-label="${step.title}">
           <brew-icon-button
             class="close"
             icon="close"
@@ -130,17 +130,24 @@ export class TourOverlay extends SignalWatcher(LitElement) {
 
   private _renderSpotlight(step: ITourStep, rect: DOMRect): HTMLTemplateResult {
     const padding = step.spotlightPadding ?? 8;
-    const cutoutStyle = `top: ${rect.top - padding}px; left: ${rect.left - padding}px; width: ${
-      rect.width + padding * 2
-    }px; height: ${rect.height + padding * 2}px;`;
+    const cutoutTop = Math.max(0, rect.top - padding);
+    const cutoutLeft = Math.max(0, rect.left - padding);
+    const cutoutWidth = rect.width + padding * 2;
+    const cutoutHeight = rect.height + padding * 2;
+
+    const cutoutStyle = `top: ${cutoutTop}px; left: ${cutoutLeft}px; width: ${cutoutWidth}px; height: ${cutoutHeight}px;`;
 
     const cardWidth = 320;
-    const clampedLeft = Math.max(16, Math.min(rect.left, window.innerWidth - cardWidth - 16));
+    const targetCenterX = rect.left + rect.width / 2;
+    const clampedLeft = Math.max(16, Math.min(targetCenterX - cardWidth / 2, window.innerWidth - cardWidth - 16));
+
     const spaceBelow = window.innerHeight - (rect.bottom + padding);
-    const placeBelow = spaceBelow > 220;
+    const spaceAbove = rect.top - padding;
+
+    const placeBelow = spaceBelow >= 180 || spaceBelow > spaceAbove;
     const cardStyle = placeBelow
-      ? `top: ${rect.bottom + padding + 12}px; left: ${clampedLeft}px;`
-      : `bottom: ${window.innerHeight - (rect.top - padding) + 12}px; left: ${clampedLeft}px;`;
+      ? `top: ${Math.min(rect.bottom + padding + 12, window.innerHeight - 200)}px; left: ${clampedLeft}px;`
+      : `bottom: ${Math.min(window.innerHeight - (rect.top - padding) + 12, window.innerHeight - 200)}px; left: ${clampedLeft}px;`;
 
     return html`
       <div class="scrim">
