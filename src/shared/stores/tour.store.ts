@@ -2,6 +2,8 @@ import { computed, signal } from "@lit-labs/preact-signals";
 import { withBase } from "../configuration/base-path";
 import { TOUR_STEPS } from "../data/tour-steps.data";
 import { navigateTo } from "../utilities/navigation.utility";
+import { needsRefreshSignal } from "../utilities/register-service-worker.utility";
+import { canShowInstallPromptSignal } from "./install-prompt.store";
 
 const TOUR_SEEN_KEY = "brewme-tour-seen";
 
@@ -14,9 +16,16 @@ export const tourActiveSignal = signal<boolean>(false);
 /** Index into `TOUR_STEPS` for the step currently being shown. */
 export const tourStepIndexSignal = signal<number>(0);
 
-/** The step object for the current index, or `null` when the tour isn't active (drives `brew-tour-overlay`'s render-nothing branch). */
+/** True when either the custom install prompt or the PWA update/refresh banner is currently visible on screen. */
+export const isPromptVisibleSignal = computed(
+  () => canShowInstallPromptSignal.value || needsRefreshSignal.value,
+);
+
+/** The step object for the current index, or `null` when the tour isn't active or a prompt banner is showing on screen. */
 export const currentTourStepSignal = computed(() =>
-  tourActiveSignal.value ? (TOUR_STEPS[tourStepIndexSignal.value] ?? null) : null,
+  tourActiveSignal.value && !isPromptVisibleSignal.value
+    ? (TOUR_STEPS[tourStepIndexSignal.value] ?? null)
+    : null,
 );
 
 /** Whether the Back button should be hidden. */

@@ -1,7 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { withBase } from "../../configuration/base-path";
 import { TOUR_STEPS } from "../../data/tour-steps.data";
+import {
+  isOfflineReadySignal,
+  needsRefreshSignal,
+} from "../../utilities/register-service-worker.utility";
 import { selectedBrewTypeSignal } from "../brew-steps.store";
+import {
+  deferredInstallPromptSignal,
+  installPromptSnoozedSignal,
+  isStandaloneSignal,
+} from "../install-prompt.store";
 import {
   advanceTour,
   currentTourStepSignal,
@@ -29,6 +38,11 @@ describe("tour.store", () => {
     tourStepIndexSignal.value = 0;
     tourSeenSignal.value = false;
     selectedBrewTypeSignal.value = null;
+    needsRefreshSignal.value = false;
+    deferredInstallPromptSignal.value = null;
+    installPromptSnoozedSignal.value = false;
+    isStandaloneSignal.value = false;
+    isOfflineReadySignal.value = false;
     window.history.pushState({}, "", "/");
     pushStateSpy = vi.spyOn(window.history, "pushState");
   });
@@ -205,6 +219,29 @@ describe("tour.store", () => {
       tourStepIndexSignal.value = 1;
 
       expect(currentTourStepSignal.value).toEqual(TOUR_STEPS[1]);
+    });
+
+    it("evaluates to null while the update/refresh prompt is showing", () => {
+      tourActiveSignal.value = true;
+      needsRefreshSignal.value = true;
+
+      expect(currentTourStepSignal.value).toBeNull();
+
+      needsRefreshSignal.value = false;
+      expect(currentTourStepSignal.value).toEqual(TOUR_STEPS[0]);
+    });
+
+    it("evaluates to null while the install prompt is showing", () => {
+      tourActiveSignal.value = true;
+      deferredInstallPromptSignal.value = {} as any;
+      isStandaloneSignal.value = false;
+      installPromptSnoozedSignal.value = false;
+      isOfflineReadySignal.value = true;
+
+      expect(currentTourStepSignal.value).toBeNull();
+
+      deferredInstallPromptSignal.value = null;
+      expect(currentTourStepSignal.value).toEqual(TOUR_STEPS[0]);
     });
   });
 
