@@ -50,6 +50,70 @@ export const CalculatorPageStyles = css`
     color: var(--brew-color-on-surface);
   }
 
+  button.primed-banner.recipe-banner {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    cursor: pointer;
+    border: 1px solid var(--brew-color-primary);
+    border-radius: 14px;
+    padding: 10px 14px;
+    background: var(--brew-color-surface-container-high);
+    color: var(--brew-color-primary);
+  }
+
+  button.primed-banner.recipe-banner:focus-visible {
+    outline: 2px solid var(--brew-color-primary);
+    outline-offset: 2px;
+  }
+
+  .chooser-intro {
+    margin: 8px 0 0;
+    text-align: center;
+    font-size: 15px;
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .chooser-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--brew-color-on-surface-variant);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .chooser-divider::before,
+  .chooser-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--brew-color-outline-variant);
+  }
+
+  .type-chip-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .type-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 14px;
+    border-radius: 14px;
+    background: var(--brew-color-secondary-container);
+    color: var(--brew-color-on-secondary-container);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
   .ratio-chip {
     align-self: flex-start;
     display: inline-flex;

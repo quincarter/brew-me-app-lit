@@ -42,8 +42,8 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
     this._aiTipIndex = (this._aiTipIndex + 1) % tipCount;
   }
 
-  private _calcThisRatio(ratioDefault: number): void {
-    primeCalculatorForRatio(ratioDefault);
+  private _calcThisRatio(ratioDefault: number, brewType: string): void {
+    primeCalculatorForRatio(ratioDefault, brewType);
     navigateTo("/calculate");
   }
 
@@ -145,7 +145,7 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
                     <p>You haven't saved a ${guide.name} ratio yet.</p>
                     <brew-button
                       variant="filled"
-                      @button-click="${() => this._calcThisRatio(guide.ratioDefault)}"
+                      @button-click="${() => this._calcThisRatio(guide.ratioDefault, guide.name)}"
                       >Calculate this ratio</brew-button
                     >
                   </div>

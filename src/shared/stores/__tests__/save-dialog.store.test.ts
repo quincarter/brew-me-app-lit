@@ -1,5 +1,13 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { IBrewStepsConfig, ILoadedRecipeSource } from "../../interfaces/brew.interface";
+import {
+  QUICK_CALCULATOR,
+  loadedRecipeSourceSignal,
+  selectBrewType,
+  selectedBrewTypeSignal,
+  updateBrewStepsConfig,
+} from "../brew-steps.store";
 import { deleteAllSavedBrews, savedBrewsSignal } from "../brew.store";
 import {
   coffeeSignal,
@@ -59,6 +67,30 @@ describe("save-dialog.store", () => {
       openSaveDialog();
 
       expect(pendingBrewIconSignal.value).toBe("");
+    });
+
+    it("prefills the pending brew type from a real, already-chosen calculator brew type", () => {
+      selectBrewType("Aeropress");
+
+      openSaveDialog();
+
+      expect(pendingBrewTypeSignal.value).toBe("Aeropress");
+    });
+
+    it("leaves the pending brew type null when the calculator's chooser picked the quick-calculator sentinel", () => {
+      selectBrewType(QUICK_CALCULATOR);
+
+      openSaveDialog();
+
+      expect(pendingBrewTypeSignal.value).toBeNull();
+    });
+
+    it("leaves the pending brew type null when the calculator's chooser hasn't been answered yet", () => {
+      expect(selectedBrewTypeSignal.value).toBeNull();
+
+      openSaveDialog();
+
+      expect(pendingBrewTypeSignal.value).toBeNull();
     });
 
     it("sets the intent to share when requested", () => {
@@ -189,6 +221,67 @@ describe("save-dialog.store", () => {
       await confirmSave();
 
       expect(savedBrewsSignal.value[0]?.icon).toBeUndefined();
+    });
+
+    it("carries the live brewStepsSignal/loadedRecipeSourceSignal into the saved brew", async () => {
+      const brewSteps: IBrewStepsConfig = {
+        steps: [{ id: "x", label: "X", kind: "note", value: "y" }],
+      };
+      const recipeSource: ILoadedRecipeSource = {
+        recipeId: "2025-1",
+        label: "Némo Pop · 2025, 1st place",
+        ratio: 9.44,
+        water: 170,
+        coffee: 18,
+        steps: brewSteps.steps,
+      };
+      setWater("480");
+      selectBrewType("Aeropress");
+      updateBrewStepsConfig(brewSteps);
+      loadedRecipeSourceSignal.value = recipeSource;
+      selectPendingBrewType("Aeropress");
+
+      await confirmSave();
+
+      expect(savedBrewsSignal.value[0]?.brewSteps).toEqual(brewSteps);
+      expect(savedBrewsSignal.value[0]?.recipeSource).toEqual(recipeSource);
+    });
+
+    it("omits brewSteps/recipeSource when neither is set for the session", async () => {
+      setWater("480");
+      selectPendingBrewType("Pour-over");
+
+      await confirmSave();
+
+      expect(savedBrewsSignal.value[0]?.brewSteps).toBeUndefined();
+      expect(savedBrewsSignal.value[0]?.recipeSource).toBeUndefined();
+    });
+
+    it("drops brewSteps/recipeSource when the Save sheet's pending type was changed away from the Calculator's selected type", async () => {
+      const brewSteps: IBrewStepsConfig = {
+        steps: [{ id: "x", label: "X", kind: "note", value: "y" }],
+      };
+      const recipeSource: ILoadedRecipeSource = {
+        recipeId: "2025-1",
+        label: "Némo Pop · 2025, 1st place",
+        ratio: 9.44,
+        water: 170,
+        coffee: 18,
+        steps: brewSteps.steps,
+      };
+      setWater("480");
+      // Calculator's own chooser picked Aeropress and loaded a WAC recipe...
+      selectBrewType("Aeropress");
+      updateBrewStepsConfig(brewSteps);
+      loadedRecipeSourceSignal.value = recipeSource;
+      // ...but the Save sheet's own type picker was then changed to something else.
+      selectPendingBrewType("Kalita Wave");
+
+      await confirmSave();
+
+      expect(savedBrewsSignal.value[0]?.brewType).toBe("Kalita Wave");
+      expect(savedBrewsSignal.value[0]?.brewSteps).toBeUndefined();
+      expect(savedBrewsSignal.value[0]?.recipeSource).toBeUndefined();
     });
 
     it("closes the sheet and resets the intent back to save after saving", async () => {

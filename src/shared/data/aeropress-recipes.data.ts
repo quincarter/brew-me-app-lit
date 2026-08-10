@@ -36,6 +36,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "At 50s, begin gently pressing for about 20 seconds.",
       "Serve.",
     ],
+    // 70g bypass + 100g brew water, all served - no further dilution mentioned.
+    doseGrams: 18,
+    totalWaterGrams: 170,
   },
   {
     id: "2025-2",
@@ -61,6 +64,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "Dilute the concentrate to a final beverage weight of 152g.",
       "Cool to roughly 54°C before serving.",
     ],
+    // Explicit final beverage weight given in the steps.
+    doseGrams: 18,
+    totalWaterGrams: 152,
   },
   {
     id: "2025-3",
@@ -89,6 +95,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "Pour and serve.",
     ],
     note: "Dharun designs each championship recipe to specific music — this one to Four Tet's Three.",
+    // 208ml total pour (spiral to 65ml, then rest up to 208ml) + 12ml dilution.
+    doseGrams: 16,
+    totalWaterGrams: 220,
   },
   {
     id: "2024-1",
@@ -117,6 +126,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "Serve.",
     ],
     note: "From George: this method was tailored to one specific coffee and roast — adapt it to your palate.",
+    // 50g + 50g pour, then a final dilution range (130-135g total, then +20-30g) - midpoint estimate.
+    doseGrams: 18,
+    totalWaterGrams: 158,
   },
   {
     id: "2024-2",
@@ -140,6 +152,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "Dilute with 10ml of room-temperature water.",
       "Serve.",
     ],
+    // 60g bloom + up to 190g second pour, + 10g final dilution.
+    doseGrams: 18,
+    totalWaterGrams: 200,
   },
   {
     id: "2024-3",
@@ -164,6 +179,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "At 1:30, flip the AeroPress and press slowly over 30 seconds.",
       "Add 30ml of room-temperature water to balance the cup.",
     ],
+    // 50g + 100g pour, + 30g final dilution.
+    doseGrams: 18,
+    totalWaterGrams: 180,
   },
   {
     id: "2023-1",
@@ -189,6 +207,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "Bypass with hot water to about 155g.",
       "Taste and serve.",
     ],
+    // Total dose 16g + 2g = 18g; water poured/bypassed cumulatively to a final 155g.
+    doseGrams: 18,
+    totalWaterGrams: 155,
   },
   {
     id: "2022-1",
@@ -215,6 +236,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "Serve.",
     ],
     note: "Optional: brew onto chilled extract ice balls (3 at the bottom, 1 on top) for a smoother mouthfeel.",
+    // 94g pour, bypassed with 90°C water to a final 150g.
+    doseGrams: 18,
+    totalWaterGrams: 150,
   },
   {
     id: "2021-1",
@@ -241,6 +265,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "Swirl from 2:00–2:30 to cool, then pour from height into another pitcher.",
       "Serve.",
     ],
+    // Pour builds cumulatively to 200g by 0:30; no further dilution mentioned.
+    doseGrams: 18,
+    totalWaterGrams: 200,
   },
   {
     id: "2019-1",
@@ -266,6 +293,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "Taste and add more water to your preferred strength (Wendelien landed on 120g).",
       "Cool to roughly 60°C by stirring and decanting, then enjoy.",
     ],
+    // Approximate: ~60g concentrate pressed from the 100g pour, diluted to her stated 120g final addition.
+    doseGrams: 30,
+    totalWaterGrams: 180,
   },
   {
     id: "2018-1",
@@ -289,6 +319,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "Do not preheat your serving vessel.",
       "Top up with 60g of 85°C water and 40g of room-temperature water.",
     ],
+    // 100g pour + 60g/40g top-up.
+    doseGrams: 34.9,
+    totalWaterGrams: 200,
   },
   {
     id: "2017-1",
@@ -312,6 +345,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "At 1:35 stop pressing — you should have about 90ml of concentrate at ~4.5% TDS.",
       "Add 160–200g of hot water and enjoy.",
     ],
+    // ~90g concentrate + midpoint of the 160-200g final dilution range.
+    doseGrams: 35,
+    totalWaterGrams: 270,
   },
   {
     id: "2016-1",
@@ -334,6 +370,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "Invert the AeroPress, give it a swirl and plunge.",
       "Add 100–120g of water to taste.",
     ],
+    // 150g pour + midpoint of the 100-120g to-taste dilution range.
+    doseGrams: 35,
+    totalWaterGrams: 260,
   },
   {
     id: "2015-1",
@@ -358,6 +397,9 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "Add the rest of the water over 10 seconds.",
       "Press down for 45 seconds.",
     ],
+    // Matches setup.Water directly - the only entry that states a total.
+    doseGrams: 20,
+    totalWaterGrams: 230,
   },
   {
     id: "2014-1",
@@ -384,5 +426,8 @@ export const AEROPRESS_RECIPES: IAeropressRecipe[] = [
       "Press down very slowly for 75 seconds.",
       "Leave 45g of slurry in the AeroPress.",
     ],
+    // 40g + 210g = 250g, matching setup.Water; input water, not netted for the slurry left behind.
+    doseGrams: 16.5,
+    totalWaterGrams: 250,
   },
 ];

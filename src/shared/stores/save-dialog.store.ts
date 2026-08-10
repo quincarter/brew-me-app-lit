@@ -1,6 +1,12 @@
 import { signal } from "@lit-labs/preact-signals";
 import type { ISaveConfirmResult, SaveDialogIntent } from "../interfaces/save-dialog.interface";
 import { shareBrew } from "../utilities/share.utility";
+import {
+  QUICK_CALCULATOR,
+  brewStepsSignal,
+  loadedRecipeSourceSignal,
+  selectedBrewTypeSignal,
+} from "./brew-steps.store";
 import { addSavedBrew } from "./brew.store";
 import {
   coffeeSignal,
@@ -21,7 +27,12 @@ export const setPendingBrewName = (value: string): void => {
 };
 
 export const openSaveDialog = (options?: { intent?: SaveDialogIntent }): void => {
-  pendingBrewTypeSignal.value = null;
+  const selectedType = selectedBrewTypeSignal.value;
+  // Prefill from the Calculator's own brew-type chooser when it picked a
+  // real method - the quick-calculator sentinel and "not answered yet" both
+  // leave the Save sheet's type picker unselected, same as before this feature.
+  pendingBrewTypeSignal.value =
+    selectedType && selectedType !== QUICK_CALCULATOR ? selectedType : null;
   pendingBrewNameSignal.value = "";
   pendingBrewIconSignal.value = "";
   saveIntentSignal.value = options?.intent ?? "save";
@@ -47,6 +58,16 @@ export const confirmSave = async (): Promise<ISaveConfirmResult | null> => {
   const coffee = coffeeSignal.value;
   if (!brewType || coffee === null) return null;
 
+  /**
+   * `brewStepsSignal`/`loadedRecipeSourceSignal` describe the Calculator's
+   * own brew-type selection, not the Save sheet's - the two are independent
+   * signals (see `selectPendingBrewType` above). Only carry them through
+   * when the person didn't change the type in the Save sheet; otherwise
+   * they'd desync from the type actually being saved (e.g. AeroPress steps
+   * saved under a "Kalita Wave" brewType).
+   */
+  const stepsMatchSavedType = brewType === selectedBrewTypeSignal.value;
+
   const name = pendingBrewNameSignal.value.trim();
   const savedBrew = addSavedBrew({
     brewType,
@@ -56,6 +77,8 @@ export const confirmSave = async (): Promise<ISaveConfirmResult | null> => {
     water: Number.parseFloat(waterSignal.value),
     coffee,
     oz: Number.parseFloat(ozSignal.value),
+    brewSteps: stepsMatchSavedType ? (brewStepsSignal.value ?? undefined) : undefined,
+    recipeSource: stepsMatchSavedType ? (loadedRecipeSourceSignal.value ?? undefined) : undefined,
   });
 
   const intent = saveIntentSignal.value;

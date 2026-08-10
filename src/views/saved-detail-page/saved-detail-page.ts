@@ -1,19 +1,24 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
+import "../../components/bottom-sheet/brew-bottom-sheet";
+import "../../components/brew-steps-card/brew-steps-card";
 import "../../components/button/brew-button";
 import "../../components/icon/brew-icon";
 import "../../components/link-card/brew-link-card";
 import "../../components/ratio-form/brew-ratio-form";
 import "../../components/ratio-summary/brew-ratio-summary";
+import "../../components/recipe-card/brew-recipe-card";
 import "../../components/star-rating/brew-star-rating";
 import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
 import "../../components/type-picker/brew-type-picker";
 import "../../components/video-search/brew-video-search";
+import { AEROPRESS_RECIPES } from "../../shared/data/aeropress-recipes.data";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
-import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
+import { BREW_STEPS_PRESETS } from "../../shared/data/brew-steps-presets.data";
+import type { IBrewStepsConfig, ISavedBrew } from "../../shared/interfaces/brew.interface";
 import { addCustomBrewType, allBrewTypesSignal } from "../../shared/stores/brew-types.store";
 import {
   brewAgain,
@@ -21,11 +26,13 @@ import {
   savedBrewsSignal,
   updateSavedBrew,
 } from "../../shared/stores/brew.store";
+import { editBeforeBrewingIdSignal } from "../../shared/stores/post-save-sheet.store";
 import { DELETE_ICON, EDIT_ICON, REPLAY_ICON, SHARE_ICON } from "../../shared/icons/icons";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
 import { BREW_ICON_MAP, normalizeBrewIconKey } from "../../shared/utilities/brew-icon.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
+import { isRecipeModified } from "../../shared/utilities/recipe-modified.utility";
 import { coffeeForWater, gramsToOunces, ouncesToGrams } from "../../shared/utilities/ratio.utility";
 import { SHARE_OUTCOME_MESSAGES, shareBrew } from "../../shared/utilities/share.utility";
 import { SavedDetailPageStyles } from "./saved-detail-page.styles";
@@ -45,9 +52,28 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
   @state() private _editCoffee: number | null = null;
   @state() private _editRating = 0;
   @state() private _editTastingNote = "";
+  @state() private _editBrewSteps: IBrewStepsConfig | null = null;
   @state() private _shareStatusText = "";
+  @state() private _originalRecipeOpen = false;
 
   private _statusTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  /**
+   * Consumes a pending "Edit before brewing" request from the Post Save
+   * Sheet (set via `requestEditBeforeBrewing` when "Brew again" was tapped
+   * on this very screen) - reading the signal here, rather than only in
+   * `render()`, still keeps it tracked by `SignalWatcher` (which wraps the
+   * whole update lifecycle), while `willUpdate` is the safe place to also
+   * set `@state` for this same render pass.
+   */
+  protected willUpdate(): void {
+    const pendingId = editBeforeBrewingIdSignal.value;
+    if (pendingId === null || this._editing) return;
+    const brew = savedBrewsSignal.value.find((item) => item.id === pendingId);
+    if (!brew || Number(this.routeParams.id) !== pendingId) return;
+    editBeforeBrewingIdSignal.value = null;
+    this._toggleEditing(brew);
+  }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
@@ -108,10 +134,14 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     this._editCoffee = brew.coffee;
     this._editRating = brew.rating ?? 0;
     this._editTastingNote = brew.tastingNote ?? "";
+    // A brew saved before this feature shipped has no `brewSteps` of its own -
+    // fall back to the type's canned preset (if any), same as the
+    // Calculator's own `primeCalculatorForBrew`.
+    this._editBrewSteps = brew.brewSteps ?? BREW_STEPS_PRESETS[brew.brewType] ?? null;
     this._editing = true;
   }
 
-  private _onSaveEdit(id: number): void {
+  private _onSaveEdit(brew: ISavedBrew): void {
     const water = Number.parseFloat(this._editWater);
     const ratio = Number.parseFloat(this._editRatio);
     const coffee = coffeeForWater(water, ratio);
@@ -119,7 +149,9 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     const oz = this._editOz ? Number.parseFloat(this._editOz) : gramsToOunces(water);
     /** A retyped brew that now has its own automatic icon match must drop any stale manual override from its old (custom) type. */
     const hasAutomaticIcon = Boolean(BREW_ICON_MAP[normalizeBrewIconKey(this._editBrewType)]);
-    updateSavedBrew(id, {
+    /** `recipeSource` is provenance for a specific loaded recipe - it's cleared, not edited, if the brew type changed away from the one it was loaded for. */
+    const droppedRecipeType = Boolean(brew.recipeSource) && this._editBrewType !== brew.brewType;
+    updateSavedBrew(brew.id, {
       brewType: this._editBrewType,
       name: this._editBrewName.trim() || undefined,
       water,
@@ -128,7 +160,9 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
       oz,
       rating: this._editRating || undefined,
       tastingNote: this._editTastingNote.trim() || undefined,
+      brewSteps: this._editBrewSteps ?? undefined,
       ...(hasAutomaticIcon ? { icon: undefined } : {}),
+      ...(droppedRecipeType ? { recipeSource: undefined } : {}),
     });
     this._editing = false;
   }
@@ -221,6 +255,21 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                       this._editTastingNote = e.detail;
                     }}"
                   ></brew-text-field>
+
+                  ${
+                    this._editBrewSteps
+                      ? html`
+                          <brew-steps-card
+                            editing
+                            start-open
+                            .config="${this._editBrewSteps}"
+                            @config-change="${(e: CustomEvent<IBrewStepsConfig>) => {
+                              this._editBrewSteps = e.detail;
+                            }}"
+                          ></brew-steps-card>
+                        `
+                      : nothing
+                  }
                 `
               : html`
                   <brew-ratio-summary
@@ -254,7 +303,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                     variant="filled"
                     full-width
                     ?disabled="${!canSaveEdit}"
-                    @button-click="${() => this._onSaveEdit(brew.id)}"
+                    @button-click="${() => this._onSaveEdit(brew)}"
                     >Save changes</brew-button
                   >
                 `
@@ -263,7 +312,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                     variant="filled"
                     full-width
                     large
-                    @button-click="${() => brewAgain(brew)}"
+                    @button-click="${() => brewAgain(brew, { alreadyOnDetail: true })}"
                     ><brew-icon .svg="${REPLAY_ICON}" size="22"></brew-icon> Brew again</brew-button
                   >
 
@@ -300,6 +349,9 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
             this._editing
               ? null
               : html`
+                  ${brew.brewSteps ? html`<brew-steps-card .config="${brew.brewSteps}"></brew-steps-card>` : nothing}
+                  ${brew.recipeSource ? this._renderRecipeBanner(brew) : nothing}
+
                   <div class="section-title">Brew guide</div>
                   ${
                     matchingGuide
@@ -322,7 +374,65 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
         </div>
 
         <brew-bottom-nav active="saved"></brew-bottom-nav>
+        ${this._renderOriginalRecipeSheet(brew)}
       </div>
+    `;
+  }
+
+  private _renderRecipeBanner(brew: ISavedBrew): HTMLTemplateResult | typeof nothing {
+    const source = brew.recipeSource;
+    if (!source) return nothing;
+
+    const modified = isRecipeModified(
+      {
+        ratio: String(brew.ratio),
+        water: String(brew.water),
+        coffee: brew.coffee,
+        steps: brew.brewSteps?.steps ?? [],
+      },
+      source,
+    );
+
+    return html`
+      <button
+        class="primed-banner recipe-banner"
+        type="button"
+        @click="${() => {
+          this._originalRecipeOpen = true;
+        }}"
+      >
+        <brew-icon name="menu_book" size="18"></brew-icon>
+        <span class="primed-banner-text"
+          >${
+            modified
+              ? html`Modified from ${source.label} — tap to see the original`
+              : html`Pulled from ${source.label}`
+          }</span
+        >
+      </button>
+    `;
+  }
+
+  private _renderOriginalRecipeSheet(brew: ISavedBrew): HTMLTemplateResult | typeof nothing {
+    const source = brew.recipeSource;
+    if (!this._originalRecipeOpen || !source) return nothing;
+    const original = AEROPRESS_RECIPES.find((recipe) => recipe.id === source.recipeId);
+
+    return html`
+      <brew-bottom-sheet
+        open
+        label="Original recipe"
+        @sheet-scrim-click="${() => {
+          this._originalRecipeOpen = false;
+        }}"
+      >
+        <div class="title">Original recipe</div>
+        ${
+          original
+            ? html`<brew-recipe-card .recipe="${original}" start-open></brew-recipe-card>`
+            : html`<p>This recipe is no longer available.</p>`
+        }
+      </brew-bottom-sheet>
     `;
   }
 }

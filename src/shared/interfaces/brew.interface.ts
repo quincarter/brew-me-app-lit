@@ -17,6 +17,10 @@ export interface ISavedBrew {
   tastingNote?: string;
   /** Epoch ms when this brew was last re-brewed via "Brew again" - falls back to `createdAt` for ordering/display when unset. */
   lastBrewedAt?: number;
+  /** Optional method-specific step sequence (bloom/steep/plunge, etc.) - only present for brew types with a real step sequence. See `BREW_STEPS_PRESETS`. */
+  brewSteps?: IBrewStepsConfig;
+  /** Optional provenance for `brewSteps`/the ratio numbers when they were loaded from a curated recipe (e.g. a WAC AeroPress entry) rather than typed in by hand. */
+  recipeSource?: ILoadedRecipeSource;
 }
 
 /**
@@ -26,6 +30,43 @@ export interface ISavedBrew {
  * they're excluded here too - they must never leak into the share-link flow.
  */
 export type IShareableBrew = Omit<ISavedBrew, "id" | "createdAt" | "rating" | "tastingNote">;
+
+/**
+ * One row in a `IBrewStepsConfig` - a method's timed phase (e.g. "Bloom",
+ * 30s) or an untimed setting/instruction (e.g. "Position" -> "Standard", or
+ * a WAC recipe's prose step). Timed and untimed rows share one shape so a
+ * curated recipe's steps and a method's canned timeline can live in the
+ * same list.
+ */
+export interface IBrewStep {
+  /** Stable per-row id so edits/removals target the right row even after reordering. */
+  id: string;
+  label: string;
+  kind: "timed" | "note";
+  /** Set when `kind` is "timed". `null` marks an untimed point in the sequence (e.g. "now"). */
+  seconds?: number | null;
+  /** Set when `kind` is "note" - free-text value, e.g. "Standard", "Paper". */
+  value?: string;
+  /** Optional short sub-copy shown under the label, e.g. "Wet all grounds, gentle swirl". */
+  note?: string;
+}
+
+/** A method's editable step sequence, shown in the Calculator/Saved Detail's collapsible Brew Steps card. */
+export interface IBrewStepsConfig {
+  steps: IBrewStep[];
+}
+
+/** Snapshot of a curated recipe (currently only WAC AeroPress entries) at the moment it was loaded into the calculator - drives the "Pulled from"/"Modified from" banner and the "see the original" comparison. */
+export interface ILoadedRecipeSource {
+  /** `AEROPRESS_RECIPES[].id` this was loaded from. */
+  recipeId: string;
+  /** Display label, e.g. "Némo Pop · 2025, 1st place". */
+  label: string;
+  ratio: number;
+  water: number;
+  coffee: number;
+  steps: IBrewStep[];
+}
 
 /** A curated YouTube walkthrough shown on a brew guide's detail screen. */
 export interface IBrewVideo {
@@ -118,6 +159,15 @@ export interface IAeropressRecipe {
   steps: string[];
   /** Optional note from the competitor. */
   note?: string;
+  /**
+   * Hand-derived from `setup.Dose`/`steps` - `setup`'s own Dose/Water text is
+   * free-form and inconsistent across entries (bypass water, ranges,
+   * split doses), so these are curated once rather than parsed at runtime.
+   * Drives "Load a WAC recipe"'s ratio/water/coffee auto-fill.
+   */
+  doseGrams: number;
+  /** Total input water across the whole recipe (brew water + any bypass/dilution), not just what touches the grounds. */
+  totalWaterGrams: number;
 }
 
 /** One named expert or brand's V60 recipe, transcribed from an external source. */
