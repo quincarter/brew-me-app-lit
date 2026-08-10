@@ -7,6 +7,7 @@ import "../../components/stat-tile/brew-stat-tile";
 import "../../components/top-bar/brew-top-bar";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
 import { streakDaysSignal, totalBrewsSignal } from "../../shared/stores/brew.store";
+import { startTour } from "../../shared/stores/tour.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { MorePageStyles } from "./more-page.styles";
@@ -14,6 +15,11 @@ import { MorePageStyles } from "./more-page.styles";
 @customElement("more-page")
 export class MorePage extends SignalWatcher(LitElement) {
   static styles = [MorePageStyles, responsiveScreenStyles];
+
+  private _onTakeTourClick = (event: Event): void => {
+    event.preventDefault();
+    startTour();
+  };
 
   render(): HTMLTemplateResult {
     return html`
@@ -43,6 +49,18 @@ export class MorePage extends SignalWatcher(LitElement) {
             leading-bg="var(--brew-color-surface-container-high)"
             leading-fg="var(--brew-color-on-surface)"
             href="/more/settings"
+          ></brew-list-row>
+
+          <div class="divider"></div>
+          <div class="section-title">Help</div>
+          <brew-list-row
+            headline="Take the tour"
+            supporting="Replay the BrewMe walkthrough"
+            leading-icon="explore"
+            leading-bg="var(--brew-color-primary-container)"
+            leading-fg="var(--brew-color-on-primary-container)"
+            href="/more"
+            @click="${this._onTakeTourClick}"
           ></brew-list-row>
 
           <div class="divider"></div>
