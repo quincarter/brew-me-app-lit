@@ -226,7 +226,7 @@ describe("timer-page", () => {
         | (HTMLElement & { startOpen: boolean; elapsedSeconds: number | null })
         | undefined;
       expect(stepsCard).not.toBeNull();
-      expect(stepsCard?.startOpen).toBe(true);
+      expect(stepsCard?.startOpen).toBe(false);
       expect(stepsCard?.elapsedSeconds).toBe(12);
     });
   });

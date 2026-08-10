@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { IBrewStep } from "../../interfaces/brew.interface";
-import { getBrewStepProgress } from "../brew-step-progress.utility";
+import { computeTotalStepSeconds, getBrewStepProgress } from "../brew-step-progress.utility";
 
 const v60Steps: IBrewStep[] = [
   { id: "bloom", label: "Bloom", kind: "timed", seconds: 30 },
@@ -70,5 +70,19 @@ describe("getBrewStepProgress", () => {
     const progress = getBrewStepProgress(steps, 30);
 
     expect(progress.map((row) => row.status)).toEqual(["done", "done", "active"]);
+  });
+});
+
+describe("computeTotalStepSeconds", () => {
+  it("sums up the seconds of timed steps", () => {
+    expect(computeTotalStepSeconds(v60Steps)).toBe(120);
+  });
+
+  it("returns null for null, empty, or note-only steps", () => {
+    expect(computeTotalStepSeconds(null)).toBeNull();
+    expect(computeTotalStepSeconds([])).toBeNull();
+    expect(
+      computeTotalStepSeconds([{ id: "filter", label: "Filter", kind: "note", value: "Paper" }]),
+    ).toBeNull();
   });
 });

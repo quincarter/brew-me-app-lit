@@ -140,7 +140,10 @@ export class TourOverlay extends SignalWatcher(LitElement) {
 
     const cardWidth = 320;
     const targetCenterX = rect.left + rect.width / 2;
-    const clampedLeft = Math.max(16, Math.min(targetCenterX - cardWidth / 2, window.innerWidth - cardWidth - 16));
+    const clampedLeft = Math.max(
+      16,
+      Math.min(targetCenterX - cardWidth / 2, window.innerWidth - cardWidth - 16),
+    );
 
     const spaceBelow = window.innerHeight - (rect.bottom + padding);
     const spaceAbove = rect.top - padding;

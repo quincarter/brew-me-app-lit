@@ -21,7 +21,7 @@ const recipe: IPrimedRecipe = {
   coffee: 20,
   water: 300,
   ratio: 15,
-  targetSeconds: 180,
+  targetSeconds: 120,
   steps: BREW_STEPS_PRESETS.V60.steps,
 };
 
@@ -93,7 +93,7 @@ describe("timer.store", () => {
         coffee: 20,
         water: 320,
         ratio: 16,
-        targetSeconds: 210,
+        targetSeconds: 120,
         steps: BREW_STEPS_PRESETS.V60.steps,
       });
     });

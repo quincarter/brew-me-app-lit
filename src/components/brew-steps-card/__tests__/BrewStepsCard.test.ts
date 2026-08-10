@@ -146,6 +146,34 @@ describe("brew-steps-card", () => {
     });
   });
 
+  describe("condensed collapsed view", () => {
+    it("renders timeline and condensed cue when collapsed (startOpen = false)", async () => {
+      const card = document.createElement("brew-steps-card") as BrewStepsCard;
+      document.body.appendChild(card);
+      card.config = baseConfig;
+      await card.updateComplete;
+
+      expect(card.shadowRoot?.querySelector(".timeline")).not.toBeNull();
+      const cue = card.shadowRoot?.querySelector(".condensed-cue");
+      expect(cue).not.toBeNull();
+      expect(cue?.querySelector(".cue-label")?.textContent).toBe("Bloom");
+      card.remove();
+    });
+
+    it("renders active step and countdown in condensed cue when elapsedSeconds is provided", async () => {
+      const card = document.createElement("brew-steps-card") as BrewStepsCard;
+      document.body.appendChild(card);
+      card.config = progressConfig;
+      card.elapsedSeconds = 40; // 10s into second step ("Pour", 45s) -> 35s left
+      await card.updateComplete;
+
+      const cue = card.shadowRoot?.querySelector(".condensed-cue");
+      expect(cue?.querySelector(".cue-label")?.textContent).toBe("Pour");
+      expect(cue?.querySelector(".pill")?.textContent?.trim()).toBe("00:35 left");
+      card.remove();
+    });
+  });
+
   describe("elapsedSeconds progress view (read-only, non-editing)", () => {
     beforeEach(async () => {
       await mount();

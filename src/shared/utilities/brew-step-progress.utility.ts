@@ -42,3 +42,20 @@ export const getBrewStepProgress = (
     return { step, status: "upcoming", startSeconds };
   });
 };
+
+/**
+ * Calculates the total duration in seconds of all timed steps in a brew step sequence.
+ * Returns `null` if there are no timed steps with positive durations.
+ */
+export const computeTotalStepSeconds = (steps: IBrewStep[] | null | undefined): number | null => {
+  if (!steps || steps.length === 0) return null;
+  let total = 0;
+  let hasTimed = false;
+  for (const step of steps) {
+    if (step.kind === "timed" && typeof step.seconds === "number" && step.seconds > 0) {
+      total += step.seconds;
+      hasTimed = true;
+    }
+  }
+  return hasTimed && total > 0 ? total : null;
+};

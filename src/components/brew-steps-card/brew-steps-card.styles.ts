@@ -48,6 +48,42 @@ export const BrewStepsCardStyles = css`
     gap: 14px;
   }
 
+  .condensed-body {
+    padding: 0 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .condensed-cue {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 2px;
+  }
+
+  .cue-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cue-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brew-color-on-surface);
+  }
+
+  .cue-note {
+    font-size: 12px;
+    color: var(--brew-color-on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .timeline {
     position: relative;
     display: flex;

@@ -130,7 +130,6 @@ export class TimerPage extends SignalWatcher(LitElement) {
                       ? html`
                           <brew-steps-card
                             .config="${{ steps: recipe.steps }}"
-                            start-open
                             elapsed-seconds="${timerSecondsSignal.value}"
                           ></brew-steps-card>
                         `

@@ -152,7 +152,7 @@ describe("brew-post-save-sheet", () => {
       coffee: 20,
       water: 320,
       ratio: 16,
-      targetSeconds: 210,
+      targetSeconds: 120,
       steps: BREW_STEPS_PRESETS.V60.steps,
     });
     expect(window.location.pathname).toBe("/timer");
