@@ -41,7 +41,8 @@ describe("brew-tour-overlay", () => {
   /** Waits for the mocked `awaitTourTarget` call made during activation to
    * settle, then for the follow-up render it triggers. */
   const flushSpotlightActivation = async (): Promise<void> => {
-    const lastResult = vi.mocked(awaitTourTarget).mock.results.at(-1);
+    const results = vi.mocked(awaitTourTarget).mock.results;
+    const lastResult = results[results.length - 1];
     if (lastResult) await lastResult.value;
     await element.updateComplete;
   };
