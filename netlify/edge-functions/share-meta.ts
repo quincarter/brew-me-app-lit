@@ -43,8 +43,8 @@ export default async (request: Request, context: NetlifyEdgeContext): Promise<Re
     return response;
   }
 
-  const title = `${brewType} · ${ratio}:1 ratio — BrewMe`;
-  const description = `${coffee}g coffee to ${water}g water (${oz}oz) at a ${ratio}:1 ratio. Open this brew in BrewMe.`;
+  const title = `${brewType} · 1:${ratio} ratio — BrewMe`;
+  const description = `${coffee}g coffee to ${water}g water (${oz}oz) at a 1:${ratio} ratio. Open this brew in BrewMe.`;
   const safeTitle = escapeHtml(title);
   const safeDescription = escapeHtml(description);
   const safeUrl = escapeHtml(url.toString());

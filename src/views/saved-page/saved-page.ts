@@ -5,9 +5,12 @@ import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/empty-state/brew-empty-state";
 import "../../components/list-row/brew-list-row";
 import "../../components/top-bar/brew-top-bar";
-import { savedBrewsSignal } from "../../shared/stores/brew.store";
+import { brewAgain, savedBrewsSignal } from "../../shared/stores/brew.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
+import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
+import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
+import { formatRatio } from "../../shared/utilities/format-ratio.utility";
 import { SavedPageStyles } from "./saved-page.styles";
 
 @customElement("saved-page")
@@ -24,17 +27,24 @@ export class SavedPage extends SignalWatcher(LitElement) {
         <div class="content">
           ${
             brews.length === 0
-              ? html`<div class="empty-state"><brew-empty-state></brew-empty-state></div>`
+              ? html`<div class="empty-state">
+                  <brew-empty-state></brew-empty-state>
+                </div>`
               : brews.map((brew) => {
                   const colors = getAvatarColors(brew.id);
                   return html`
                     <brew-list-row
-                      headline="${brew.brewType} · ${brew.ratio}:1"
+                      headline="${getBrewDisplayName(brew)} · ${formatRatio(brew.ratio)}"
                       supporting="${brew.coffee}g coffee · ${brew.water}g water · ${brew.oz}oz"
-                      leading-initial="${getInitial(brew.brewType)}"
+                      leading-initial="${getInitial(getBrewDisplayName(brew))}"
                       leading-bg="${colors.background}"
                       leading-fg="${colors.foreground}"
+                      .avatarIcon="${getBrewTypeIcon(brew.brewType, brew.icon)}"
+                      is-saved-brew
                       href="/saved/${brew.id}"
+                      rating="${brew.rating ?? 0}"
+                      ?replayable="${true}"
+                      @replay-click="${() => brewAgain(brew)}"
                     ></brew-list-row>
                   `;
                 })

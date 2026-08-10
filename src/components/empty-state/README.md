@@ -22,9 +22,9 @@ Saved Brews list.
 
 ## Properties
 
-| Property   | Attribute    | Type     | Default                                                      | Description                                             |
-| ---------- | ------------ | -------- | ------------------------------------------------------------- | -------------------------------------------------------- |
-| `image`    | `image`      | `String` | `"/tired-guy.png"`                                            | Illustration shown above the message.                    |
-| `message`  | `message`    | `String` | `"No coffee brews yet! Head over to Calculate to add some!"`  | The cheeky empty-state copy.                              |
-| `ctaLabel` | `cta-label`  | `String` | `"Calculate a brew"`                                           | CTA button label. Omit both CTA props to hide the button. |
-| `ctaHref`  | `cta-href`   | `String` | `"/calculate"`                                                 | CTA button destination.                                   |
+| Property   | Attribute   | Type     | Default                                                      | Description                                               |
+| ---------- | ----------- | -------- | ------------------------------------------------------------ | --------------------------------------------------------- |
+| `image`    | `image`     | `String` | `"/tired-guy.png"`                                           | Illustration shown above the message.                     |
+| `message`  | `message`   | `String` | `"No coffee brews yet! Head over to Calculate to add some!"` | The cheeky empty-state copy.                              |
+| `ctaLabel` | `cta-label` | `String` | `"Calculate a brew"`                                         | CTA button label. Omit both CTA props to hide the button. |
+| `ctaHref`  | `cta-href`  | `String` | `"/calculate"`                                               | CTA button destination.                                   |

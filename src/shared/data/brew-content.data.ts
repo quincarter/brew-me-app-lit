@@ -1,8 +1,4 @@
-import type {
-  IBrewGlossaryTerm,
-  IBrewGuideItem,
-  IBrewVideo,
-} from "../interfaces/brew.interface";
+import type { IBrewGlossaryTerm, IBrewGuideItem, IBrewVideo } from "../interfaces/brew.interface";
 
 /** Brew type options offered when naming a saved ratio. */
 export const BREW_TYPES: string[] = [
@@ -29,8 +25,7 @@ const POUR_OVER_TIP_VIDEO: IBrewVideo = {
 const CHEMEX_VIDEOS: IBrewVideo[] = [
   {
     youtubeId: "4tQG_aMcCL0",
-    title:
-      "Chemex Brew Guide — How to Hack and Brew Incredible Coffee on the Chemex",
+    title: "Chemex Brew Guide — How to Hack and Brew Incredible Coffee on the Chemex",
     channel: "Lance Hedrick",
   },
   {
@@ -140,8 +135,7 @@ const COLD_BREW_VIDEOS: IBrewVideo[] = [
   },
   {
     youtubeId: "c1UbW3cKGe0",
-    title:
-      "The Cold Brew Recipe You Should Be Making (and it's tasty, obviously)",
+    title: "The Cold Brew Recipe You Should Be Making (and it's tasty, obviously)",
     channel: "Morgan Eckroth",
   },
   {
@@ -159,8 +153,7 @@ const COLD_BREW_VIDEOS: IBrewVideo[] = [
 const ESPRESSO_VIDEOS: IBrewVideo[] = [
   {
     youtubeId: "j-Hu4hF5PTM",
-    title:
-      "Guide to Making Great Espresso: Understanding Variables to Dial In Perfectly",
+    title: "Guide to Making Great Espresso: Understanding Variables to Dial In Perfectly",
     channel: "Lance Hedrick",
   },
   {
@@ -230,10 +223,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     id: "v60",
     name: "V60",
     desc: "The classic spiral-ridged pour-over — gives you full control over pour rate and extraction for a clean, bright cup.",
-    ratioHint: "16:1",
+    ratioHint: "1:16",
     grind: "Medium",
     temp: "200°F",
     ratioDefault: 16,
+    brewTimeSeconds: 210,
     aiTips: [
       "Pour in slow concentric circles to keep extraction even.",
       "Let it bloom for 30–45 seconds before your main pour.",
@@ -256,10 +250,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     id: "chemex",
     name: "Chemex",
     desc: "Pour-over through a thick paper filter for an exceptionally clean, bright cup with heavier oils filtered out.",
-    ratioHint: "16:1",
+    ratioHint: "1:16",
     grind: "Medium-coarse",
     temp: "200°F",
     ratioDefault: 16,
+    brewTimeSeconds: 270,
     aiTips: [
       "Rinse the filter first to remove papery taste.",
       "Pour in stages, keeping the bed evenly saturated.",
@@ -277,10 +272,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     id: "frenchpress",
     name: "French Press",
     desc: "Full immersion brewing through a metal mesh plunger — rich, heavy body with more sediment than filtered methods.",
-    ratioHint: "15:1",
+    ratioHint: "1:15",
     grind: "Coarse",
     temp: "200°F",
     ratioDefault: 15,
+    brewTimeSeconds: 240,
     aiTips: [
       "Use a coarse grind to avoid sediment in your cup.",
       "Steep 4 minutes, then plunge slowly and evenly.",
@@ -298,10 +294,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     id: "espresso",
     name: "Espresso Shot",
     desc: "Concentrated coffee pulled under pressure through a fine, compact puck — the base for lattes and cappuccinos.",
-    ratioHint: "2:1",
+    ratioHint: "1:2",
     grind: "Fine",
     temp: "195–205°F",
     ratioDefault: 2,
+    brewTimeSeconds: 30,
     aiTips: [
       "Aim for a 25–30 second extraction time.",
       "A finer grind slows the shot; adjust in small steps.",
@@ -325,7 +322,7 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     id: "coldbrew",
     name: "Cold Brew",
     desc: "Steeped in cold water for 12–24 hours for a smooth, low-acid concentrate — dilute with water or milk to taste.",
-    ratioHint: "4:1",
+    ratioHint: "1:4",
     grind: "Coarse",
     temp: "Room temp / cold",
     ratioDefault: 4,
@@ -359,10 +356,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     id: "aeropress",
     name: "Aeropress",
     desc: "Fast, full-immersion brewing with light pressure — portable and forgiving, ready in under two minutes.",
-    ratioHint: "15:1",
+    ratioHint: "1:15",
     grind: "Medium-fine",
     temp: "175–185°F",
     ratioDefault: 15,
+    brewTimeSeconds: 105,
     aiTips: [
       "Try the inverted method for a longer steep time.",
       "Press slowly over 20–30 seconds for a smoother cup.",
@@ -385,10 +383,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     id: "kalitawave",
     name: "Kalita Wave",
     desc: "A flat-bottomed pour-over that evens out extraction, making it more forgiving than conical drippers like the V60.",
-    ratioHint: "16:1",
+    ratioHint: "1:16",
     grind: "Medium",
     temp: "200°F",
     ratioDefault: 16,
+    brewTimeSeconds: 210,
     aiTips: [
       "The flat bed means pour position matters less than on a V60.",
       "Keep pours steady to avoid channeling at the edges.",
@@ -406,10 +405,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     id: "origami",
     name: "Origami",
     desc: "A fluted, flexible pour-over dripper that adapts its flow rate depending on the filter paper you pair it with.",
-    ratioHint: "15:1",
+    ratioHint: "1:15",
     grind: "Medium",
     temp: "200°F",
     ratioDefault: 15,
+    brewTimeSeconds: 195,
     aiTips: [
       "Pair with a conical filter for faster flow, flat for slower.",
       "Its ridges make it easy to swirl the slurry mid-pour.",
@@ -427,10 +427,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     id: "drip",
     name: "Drip",
     desc: "Automatic, hands-off brewing for a consistent daily cup with minimal effort — great for brewing multiple cups at once.",
-    ratioHint: "16:1",
+    ratioHint: "1:16",
     grind: "Medium",
     temp: "195–200°F",
     ratioDefault: 16,
+    brewTimeSeconds: 300,
     aiTips: [
       "Use filtered water — machines can't compensate for bad water.",
       "Clean your machine monthly to avoid stale, bitter flavors.",
@@ -453,10 +454,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     id: "hario-switch",
     name: "Hario Switch",
     desc: "A hybrid dripper with a valve at the base — steep it closed like an immersion brewer, then flip the switch to let it draw down like a pour-over, all in one device.",
-    ratioHint: "15:1",
+    ratioHint: "1:15",
     grind: "Medium",
     temp: "200°F",
     ratioDefault: 15,
+    brewTimeSeconds: 210,
     aiTips: [
       "Keep the switch closed for the full steep, then open it and let gravity do the rest.",
       "A slightly finer grind than a normal pour-over makes up for the shorter drawdown contact time.",
@@ -465,8 +467,7 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     externalLinks: [
       {
         label: "Clever Dripper",
-        description:
-          "See also: a very similar steep-then-release brewer, from Roastopedia",
+        description: "See also: a very similar steep-then-release brewer, from Roastopedia",
         url: "https://roastopedia.com/clever-dripper/",
       },
     ],
@@ -475,10 +476,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     id: "clever-dripper",
     name: "Clever Dripper",
     desc: "Looks like a cone dripper, brews like an immersion steeper — a valve at the bottom holds the coffee back until you set it down on your cup or server, then releases a clean, filtered cup.",
-    ratioHint: "15:1",
+    ratioHint: "1:15",
     grind: "Medium",
     temp: "200°F",
     ratioDefault: 15,
+    brewTimeSeconds: 240,
     aiTips: [
       "The valve only opens once it's resting on your cup or server, so steep time is fully in your control.",
       "Give it a gentle stir partway through the steep to keep grounds from clumping at the bottom.",

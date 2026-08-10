@@ -43,8 +43,16 @@ export const ListRowStyles = css`
     margin-top: 2px;
   }
 
+  .text brew-star-rating {
+    margin-top: 4px;
+  }
+
   brew-icon.chevron {
     color: var(--brew-color-on-surface-variant);
+    flex-shrink: 0;
+  }
+
+  brew-icon-button {
     flex-shrink: 0;
   }
 `;

@@ -30,6 +30,12 @@ export const BrewSharePageStyles = css`
     color: var(--brew-color-on-surface-variant);
   }
 
+  .brew-type-subtitle {
+    margin-top: -12px;
+    font-size: 13px;
+    color: var(--brew-color-on-surface-variant);
+  }
+
   .ratio-hero {
     background: var(--brew-color-primary-container);
     border-radius: 24px;

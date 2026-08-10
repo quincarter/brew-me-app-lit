@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const screenshotsDir = path.join(rootDir, "screenshots");
+const mockDataPath = path.join(rootDir, "e2e", "brew-me-export-2026-08-09.json");
 
 if (!existsSync(screenshotsDir)) {
   mkdirSync(screenshotsDir, { recursive: true });
@@ -31,7 +32,9 @@ async function capture() {
   });
   const page = await context.newPage();
 
-  const pagesToCapture = [
+  // Captured first, against a fresh (unseeded) IndexedDB, so these are the
+  // genuine first-launch empty-state views - not just a placeholder.
+  const emptyStatePages = [
     { name: "home.png", path: "/" },
     { name: "calculator.png", path: "/calculate" },
     { name: "saved.png", path: "/saved" },
@@ -43,7 +46,35 @@ async function capture() {
     { name: "settings.png", path: "/more/settings" },
   ];
 
-  for (const item of pagesToCapture) {
+  for (const item of emptyStatePages) {
+    console.log(`Capturing ${item.name} (${item.path})...`);
+    await page.goto(`${baseUrl}${item.path}`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(500);
+    const outputPath = path.join(screenshotsDir, item.name);
+    await page.screenshot({ path: outputPath, fullPage: false });
+  }
+
+  // Seed real saved-brew data through the actual Import Data flow (Settings
+  // -> file input -> confirm) rather than writing to IndexedDB directly, so
+  // these screenshots reflect exactly what a user sees after restoring a
+  // backup, not a synthetic shortcut.
+  console.log("Importing mock data for populated screenshots...");
+  await page.goto(`${baseUrl}/more/settings`, { waitUntil: "networkidle" });
+  await page.locator('input[type="file"]').setInputFiles(mockDataPath);
+  await Promise.all([
+    page.waitForLoadState("load"),
+    page.getByRole("button", { name: "Yes, import and replace" }).click(),
+  ]);
+
+  // Only Home and Saved Brews look meaningfully different with data - the
+  // rest of the app (calculator, timer, static guide/recipe pages, settings)
+  // doesn't depend on saved-brew content.
+  const populatedPages = [
+    { name: "home-with-data.png", path: "/" },
+    { name: "saved-with-data.png", path: "/saved" },
+  ];
+
+  for (const item of populatedPages) {
     console.log(`Capturing ${item.name} (${item.path})...`);
     await page.goto(`${baseUrl}${item.path}`, { waitUntil: "networkidle" });
     await page.waitForTimeout(500);

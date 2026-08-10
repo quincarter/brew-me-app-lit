@@ -11,16 +11,17 @@ export const IconButtonStyles = css`
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: var(--icon-button-size, 40px);
+    height: var(--icon-button-size, 40px);
     border-radius: 50%;
     cursor: pointer;
-    color: var(--brew-color-on-surface-variant);
+    background: var(--icon-button-bg, transparent);
+    color: var(--icon-button-color, var(--brew-color-on-surface-variant));
     transition: background-color 0.15s ease;
   }
 
   .btn:hover {
-    background: color-mix(in srgb, currentColor 8%, transparent);
+    background: color-mix(in srgb, currentColor 8%, var(--icon-button-bg, transparent));
   }
 
   .btn:focus-visible {
@@ -29,8 +30,8 @@ export const IconButtonStyles = css`
   }
 
   .btn.filled {
-    background: var(--brew-color-secondary-container);
-    color: var(--brew-color-on-secondary-container);
+    background: var(--brew-color-primary);
+    color: var(--brew-color-on-primary);
   }
 
   .btn.fab {

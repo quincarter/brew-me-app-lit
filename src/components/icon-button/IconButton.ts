@@ -1,4 +1,4 @@
-import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
+import { type HTMLTemplateResult, html, LitElement, nothing, type SVGTemplateResult } from "lit";
 import { property } from "lit/decorators.js";
 import "../icon/brew-icon";
 import { IconButtonStyles } from "./icon-button.styles";
@@ -21,6 +21,8 @@ export class IconButton extends LitElement {
   /** Named `ariaLabelText` (not `ariaLabel`) to avoid clashing with the built-in `ARIAMixin.ariaLabel` on `HTMLElement`. */
   @property({ type: String, attribute: "aria-label" }) ariaLabelText = "";
   @property({ type: Number }) size = 24;
+  /** A custom Lit SVG icon (from `src/shared/icons/`) - takes precedence over `icon` when set. */
+  @property({ type: Object }) svgIcon: SVGTemplateResult | null = null;
 
   private _onClick = (): void => {
     if (this.href) return;
@@ -28,7 +30,11 @@ export class IconButton extends LitElement {
   };
 
   render(): HTMLTemplateResult {
-    const inner = html`<brew-icon name="${this.icon}" size="${this.size}"></brew-icon>`;
+    const inner = html`<brew-icon
+      name="${this.icon}"
+      size="${this.size}"
+      .svg="${this.svgIcon}"
+    ></brew-icon>`;
     return this.href
       ? html`<a
           class="btn ${this.variant}"

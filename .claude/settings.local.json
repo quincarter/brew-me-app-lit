@@ -21,7 +21,19 @@
       "Bash(npx vitest *)",
       "Bash(npm ls *)",
       "Bash(npm install *)",
-      "Bash(cat)"
+      "Bash(cat)",
+      "Bash(git -C /Users/quincarter/Documents/Dev/brew-me-app-lit status --porcelain src/components/avatar/__tests__/Avatar.test.ts)",
+      "Bash(git -C /Users/quincarter/Documents/Dev/brew-me-app-lit status --porcelain)",
+      "Bash(xargs cat)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(npx playwright *)",
+      "Bash(rm -f /tmp/debug.spec.ts; git status --short | grep -i zzz)",
+      "Bash(xargs -I{} basename {})",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(git status *)",
+      "Bash(grep -n \"^a\\\\b\\\\|^a,\\\\|a {\" /Users/quincarter/Documents/Dev/brew-me-app-lit/src/index.css)",
+      "Bash(git -C /Users/quincarter/Documents/Dev/brew-me-app-lit status --porcelain=v1)",
+      "Bash(cd /Users/quincarter/Documents/Dev/brew-me-app-lit && cat playwright.config.ts 2>/dev/null | head -50)"
     ]
   }
 }

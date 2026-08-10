@@ -1,17 +1,22 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import { html, LitElement, nothing, type HTMLTemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
+import "../../components/icon-button/brew-icon-button";
 import "../../components/icon/brew-icon";
 import "../../components/ratio-form/brew-ratio-form";
 import "../../components/save-sheet/brew-save-sheet";
 import "../../components/saved-card/brew-saved-card";
 import "../../components/top-bar/brew-top-bar";
-import { recentSavedBrewsSignal } from "../../shared/stores/brew.store";
+import { REFRESH_ICON, SHARE_ICON } from "../../shared/icons/icons";
+import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
+import { brewAgain, recentSavedBrewsSignal } from "../../shared/stores/brew.store";
 import {
   coffeeSignal,
+  dismissPrimedBanner,
   ozSignal,
+  primedFromNameSignal,
   ratioSignal,
   resetCalculator,
   setOz,
@@ -19,20 +24,16 @@ import {
   setWater,
   waterSignal,
 } from "../../shared/stores/calculator.store";
+import { openPostSaveSheet } from "../../shared/stores/post-save-sheet.store";
 import { openSaveDialog } from "../../shared/stores/save-dialog.store";
+import { primeTimerForSavedBrew } from "../../shared/stores/timer.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
-import {
-  getAvatarColors,
-  getInitial,
-} from "../../shared/utilities/avatar-palette.utility";
-import {
-  SHARE_OUTCOME_MESSAGES,
-  shareBrew,
-} from "../../shared/utilities/share.utility";
+import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
+import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
+import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
+import { navigateTo } from "../../shared/utilities/navigation.utility";
+import { SHARE_OUTCOME_MESSAGES, type ShareOutcome } from "../../shared/utilities/share.utility";
 import { CalculatorPageStyles } from "./calculator-page.styles";
-
-/** Placeholder brew type for a share sent straight from the calculator, before it's been named/saved. */
-const UNSAVED_BREW_TYPE = "Custom Ratio";
 
 @customElement("calculator-page")
 export class CalculatorPage extends SignalWatcher(LitElement) {
@@ -56,23 +57,6 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
     }, 2500);
   }
 
-  private _onShare = async (): Promise<void> => {
-    const coffee = coffeeSignal.value;
-    const water = Number.parseFloat(waterSignal.value);
-    const oz = Number.parseFloat(ozSignal.value);
-    const ratio = Number.parseFloat(ratioSignal.value);
-    if (coffee === null || Number.isNaN(water) || Number.isNaN(oz)) return;
-
-    const outcome = await shareBrew({
-      brewType: UNSAVED_BREW_TYPE,
-      ratio,
-      water,
-      coffee,
-      oz,
-    });
-    this._showStatus(SHARE_OUTCOME_MESSAGES[outcome]);
-  };
-
   render(): HTMLTemplateResult {
     const coffee = coffeeSignal.value;
     const water = waterSignal.value;
@@ -85,6 +69,25 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
         <brew-top-bar title="Calculator"></brew-top-bar>
 
         <div class="content">
+          ${
+            primedFromNameSignal.value
+              ? html`
+                  <div class="primed-banner">
+                    <brew-icon name="replay" size="18"></brew-icon>
+                    <span class="primed-banner-text"
+                      >Loaded from ${primedFromNameSignal.value}</span
+                    >
+                    <brew-icon-button
+                      icon="close"
+                      size="18"
+                      aria-label="Dismiss"
+                      @icon-click="${dismissPrimedBanner}"
+                    ></brew-icon-button>
+                  </div>
+                `
+              : nothing
+          }
+
           <brew-ratio-form
             ratio="${ratioSignal.value}"
             water="${water}"
@@ -96,84 +99,101 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
           ></brew-ratio-form>
 
           <div class="row actions">
+            <brew-button variant="outlined" full-width @button-click="${resetCalculator}"
+              ><brew-icon .svg=${REFRESH_ICON} size="18"></brew-icon> Reset</brew-button
+            >
             <brew-button
               variant="outlined"
               full-width
-              @button-click="${resetCalculator}"
-              >Reset</brew-button
-            >
-            <brew-button
-              variant="filled"
-              full-width
               ?disabled="${!isValid}"
-              @button-click="${openSaveDialog}"
-              >Save ratio</brew-button
+              @button-click="${() => openSaveDialog({ intent: "share" })}"
+              ><brew-icon .svg=${SHARE_ICON} size="18"></brew-icon> Share</brew-button
             >
           </div>
-
           <brew-button
-            variant="text"
+            variant="outlined"
             full-width
             ?disabled="${!isValid}"
-            @button-click="${this._onShare}"
-            >Share this brew</brew-button
+            @button-click="${() => openSaveDialog({ intent: "guided-timer" })}"
+            ><brew-icon name="timer" size="22"></brew-icon> Start guided timer</brew-button
           >
-          ${this._shareStatusText
-            ? html`<p class="share-status">${this._shareStatusText}</p>`
-            : null}
+          <brew-button
+            variant="filled"
+            full-width
+            large
+            ?disabled="${!isValid}"
+            @button-click="${openSaveDialog}"
+            ><brew-icon name="bookmark" size="18"></brew-icon> Save</brew-button
+          >
+          ${
+            this._shareStatusText
+              ? html`<p class="share-status">${this._shareStatusText}</p>`
+              : null
+          }
 
           <div class="ratio-tips">
             <div class="ratio-tips-header">
               <brew-icon name="info" size="20"></brew-icon>
               <span class="ratio-tips-title">Ratio tips</span>
             </div>
-            <p class="ratio-tips-body">
-              Lower ratio = stronger, more intense brew.
-            </p>
+            <p class="ratio-tips-body">Lower ratio = stronger, more intense brew.</p>
             <p class="ratio-tips-body">Higher ratio = weaker, lighter cup.</p>
             <p class="ratio-tips-body">
-              As always - Adjust to taste. If it tastes good, the math and
-              numbers are just numbers.
+              As always - Adjust to taste. If it tastes good, the math and numbers are just numbers.
             </p>
             <span class="ratio-tips-body">Brew Examples</span>
             <ul class="ratio-tips-body">
-              <li>Pour-over/drip: 15–18:1</li>
-              <li>Espresso: ~2:1</li>
-              <li>Cold brew: 3–5:1.</li>
+              <li>Pour-over/drip: 1:15–18</li>
+              <li>Espresso: 1:2</li>
+              <li>Cold brew: 1:3–5</li>
             </ul>
           </div>
 
-          ${recentBrews.length > 0
-            ? html`
-                <div class="section-header">
-                  <span class="section-title">Recent brews</span>
-                  <a class="see-all" href="/saved">See all</a>
-                </div>
+          ${
+            recentBrews.length > 0
+              ? html`
+                  <div class="section-header">
+                    <span class="section-title">Recent brews</span>
+                    <a class="see-all" href="/saved">See all</a>
+                  </div>
 
-                <div class="recent-row">
-                  ${recentBrews.map((brew) => {
-                    const colors = getAvatarColors(brew.id);
-                    return html`
-                      <brew-saved-card
-                        href="/saved/${brew.id}"
-                        brew-type="${brew.brewType}"
-                        ratio="${brew.ratio}"
-                        coffee="${brew.coffee}"
-                        water="${brew.water}"
-                        oz="${brew.oz}"
-                        avatar-initial="${getInitial(brew.brewType)}"
-                        avatar-bg="${colors.background}"
-                        avatar-fg="${colors.foreground}"
-                      ></brew-saved-card>
-                    `;
-                  })}
-                </div>
-              `
-            : null}
+                  <div class="recent-row">
+                    ${recentBrews.map((brew) => {
+                      const colors = getAvatarColors(brew.id);
+                      return html`
+                        <brew-saved-card
+                          href="/saved/${brew.id}"
+                          brew-type="${getBrewDisplayName(brew)}"
+                          ratio="${brew.ratio}"
+                          coffee="${brew.coffee}"
+                          water="${brew.water}"
+                          oz="${brew.oz}"
+                          avatar-initial="${getInitial(getBrewDisplayName(brew))}"
+                          avatar-bg="${colors.background}"
+                          avatar-fg="${colors.foreground}"
+                          .avatarIcon="${getBrewTypeIcon(brew.brewType, brew.icon) ?? null}"
+                          rating="${brew.rating ?? 0}"
+                          ?replayable="${true}"
+                          @replay-click="${() => brewAgain(brew)}"
+                        ></brew-saved-card>
+                      `;
+                    })}
+                  </div>
+                `
+              : null
+          }
         </div>
 
         <brew-bottom-nav active="calculate"></brew-bottom-nav>
-        <brew-save-sheet></brew-save-sheet>
+        <brew-save-sheet
+          @brew-share-outcome="${(e: CustomEvent<ShareOutcome>) =>
+            this._showStatus(SHARE_OUTCOME_MESSAGES[e.detail])}"
+          @brew-saved="${(e: CustomEvent<ISavedBrew>) => openPostSaveSheet(e.detail)}"
+          @brew-guided-timer-ready="${(e: CustomEvent<ISavedBrew>) => {
+            primeTimerForSavedBrew(e.detail);
+            navigateTo("/timer");
+          }}"
+        ></brew-save-sheet>
       </div>
     `;
   }

@@ -25,6 +25,7 @@ export const TimerPageStyles = css`
   }
 
   .dial {
+    box-sizing: border-box;
     width: 220px;
     height: 220px;
     border-radius: 50%;
@@ -36,6 +37,12 @@ export const TimerPageStyles = css`
     gap: 6px;
   }
 
+  /* The bordered-ring treatment is specific to a guided (recipe-primed) brew - the plain, unprimed stopwatch keeps its original filled-circle look. */
+  .dial.guided {
+    border: 10px solid var(--brew-color-primary-container);
+    background: var(--brew-color-surface);
+  }
+
   .dial-label {
     font-size: 12px;
     color: var(--brew-color-on-primary-container);
@@ -43,10 +50,54 @@ export const TimerPageStyles = css`
     letter-spacing: 0.06em;
   }
 
+  .dial.guided .dial-label {
+    color: var(--brew-color-on-surface-variant);
+  }
+
   .dial-value {
     font-size: 48px;
     font-weight: 600;
     color: var(--brew-color-on-primary-container);
+  }
+
+  .dial.guided .dial-value {
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--brew-color-on-surface);
+  }
+
+  .recipe-caption {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: center;
+  }
+
+  .recipe-caption-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brew-color-on-surface);
+  }
+
+  .recipe-caption-detail {
+    margin: 0;
+    font-size: 12px;
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .guided-options {
+    width: 100%;
+    max-width: 280px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .mode-toggle {
+    display: flex;
+    gap: 8px;
   }
 
   .controls {

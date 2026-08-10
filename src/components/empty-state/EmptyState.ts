@@ -25,9 +25,13 @@ export class EmptyState extends LitElement {
       <div class="empty-state">
         <img class="empty-state-image" src="${this.image}" alt="" width="117" height="187" />
         <p class="empty-state-message">${this.message}</p>
-        ${this.ctaLabel && this.ctaHref
-          ? html`<brew-button variant="filled" href="${this.ctaHref}">${this.ctaLabel}</brew-button>`
-          : nothing}
+        ${
+          this.ctaLabel && this.ctaHref
+            ? html`<brew-button variant="filled" href="${this.ctaHref}"
+                >${this.ctaLabel}</brew-button
+              >`
+            : nothing
+        }
       </div>
     `;
   }

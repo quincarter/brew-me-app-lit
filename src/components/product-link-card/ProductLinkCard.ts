@@ -32,15 +32,8 @@ export class ProductLinkCard extends LitElement {
 
   render(): HTMLTemplateResult {
     return html`
-      <a
-        class="product-link-card"
-        href="${this.href}"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <span class="product-icon"
-          ><brew-icon name="${this.icon}" size="24"></brew-icon
-        ></span>
+      <a class="product-link-card" href="${this.href}" target="_blank" rel="noopener noreferrer">
+        <span class="product-icon"><brew-icon name="${this.icon}" size="24"></brew-icon></span>
         <div class="wrapper">
           <div class="affiliate-badge">Affiliate link</div>
           <span class="product-text">

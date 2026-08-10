@@ -1,4 +1,8 @@
 import { signal } from "@lit-labs/preact-signals";
+import { BREW_GUIDE } from "../data/brew-content.data";
+import type { ISavedBrew } from "../interfaces/brew.interface";
+import type { IPrimedRecipe } from "../interfaces/timer.interface";
+import { getBrewDisplayName } from "../utilities/brew-display.utility";
 
 /**
  * Module-level (not component-level) timer state, so the pour-over countdown
@@ -7,6 +11,22 @@ import { signal } from "@lit-labs/preact-signals";
  */
 export const timerSecondsSignal = signal(0);
 export const timerRunningSignal = signal(false);
+
+/**
+ * Set when the Timer screen was reached via "Start guided timer" - null for
+ * a plain, unprimed stopwatch. Persists across navigation and across
+ * `resetTimer()` calls, same as the elapsed time itself - "Reset" restarts
+ * the clock for the current recipe, it doesn't exit guided mode. Only
+ * priming a new recipe (or a full page reload) replaces it.
+ */
+export const primedRecipeSignal = signal<IPrimedRecipe | null>(null);
+
+export type GuidedTimerMode = "countdown" | "countup";
+
+/** Only meaningful while `primedRecipeSignal` is set - a plain, unprimed timer always counts up. */
+export const guidedModeSignal = signal<GuidedTimerMode>("countdown");
+
+const DEFAULT_GUIDED_TARGET_SECONDS = 300;
 
 let intervalHandle: ReturnType<typeof setInterval> | undefined;
 
@@ -23,8 +43,44 @@ export const toggleTimer = (): void => {
   timerRunningSignal.value = true;
 };
 
+/** Restarts the elapsed clock at 0 - deliberately leaves `primedRecipeSignal` alone (see its doc comment). */
 export const resetTimer = (): void => {
   clearInterval(intervalHandle);
   timerRunningSignal.value = false;
   timerSecondsSignal.value = 0;
+};
+
+/** Primes the timer with a recipe from the Calculator's "Start guided timer" action, and restarts the clock at 0. */
+export const primeTimerForRecipe = (recipe: IPrimedRecipe): void => {
+  resetTimer();
+  primedRecipeSignal.value = recipe;
+  guidedModeSignal.value = recipe.targetSeconds !== null ? "countdown" : "countup";
+};
+
+/** Primes the timer from an already-saved brew - looks up its guide entry (if any) for the guided target duration, same lookup the Calculator's guided-timer flow used to do inline. */
+export const primeTimerForSavedBrew = (brew: ISavedBrew): void => {
+  const guide = BREW_GUIDE.find((item) => item.name === brew.brewType);
+  primeTimerForRecipe({
+    name: getBrewDisplayName(brew),
+    coffee: brew.coffee,
+    water: brew.water,
+    ratio: brew.ratio,
+    targetSeconds: guide?.brewTimeSeconds ?? null,
+  });
+};
+
+/** Switches a guided brew between counting down to its target and counting up like a plain stopwatch. */
+export const setGuidedMode = (mode: GuidedTimerMode): void => {
+  guidedModeSignal.value = mode;
+  const recipe = primedRecipeSignal.value;
+  if (mode === "countdown" && recipe && recipe.targetSeconds === null) {
+    primedRecipeSignal.value = { ...recipe, targetSeconds: DEFAULT_GUIDED_TARGET_SECONDS };
+  }
+};
+
+/** Lets the person pouring override the guided target time (e.g. a method with no built-in default, or to taste). */
+export const setGuidedTargetSeconds = (seconds: number): void => {
+  const recipe = primedRecipeSignal.value;
+  if (!recipe) return;
+  primedRecipeSignal.value = { ...recipe, targetSeconds: Math.max(0, Math.round(seconds)) };
 };

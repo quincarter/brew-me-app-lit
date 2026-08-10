@@ -10,7 +10,9 @@ const THEME_KEY = "theme";
  * `localStorage` directly, so there's exactly one source of truth for "what
  * theme is currently applied."
  */
-export const isDarkThemeSignal = signal(document.documentElement.getAttribute("data-theme") === "dark");
+export const isDarkThemeSignal = signal(
+  document.documentElement.getAttribute("data-theme") === "dark",
+);
 
 export const setDarkTheme = (isDark: boolean): void => {
   isDarkThemeSignal.value = isDark;

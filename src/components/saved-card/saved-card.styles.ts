@@ -49,4 +49,9 @@ export const SavedCardStyles = css`
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+  }
 `;

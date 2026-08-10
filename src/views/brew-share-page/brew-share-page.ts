@@ -13,6 +13,8 @@ import type { IShareableBrew } from "../../shared/interfaces/brew.interface";
 import { addSavedBrew, savedBrewsSignal } from "../../shared/stores/brew.store";
 import { primeCalculatorForBrew } from "../../shared/stores/calculator.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
+import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
+import { formatRatio } from "../../shared/utilities/format-ratio.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
 import {
   SHARE_OUTCOME_MESSAGES,
@@ -99,22 +101,19 @@ export class BrewSharePage extends SignalWatcher(LitElement) {
         saved.oz === brew.oz,
     );
     const isSaved = this._justSaved || alreadySaved;
-    console.log("brew type", brew.brewType);
-    const matchingGuide = BREW_GUIDE.find((item) => {
-      console.log(item.name);
-      return item.name === brew.brewType;
-    });
+    const matchingGuide = BREW_GUIDE.find((item) => item.name === brew.brewType);
 
     return html`
       <div class="screen">
-        <brew-top-bar title="${brew.brewType}"></brew-top-bar>
+        <brew-top-bar title="${getBrewDisplayName(brew)}"></brew-top-bar>
 
         <div class="content">
           <div class="eyebrow">Shared brew ratio</div>
+          ${brew.name ? html`<div class="brew-type-subtitle">${brew.brewType}</div>` : null}
 
           <div class="ratio-hero">
             <div class="ratio-label">Ratio</div>
-            <div class="ratio-value">${brew.ratio}:1</div>
+            <div class="ratio-value">${formatRatio(brew.ratio)}</div>
           </div>
 
           <div class="stat-row">
@@ -144,37 +143,32 @@ export class BrewSharePage extends SignalWatcher(LitElement) {
               full-width
               ?disabled="${isSaved}"
               @button-click="${() => this._onSave(brew)}"
-              >${isSaved
-                ? "Saved to your brews"
-                : "Save to my brews"}</brew-button
+              >${isSaved ? "Saved to your brews" : "Save to my brews"}</brew-button
             >
-            <brew-button
-              variant="text"
-              full-width
-              @button-click="${() => this._onShare(brew)}"
+            <brew-button variant="text" full-width @button-click="${() => this._onShare(brew)}"
               >Share this brew</brew-button
             >
           </div>
 
-          ${this._shareStatusText
-            ? html`<p class="share-status">${this._shareStatusText}</p>`
-            : null}
+          ${
+            this._shareStatusText
+              ? html`<p class="share-status">${this._shareStatusText}</p>`
+              : null
+          }
 
           <div class="section-title">Brew guide</div>
-          ${matchingGuide
-            ? html`
-                <brew-link-card
-                  href="/more/guide/${matchingGuide.id}"
-                  icon="menu_book"
-                  label="${matchingGuide.name} Brew Guide"
-                  description="Ratio tips, grind size, and video walkthroughs"
-                ></brew-link-card>
-              `
-            : html`
-                <brew-video-search
-                  query="${brew.brewType} Brew Guide"
-                ></brew-video-search>
-              `}
+          ${
+            matchingGuide
+              ? html`
+                  <brew-link-card
+                    href="/more/guide/${matchingGuide.id}"
+                    icon="menu_book"
+                    label="${matchingGuide.name} Brew Guide"
+                    description="Ratio tips, grind size, and video walkthroughs"
+                  ></brew-link-card>
+                `
+              : html` <brew-video-search query="${brew.brewType} Brew Guide"></brew-video-search> `
+          }
         </div>
 
         <brew-bottom-nav></brew-bottom-nav>

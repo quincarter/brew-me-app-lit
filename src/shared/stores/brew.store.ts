@@ -1,19 +1,30 @@
 import { computed } from "@lit-labs/preact-signals";
 import type { IShareableBrew, ISavedBrew } from "../interfaces/brew.interface";
 import { persistentSignal } from "./persistent-signal";
+import { openPostSaveSheet } from "./post-save-sheet.store";
 
 /** No seed data - a fresh install starts with nothing saved. */
 export const savedBrewsSignal = persistentSignal<ISavedBrew[]>([], { key: "saved-brews" });
 
 export const totalBrewsSignal = computed(() => savedBrewsSignal.value.length);
 
-/** Number of most-recently-saved brews surfaced by recentSavedBrewsSignal. */
+/** Number of most-recently-active brews surfaced by recentSavedBrewsSignal. */
 const RECENT_BREWS_LIMIT = 4;
 
-/** The most recently saved brews, newest first, capped for "Recent brews" style sections. */
+/**
+ * The most recently *active* brews, newest first, capped for "Recent brews"
+ * style sections - ordered by `lastBrewedAt` (falling back to `createdAt`
+ * for a brew that's never been re-brewed), not by save order, so re-brewing
+ * an older saved ratio surfaces it here again.
+ */
 export const recentSavedBrewsSignal = computed(() =>
-  savedBrewsSignal.value.slice(-RECENT_BREWS_LIMIT).reverse(),
+  [...savedBrewsSignal.value]
+    .sort((a, b) => (b.lastBrewedAt ?? b.createdAt) - (a.lastBrewedAt ?? a.createdAt))
+    .slice(0, RECENT_BREWS_LIMIT),
 );
+
+/** The single most recently brewed saved brew, or null when nothing's saved yet - drives Home's featured "Brew again" card. */
+export const mostRecentlyBrewedSignal = computed(() => recentSavedBrewsSignal.value[0] ?? null);
 
 const dayKey = (timestamp: number): string => new Date(timestamp).toDateString();
 
@@ -41,9 +52,11 @@ export const streakDaysSignal = computed(() => {
 export const getSavedBrewById = (id: number): ISavedBrew | undefined =>
   savedBrewsSignal.value.find((brew) => brew.id === id);
 
-export const addSavedBrew = (brew: IShareableBrew): void => {
+export const addSavedBrew = (brew: IShareableBrew): ISavedBrew => {
   const now = Date.now();
-  savedBrewsSignal.value = [...savedBrewsSignal.value, { ...brew, id: now, createdAt: now }];
+  const savedBrew = { ...brew, id: now, createdAt: now };
+  savedBrewsSignal.value = [...savedBrewsSignal.value, savedBrew];
+  return savedBrew;
 };
 
 export const updateSavedBrew = (id: number, patch: Partial<Omit<ISavedBrew, "id">>): void => {
@@ -54,6 +67,23 @@ export const updateSavedBrew = (id: number, patch: Partial<Omit<ISavedBrew, "id"
 
 export const deleteSavedBrew = (id: number): void => {
   savedBrewsSignal.value = savedBrewsSignal.value.filter((brew) => brew.id !== id);
+};
+
+/** Stamps a brew as brewed right now - used by "Brew again" so recency ordering reflects actual use, not just save order. */
+export const markBrewedNow = (id: number): void => {
+  updateSavedBrew(id, { lastBrewedAt: Date.now() });
+};
+
+/**
+ * The "Brew again" action, available from Home, Saved Brews, Saved Ratio
+ * Detail, and the Calculator's own recent-brews strip: stamps the brew as
+ * brewed now and opens the post-save sheet so the user can jump into a
+ * guided timer or view the brew's detail - without routing back through
+ * Save, which would create a duplicate entry instead of updating this one.
+ */
+export const brewAgain = (brew: ISavedBrew): void => {
+  markBrewedNow(brew.id);
+  openPostSaveSheet(brew);
 };
 
 /** Danger-zone reset: clears every saved ratio. Used by the Settings screen. */

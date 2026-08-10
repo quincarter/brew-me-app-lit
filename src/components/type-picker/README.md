@@ -5,7 +5,7 @@ affordance for types that aren't in the stock list. Used by both the
 post-creation Save sheet and the Saved Ratio Detail edit flow so adding a
 custom type works identically in both places.
 
-It's a *controlled* component: it doesn't own the brew-type list or persist
+It's a _controlled_ component: it doesn't own the brew-type list or persist
 new types itself. The consumer passes in the full list to render (typically
 `allBrewTypesSignal.value`, stock + custom, from `brew-types.store.ts`) and
 reacts to `type-select`/`type-add` to update its own "selected" state and
@@ -27,14 +27,14 @@ persist new types via `addCustomBrewType`.
 
 ## Properties
 
-| Property   | Attribute  | Type       | Default | Description                              |
-| ---------- | ---------- | ---------- | ------- | ------------------------------------------ |
-| `types`    | -          | `string[]` | `[]`    | Full list of brew type chips to render.    |
-| `selected` | `selected` | `String`   | `""`    | Name of the currently selected type.       |
+| Property   | Attribute  | Type       | Default | Description                             |
+| ---------- | ---------- | ---------- | ------- | --------------------------------------- |
+| `types`    | -          | `string[]` | `[]`    | Full list of brew type chips to render. |
+| `selected` | `selected` | `String`   | `""`    | Name of the currently selected type.    |
 
 ## Events
 
-| Event         | Type                  | Description                                              |
-| ------------- | --------------------- | ----------------------------------------------------------- |
-| `type-select` | `CustomEvent<string>` | Fired with the tapped type's name.                          |
-| `type-add`    | `CustomEvent<string>` | Fired with the trimmed name once "Add" is confirmed.        |
+| Event         | Type                  | Description                                          |
+| ------------- | --------------------- | ---------------------------------------------------- |
+| `type-select` | `CustomEvent<string>` | Fired with the tapped type's name.                   |
+| `type-add`    | `CustomEvent<string>` | Fired with the trimmed name once "Add" is confirmed. |

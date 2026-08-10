@@ -1,4 +1,4 @@
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import { type HTMLTemplateResult, html, LitElement, type SVGTemplateResult } from "lit";
 import { property } from "lit/decorators.js";
 import { IconStyles } from "./icon.styles";
 
@@ -25,8 +25,28 @@ export class Icon extends LitElement {
   @property({ type: Number })
   size = 24;
 
+  /** Renders the filled variant via the Material Symbols variable-font FILL axis. @attr filled */
+  @property({ type: Boolean })
+  filled = false;
+
+  /** A custom Lit SVG icon (from `src/shared/icons/`) - takes precedence over `name` when set. */
+  @property({ type: Object })
+  svg: SVGTemplateResult | null = null;
+
   render(): HTMLTemplateResult {
-    return html`<span class="material-symbols-outlined" style="font-size:${this.size}px"
+    if (this.svg) {
+      return html`<span
+        class="icon-svg"
+        aria-hidden="true"
+        style="width:${this.size}px;height:${this.size}px"
+        >${this.svg}</span
+      >`;
+    }
+
+    return html`<span
+      class="material-symbols-outlined"
+      aria-hidden="true"
+      style="font-size:${this.size}px; font-variation-settings: 'FILL' ${this.filled ? 1 : 0}"
       >${this.name}</span
     >`;
   }

@@ -32,6 +32,37 @@ export const CalculatorPageStyles = css`
     flex: 1;
   }
 
+  .primed-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--brew-color-primary);
+    border-radius: 14px;
+    padding: 10px 14px;
+    background: var(--brew-color-surface-container-high);
+    color: var(--brew-color-primary);
+  }
+
+  .primed-banner-text {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brew-color-on-surface);
+  }
+
+  .ratio-chip {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 14px;
+    border-radius: 14px;
+    background: var(--brew-color-primary-container);
+    color: var(--brew-color-on-primary-container);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
   .share-status {
     margin: -8px 0 0;
     text-align: center;

@@ -95,3 +95,39 @@ export async function clearPersistentSignals(): Promise<void> {
   const db = await getDB();
   await db.clear(STORE_NAME);
 }
+
+/**
+ * Reads every key/value pair currently persisted in IndexedDB, keyed by the
+ * same keys passed to `persistentSignal`. Reads the store directly rather
+ * than hardcoding known keys, so it stays correct as new persistent signals
+ * are added.
+ */
+export async function getAllPersistedData(): Promise<Record<string, unknown>> {
+  const db = await getDB();
+  // Read keys and values from the same transaction so a concurrent write
+  // (e.g. `persistentSignal`'s effect firing mid-export) can't shift array
+  // indices between two separate reads and zip a value to the wrong key.
+  const tx = db.transaction(STORE_NAME, "readonly");
+  const [keys, values] = await Promise.all([tx.store.getAllKeys(), tx.store.getAll()]);
+  await tx.done;
+
+  const data: Record<string, unknown> = {};
+  keys.forEach((key, index) => {
+    data[String(key)] = values[index];
+  });
+  return data;
+}
+
+/**
+ * Fully replaces the contents of the persisted signals store with `data`, in
+ * one `readwrite` transaction. This is a snapshot restore (matching the
+ * export's full-snapshot semantics), not a merge - existing keys not present
+ * in `data` are dropped.
+ */
+export async function replaceAllPersistedData(data: Record<string, unknown>): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  await tx.store.clear();
+  await Promise.all(Object.entries(data).map(([key, value]) => tx.store.put(value, key)));
+  await tx.done;
+}

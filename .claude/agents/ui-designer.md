@@ -11,13 +11,15 @@ You are the UI/design specialist for the BrewMe app — a coffee ratio calculato
 All color comes from CSS custom properties defined on `:root` (light) and re-defined on `[data-theme="dark"]` — a Material 3-style token set: `--brew-color-primary`, `-on-primary`, `-primary-container`, `-on-primary-container`, and the same pattern for `secondary`/`tertiary`/`surface`/`error`, plus `-outline`, `-outline-variant`, `-inverse-surface`. `--brew-page-background` sits outside that token family for the app's overall canvas.
 
 Rules:
-- **Never hardcode a color** in a component's `.styles.ts` — always reference a `var(--brew-color-*)` token. If the token you need doesn't exist yet, add it to *both* the `:root` and `[data-theme="dark"]` blocks together, in the same relative position, so light/dark stay in sync — never add a token to only one theme.
+
+- **Never hardcode a color** in a component's `.styles.ts` — always reference a `var(--brew-color-*)` token. If the token you need doesn't exist yet, add it to _both_ the `:root` and `[data-theme="dark"]` blocks together, in the same relative position, so light/dark stay in sync — never add a token to only one theme.
 - Check both themes visually (or at least re-read both blocks) after any token change — a token added only for light mode is a common, easy-to-miss regression here.
 - `color-scheme` is wired to `--color-scheme` and set per-theme — don't override `color-scheme` locally in a component.
 
 ## Responsive layout (`src/shared/styles/responsive.styles.ts`)
 
 One breakpoint, `EXPANDED_BREAKPOINT_PX = 840`:
+
 - **Compact** (<840px): full-bleed phone layout, `brew-bottom-nav` is a bottom tab bar, the save-ratio flow is a bottom sheet (`brew-save-sheet`).
 - **Expanded** (≥840px): `brew-bottom-nav` becomes a fixed left rail (`RAIL_WIDTH_PX = 88`), main content centers in a `CONTENT_MAX_WIDTH_PX = 640` column, the save sheet becomes a centered modal dialog.
 

@@ -21,8 +21,8 @@ Always renders as an `<a>` that opens in a new tab with
 ## Properties
 
 | Property      | Attribute     | Type     | Default          | Description                                 |
-| ------------- | ------------- | -------- | ---------------- | -------------------------------------------- |
-| `href`        | `href`        | `String` | `""`              | The product link's URL.                     |
-| `label`       | `label`       | `String` | `""`              | Product/title text.                         |
-| `description` | `description` | `String` | `""`              | Supporting text under the title.            |
-| `icon`        | `icon`        | `String` | `"shopping_bag"`  | Material Symbols name for the leading icon. |
+| ------------- | ------------- | -------- | ---------------- | ------------------------------------------- |
+| `href`        | `href`        | `String` | `""`             | The product link's URL.                     |
+| `label`       | `label`       | `String` | `""`             | Product/title text.                         |
+| `description` | `description` | `String` | `""`             | Supporting text under the title.            |
+| `icon`        | `icon`        | `String` | `"shopping_bag"` | Material Symbols name for the leading icon. |

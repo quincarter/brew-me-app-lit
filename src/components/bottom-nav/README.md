@@ -17,6 +17,6 @@ highlighted there.
 
 ## Properties
 
-| Property | Attribute | Type                                     | Default | Description                     |
-| -------- | --------- | ---------------------------------------- | ------- | ------------------------------- |
+| Property | Attribute | Type                                               | Default | Description                     |
+| -------- | --------- | -------------------------------------------------- | ------- | ------------------------------- |
 | `active` | `active`  | `"home" \| "calculate" \| "saved" \| "more" \| ""` | `""`    | Which tab shows the active pill |

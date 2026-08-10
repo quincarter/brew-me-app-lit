@@ -22,57 +22,29 @@ export const SavedDetailPageStyles = css`
     overflow: auto;
   }
 
-  .ratio-hero {
-    background: var(--brew-color-primary-container);
-    border-radius: 24px;
-    padding: 24px;
+  .rating {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 4px;
-  }
-
-  .ratio-label {
-    font-size: 12px;
-    color: var(--brew-color-on-primary-container);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .ratio-value {
-    font-size: 40px;
-    font-weight: 600;
-    color: var(--brew-color-on-primary-container);
-  }
-
-  .stat-row {
-    display: flex;
-    gap: 12px;
-  }
-
-  .stat {
-    flex: 1;
-    background: var(--brew-color-surface-container);
-    border-radius: 16px;
-    padding: 14px;
-    text-align: center;
-  }
-
-  .stat-value {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--brew-color-on-surface);
-  }
-
-  .stat-label {
-    font-size: 12px;
-    color: var(--brew-color-on-surface-variant);
+    flex-direction: column;
   }
 
   .field-label {
     font-size: 12px;
     font-weight: 500;
     color: var(--brew-color-on-surface-variant);
+  }
+
+  .tasting-note {
+    margin: 0;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
+    justify-content: space-evenly;
   }
 
   .section-title {
@@ -89,15 +61,5 @@ export const SavedDetailPageStyles = css`
     text-align: center;
     font-size: 13px;
     color: var(--brew-color-on-surface-variant);
-  }
-
-  .delete-link {
-    all: unset;
-    align-self: center;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 10px 12px;
-    color: var(--brew-color-error);
   }
 `;
