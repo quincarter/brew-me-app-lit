@@ -166,12 +166,17 @@ describe("brew-steps-card", () => {
     });
 
     it("renders a remove control and an add-step control", () => {
-      const removeButtons = element.shadowRoot?.querySelectorAll("brew-icon-button");
+      const removeButtons = element.shadowRoot?.querySelectorAll("brew-icon-button[icon='delete']");
       expect(removeButtons).toHaveLength(3);
       const addButton = Array.from(element.shadowRoot?.querySelectorAll("brew-button") ?? []).find(
         (button) => button.textContent?.includes("Add step"),
       );
       expect(addButton).not.toBeUndefined();
+    });
+
+    it("renders a drag handle for each row", () => {
+      const dragHandles = element.shadowRoot?.querySelectorAll("brew-icon-button.drag-handle");
+      expect(dragHandles).toHaveLength(3);
     });
 
     it("renders a 'Reset to preset' action alongside 'Add step'", () => {
@@ -277,7 +282,7 @@ describe("brew-steps-card", () => {
     });
 
     it("fires config-change with the row removed when its remove control is activated", async () => {
-      const removeButtons = element.shadowRoot?.querySelectorAll("brew-icon-button");
+      const removeButtons = element.shadowRoot?.querySelectorAll("brew-icon-button[icon='delete']");
       const filterRemove = removeButtons?.[2];
       if (!filterRemove) throw new Error("expected the Filter row's remove control");
       const changed = waitForConfigChange();
@@ -383,6 +388,230 @@ describe("brew-steps-card", () => {
 
       expect(fired).toBe(false);
       expect(element.shadowRoot?.querySelector("brew-text-field")).toBeNull();
+    });
+  });
+
+  describe("drag-to-reorder", () => {
+    beforeEach(async () => {
+      await mount({ editing: true });
+    });
+
+    const dragHandles = (): NodeListOf<Element> =>
+      element.shadowRoot!.querySelectorAll(".edit-row brew-icon-button.drag-handle");
+
+    const editRowFor = (stepId: string): HTMLElement => {
+      const row = element.shadowRoot?.querySelector<HTMLElement>(
+        `.edit-row[data-step-id="${stepId}"]`,
+      );
+      if (!row) throw new Error(`expected an edit row for step ${stepId}`);
+      return row;
+    };
+
+    it("has a data-step-id on every edit row matching its step", () => {
+      const rows = element.shadowRoot?.querySelectorAll<HTMLElement>(".edit-row");
+      expect(rows?.length).toBe(3);
+      expect(Array.from(rows ?? []).map((row) => row.dataset.stepId)).toEqual(["s1", "s2", "s3"]);
+    });
+
+    describe("keyboard", () => {
+      it("fires config-change with the first two steps swapped when ArrowDown is pressed on the first row's drag handle", async () => {
+        const handle = dragHandles()[0];
+        if (!handle) throw new Error("expected the Bloom row's drag handle");
+        const changed = waitForConfigChange();
+
+        handle.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, composed: true }),
+        );
+
+        const event = await changed;
+        expect(event.detail.steps.map((step) => step.id)).toEqual(["s2", "s1", "s3"]);
+      });
+
+      it("fires config-change moving a middle row up one position when ArrowUp is pressed on its drag handle", async () => {
+        const handle = dragHandles()[1];
+        if (!handle) throw new Error("expected the Plunge row's drag handle");
+        const changed = waitForConfigChange();
+
+        handle.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true, composed: true }),
+        );
+
+        const event = await changed;
+        expect(event.detail.steps.map((step) => step.id)).toEqual(["s2", "s1", "s3"]);
+      });
+
+      it("fires config-change moving the last row up one position when ArrowUp is pressed on its drag handle", async () => {
+        const handle = dragHandles()[2];
+        if (!handle) throw new Error("expected the Filter row's drag handle");
+        const changed = waitForConfigChange();
+
+        handle.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true, composed: true }),
+        );
+
+        const event = await changed;
+        expect(event.detail.steps.map((step) => step.id)).toEqual(["s1", "s3", "s2"]);
+      });
+
+      it("does not fire config-change when ArrowUp is pressed on the first row (already at the top)", async () => {
+        const handle = dragHandles()[0];
+        if (!handle) throw new Error("expected the Bloom row's drag handle");
+        let fired = false;
+        element.addEventListener("config-change", () => {
+          fired = true;
+        });
+
+        handle.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true, composed: true }),
+        );
+        await element.updateComplete;
+
+        expect(fired).toBe(false);
+      });
+
+      it("does not fire config-change when ArrowDown is pressed on the last row (already at the bottom)", async () => {
+        const handle = dragHandles()[2];
+        if (!handle) throw new Error("expected the Filter row's drag handle");
+        let fired = false;
+        element.addEventListener("config-change", () => {
+          fired = true;
+        });
+
+        handle.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, composed: true }),
+        );
+        await element.updateComplete;
+
+        expect(fired).toBe(false);
+      });
+
+      it("does not fire config-change for an unrelated key", async () => {
+        const handle = dragHandles()[0];
+        if (!handle) throw new Error("expected the Bloom row's drag handle");
+        let fired = false;
+        element.addEventListener("config-change", () => {
+          fired = true;
+        });
+
+        handle.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "Enter", bubbles: true, composed: true }),
+        );
+        await element.updateComplete;
+
+        expect(fired).toBe(false);
+      });
+    });
+
+    describe("pointer drag", () => {
+      afterEach(() => {
+        // @ts-expect-error - restoring the stub set by individual tests.
+        delete document.elementFromPoint;
+      });
+
+      it("fires config-change reordering the dragged row to sit where the row the pointer moved over was", async () => {
+        const handle = dragHandles()[0];
+        if (!handle) throw new Error("expected the Bloom row's drag handle");
+        const filterRow = editRowFor("s3");
+        document.elementFromPoint = () => filterRow;
+        const changed = waitForConfigChange();
+
+        handle.dispatchEvent(
+          new PointerEvent("pointerdown", { pointerId: 1, bubbles: true, composed: true }),
+        );
+        handle.dispatchEvent(
+          new PointerEvent("pointermove", {
+            pointerId: 1,
+            clientX: 10,
+            clientY: 100,
+            bubbles: true,
+            composed: true,
+          }),
+        );
+        handle.dispatchEvent(
+          new PointerEvent("pointerup", { pointerId: 1, bubbles: true, composed: true }),
+        );
+
+        const event = await changed;
+        expect(event.detail.steps.map((step) => step.id)).toEqual(["s2", "s3", "s1"]);
+      });
+
+      it("does not fire config-change when the drag ends without the order actually changing", async () => {
+        const handle = dragHandles()[0];
+        if (!handle) throw new Error("expected the Bloom row's drag handle");
+        let fired = false;
+        element.addEventListener("config-change", () => {
+          fired = true;
+        });
+
+        handle.dispatchEvent(
+          new PointerEvent("pointerdown", { pointerId: 1, bubbles: true, composed: true }),
+        );
+        handle.dispatchEvent(
+          new PointerEvent("pointerup", { pointerId: 1, bubbles: true, composed: true }),
+        );
+        await element.updateComplete;
+
+        expect(fired).toBe(false);
+      });
+
+      it("does not reorder when the pointer moves over the row already being dragged", async () => {
+        const handle = dragHandles()[0];
+        if (!handle) throw new Error("expected the Bloom row's drag handle");
+        const bloomRow = editRowFor("s1");
+        document.elementFromPoint = () => bloomRow;
+        let fired = false;
+        element.addEventListener("config-change", () => {
+          fired = true;
+        });
+
+        handle.dispatchEvent(
+          new PointerEvent("pointerdown", { pointerId: 1, bubbles: true, composed: true }),
+        );
+        handle.dispatchEvent(
+          new PointerEvent("pointermove", {
+            pointerId: 1,
+            clientX: 10,
+            clientY: 10,
+            bubbles: true,
+            composed: true,
+          }),
+        );
+        handle.dispatchEvent(
+          new PointerEvent("pointerup", { pointerId: 1, bubbles: true, composed: true }),
+        );
+        await element.updateComplete;
+
+        expect(fired).toBe(false);
+      });
+
+      it("resolves the row under the pointer via elementFromPoint even when it returns a descendant of the row", async () => {
+        const handle = dragHandles()[0];
+        if (!handle) throw new Error("expected the Bloom row's drag handle");
+        const filterRow = editRowFor("s3");
+        const descendant = filterRow.querySelector(".label-select");
+        if (!descendant) throw new Error("expected a descendant of the Filter row");
+        document.elementFromPoint = () => descendant;
+        const changed = waitForConfigChange();
+
+        handle.dispatchEvent(
+          new PointerEvent("pointerdown", { pointerId: 1, bubbles: true, composed: true }),
+        );
+        handle.dispatchEvent(
+          new PointerEvent("pointermove", {
+            pointerId: 1,
+            clientX: 10,
+            clientY: 100,
+            bubbles: true,
+            composed: true,
+          }),
+        );
+        handle.dispatchEvent(
+          new PointerEvent("pointerup", { pointerId: 1, bubbles: true, composed: true }),
+        );
+
+        const event = await changed;
+        expect(event.detail.steps.map((step) => step.id)).toEqual(["s2", "s3", "s1"]);
+      });
     });
   });
 });

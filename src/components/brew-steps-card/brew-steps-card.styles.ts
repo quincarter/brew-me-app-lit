@@ -151,6 +151,36 @@ export const BrewStepsCardStyles = css`
     display: flex;
     align-items: center;
     gap: 8px;
+    border-radius: 10px;
+    transition:
+      opacity 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  /* Drag feedback: lift the row being reordered off the list visually
+   * without introducing any new color tokens - reuses the existing surface
+   * scale so it holds up in both light and dark. */
+  .edit-row.dragging {
+    opacity: 0.6;
+    background: var(--brew-color-surface-container);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  }
+
+  /*
+   * icon-button's own internal .btn sets an explicit "cursor: pointer" (not
+   * inherited), which would otherwise shadow a plain "cursor: grab" set
+   * here on the host - go through its "--icon-button-cursor" custom
+   * property instead, same pattern it already uses for bg/color.
+   */
+  .drag-handle {
+    flex-shrink: 0;
+    --icon-button-cursor: grab;
+    touch-action: none;
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .edit-row.dragging .drag-handle {
+    --icon-button-cursor: grabbing;
   }
 
   .label-select,
