@@ -1,9 +1,6 @@
 import { signal } from "@lit-labs/preact-signals";
-import type { IShareableBrew, ISavedBrew } from "../interfaces/brew.interface";
-import { getBrewDisplayName } from "../utilities/brew-display.utility";
-import { navigateTo } from "../utilities/navigation.utility";
+import type { IShareableBrew } from "../interfaces/brew.interface";
 import { coffeeForWater, gramsToOunces, ouncesToGrams } from "../utilities/ratio.utility";
-import { markBrewedNow } from "./brew.store";
 
 /**
  * Ephemeral calculator state. Deliberately *not* persisted (unlike
@@ -83,16 +80,4 @@ export const primeCalculatorForBrew = (brew: IShareableBrew): void => {
 /** Clears just the "Loaded from" banner - does not reset the entered numbers, unlike `resetCalculator`. */
 export const dismissPrimedBanner = (): void => {
   primedFromNameSignal.value = null;
-};
-
-/**
- * The "Brew again" action, available from Home, Saved Brews, and Saved
- * Ratio Detail: stamps the brew as brewed now, primes the calculator with
- * its numbers, and navigates there with the "Loaded from" banner showing.
- */
-export const brewAgain = (brew: ISavedBrew): void => {
-  markBrewedNow(brew.id);
-  primeCalculatorForBrew(brew);
-  primedFromNameSignal.value = getBrewDisplayName(brew);
-  navigateTo("/calculate");
 };

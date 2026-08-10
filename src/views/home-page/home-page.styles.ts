@@ -44,6 +44,8 @@ export const HomePageStyles = css`
     display: flex;
     align-items: center;
     gap: 14px;
+    text-decoration: none;
+    cursor: pointer;
   }
 
   .brew-again-text {

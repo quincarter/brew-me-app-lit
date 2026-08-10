@@ -39,14 +39,14 @@ test.describe("rating and tasting notes on a saved brew", () => {
     await page.getByLabel("Tasting note", { exact: true }).fill("");
     await page.getByRole("button", { name: "Save changes" }).click();
 
-    await expect(page.locator("brew-star-rating")).toHaveCount(0);
+    await expect(page.locator("brew-star-rating .star.filled")).toHaveCount(0);
     await expect(page.locator(".tasting-note")).toHaveCount(0);
 
     await page.locator("brew-bottom-nav").getByRole("link", { name: "Saved" }).click();
-    await expect(page.locator("brew-list-row brew-star-rating")).toHaveCount(0);
+    await expect(page.locator("brew-list-row .star.filled")).toHaveCount(0);
 
     await page.locator("brew-bottom-nav").getByRole("link", { name: "Home" }).click();
-    await expect(page.locator("brew-saved-card brew-star-rating")).toHaveCount(0);
+    await expect(page.locator("brew-saved-card .star.filled")).toHaveCount(0);
   });
 
   test("toggles the theme while keeping saved brew content visible", async ({ page }) => {

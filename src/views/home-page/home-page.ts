@@ -9,8 +9,8 @@ import "../../components/icon-button/brew-icon-button";
 import "../../components/saved-card/brew-saved-card";
 import "../../components/stat-tile/brew-stat-tile";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
-import { brewAgain } from "../../shared/stores/calculator.store";
 import {
+  brewAgain,
   mostRecentlyBrewedSignal,
   recentSavedBrewsSignal,
   streakDaysSignal,
@@ -42,7 +42,7 @@ export class HomePage extends SignalWatcher(LitElement) {
     const relativeLower = relative.charAt(0).toLowerCase() + relative.slice(1);
 
     return html`
-      <div class="brew-again-card">
+      <a class="brew-again-card" href="/saved/${brew.id}">
         <brew-avatar
           initial="${getInitial(getBrewDisplayName(brew))}"
           background="var(--brew-color-surface)"
@@ -62,9 +62,13 @@ export class HomePage extends SignalWatcher(LitElement) {
           variant="filled"
           aria-label="Brew again"
           style="--icon-button-size: 44px"
-          @icon-click="${() => brewAgain(brew)}"
+          @click="${(event: Event) => {
+            event.stopPropagation();
+            event.preventDefault();
+            brewAgain(brew);
+          }}"
         ></brew-icon-button>
-      </div>
+      </a>
     `;
   }
 

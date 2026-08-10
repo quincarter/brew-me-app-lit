@@ -3,12 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { IShareableBrew } from "../../interfaces/brew.interface";
 import {
   addSavedBrew,
+  brewAgain,
   deleteAllSavedBrews,
   markBrewedNow,
   mostRecentlyBrewedSignal,
   recentSavedBrewsSignal,
   savedBrewsSignal,
 } from "../brew.store";
+import {
+  closePostSaveSheet,
+  postSaveSheetBrewSignal,
+  postSaveSheetOpenSignal,
+} from "../post-save-sheet.store";
 
 const brew = (overrides: Partial<IShareableBrew> = {}): IShareableBrew => ({
   brewType: "Pour-over",
@@ -28,6 +34,8 @@ describe("brew.store", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    closePostSaveSheet();
+    postSaveSheetBrewSignal.value = null;
   });
 
   describe("markBrewedNow", () => {
@@ -88,6 +96,28 @@ describe("brew.store", () => {
 
       const order = recentSavedBrewsSignal.value.map((b) => b.id);
       expect(order).toEqual([newer.id, older.id]);
+    });
+  });
+
+  describe("brewAgain", () => {
+    it("stamps lastBrewedAt on the matching saved brew", () => {
+      const saved = addSavedBrew(brew({ brewType: "V60" }));
+      vi.advanceTimersByTime(1000);
+
+      brewAgain(saved);
+
+      const updated = savedBrewsSignal.value.find((b) => b.id === saved.id);
+      expect(updated?.lastBrewedAt).toBe(Date.now());
+    });
+
+    it("opens the post-save sheet with that exact brew", () => {
+      const saved = addSavedBrew(brew({ brewType: "Chemex" }));
+
+      brewAgain(saved);
+
+      expect(postSaveSheetOpenSignal.value).toBe(true);
+      expect(postSaveSheetBrewSignal.value?.id).toBe(saved.id);
+      expect(postSaveSheetBrewSignal.value).toEqual(saved);
     });
   });
 });

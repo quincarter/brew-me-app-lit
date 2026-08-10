@@ -15,8 +15,12 @@ import "../../components/video-search/brew-video-search";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import { addCustomBrewType, allBrewTypesSignal } from "../../shared/stores/brew-types.store";
-import { deleteSavedBrew, savedBrewsSignal, updateSavedBrew } from "../../shared/stores/brew.store";
-import { brewAgain } from "../../shared/stores/calculator.store";
+import {
+  brewAgain,
+  deleteSavedBrew,
+  savedBrewsSignal,
+  updateSavedBrew,
+} from "../../shared/stores/brew.store";
 import { DELETE_ICON, EDIT_ICON, REPLAY_ICON, SHARE_ICON } from "../../shared/icons/icons";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";

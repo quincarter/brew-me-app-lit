@@ -1,6 +1,7 @@
 import { computed } from "@lit-labs/preact-signals";
 import type { IShareableBrew, ISavedBrew } from "../interfaces/brew.interface";
 import { persistentSignal } from "./persistent-signal";
+import { openPostSaveSheet } from "./post-save-sheet.store";
 
 /** No seed data - a fresh install starts with nothing saved. */
 export const savedBrewsSignal = persistentSignal<ISavedBrew[]>([], { key: "saved-brews" });
@@ -71,6 +72,18 @@ export const deleteSavedBrew = (id: number): void => {
 /** Stamps a brew as brewed right now - used by "Brew again" so recency ordering reflects actual use, not just save order. */
 export const markBrewedNow = (id: number): void => {
   updateSavedBrew(id, { lastBrewedAt: Date.now() });
+};
+
+/**
+ * The "Brew again" action, available from Home, Saved Brews, Saved Ratio
+ * Detail, and the Calculator's own recent-brews strip: stamps the brew as
+ * brewed now and opens the post-save sheet so the user can jump into a
+ * guided timer or view the brew's detail - without routing back through
+ * Save, which would create a duplicate entry instead of updating this one.
+ */
+export const brewAgain = (brew: ISavedBrew): void => {
+  markBrewedNow(brew.id);
+  openPostSaveSheet(brew);
 };
 
 /** Danger-zone reset: clears every saved ratio. Used by the Settings screen. */

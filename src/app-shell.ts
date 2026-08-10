@@ -5,6 +5,7 @@ import { html as staticHtml, unsafeStatic } from "lit/static-html.js";
 import "urlpattern-polyfill";
 import { AppShellStyles } from "./app-shell.styles";
 import "./components/install-prompt/brew-install-prompt";
+import "./components/post-save-sheet/brew-post-save-sheet";
 import "./components/theme-toggle/brew-theme-toggle";
 import "./components/update-prompt/brew-update-prompt";
 import { withBase } from "./shared/configuration/base-path";
@@ -50,6 +51,7 @@ export class AppShell extends LitElement {
       <main>${this._router.outlet()}</main>
       <brew-install-prompt></brew-install-prompt>
       <brew-update-prompt></brew-update-prompt>
+      <brew-post-save-sheet></brew-post-save-sheet>
     `;
   }
 }

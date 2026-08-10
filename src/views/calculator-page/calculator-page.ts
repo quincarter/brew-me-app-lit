@@ -5,16 +5,14 @@ import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
 import "../../components/icon-button/brew-icon-button";
 import "../../components/icon/brew-icon";
-import "../../components/post-save-sheet/brew-post-save-sheet";
 import "../../components/ratio-form/brew-ratio-form";
 import "../../components/save-sheet/brew-save-sheet";
 import "../../components/saved-card/brew-saved-card";
 import "../../components/top-bar/brew-top-bar";
 import { REFRESH_ICON, SHARE_ICON } from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
-import { recentSavedBrewsSignal } from "../../shared/stores/brew.store";
+import { brewAgain, recentSavedBrewsSignal } from "../../shared/stores/brew.store";
 import {
-  brewAgain,
   coffeeSignal,
   dismissPrimedBanner,
   ozSignal,
@@ -196,7 +194,6 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             navigateTo("/timer");
           }}"
         ></brew-save-sheet>
-        <brew-post-save-sheet></brew-post-save-sheet>
       </div>
     `;
   }
