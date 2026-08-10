@@ -44,6 +44,7 @@ export const SavedDetailPageStyles = css`
   .action-row {
     display: flex;
     gap: 10px;
+    justify-content: space-evenly;
   }
 
   .section-title {
