@@ -199,4 +199,67 @@ export interface IV60Recipe {
   steps: string[];
   /** Optional note or caveat from the source. */
   note?: string;
+  /** Hand-curated timed brew sequence derived from this recipe's steps for the timer to ingest. */
+  timedSteps?: IBrewStep[];
 }
+
+/** One named expert, champion, or brand's Origami recipe, transcribed from an external source. */
+export interface IOrigamiRecipe {
+  id: string;
+  author: string;
+  title: string;
+  setup: Record<string, string>;
+  steps: string[];
+  note?: string;
+  /** Hand-curated timed brew sequence derived from this recipe's steps for the timer to ingest. */
+  timedSteps?: IBrewStep[];
+}
+
+/** One named expert, champion, or brand's Kalita Wave recipe, transcribed from an external source. */
+export interface IKalitaWaveRecipe {
+  id: string;
+  author: string;
+  title: string;
+  setup: Record<string, string>;
+  steps: string[];
+  note?: string;
+  /** Hand-curated timed brew sequence derived from this recipe's steps for the timer to ingest. */
+  timedSteps?: IBrewStep[];
+}
+
+/** One named expert, champion, or brand's Chemex recipe, transcribed from an external source. */
+export interface IChemexRecipe {
+  id: string;
+  author: string;
+  title: string;
+  setup: Record<string, string>;
+  steps: string[];
+  note?: string;
+  /** Hand-curated timed brew sequence derived from this recipe's steps for the timer to ingest. */
+  timedSteps?: IBrewStep[];
+}
+
+/** One named expert, champion, or brand's Clever Dripper recipe, transcribed from an external source. */
+export interface ICleverDripperRecipe {
+  id: string;
+  author: string;
+  title: string;
+  setup: Record<string, string>;
+  steps: string[];
+  note?: string;
+  /** Hand-curated timed brew sequence derived from this recipe's steps for the timer to ingest. */
+  timedSteps?: IBrewStep[];
+}
+
+/** One named expert, champion, or brand's Hario Switch recipe, transcribed from an external source. */
+export interface IHarioSwitchRecipe {
+  id: string;
+  author: string;
+  title: string;
+  setup: Record<string, string>;
+  steps: string[];
+  note?: string;
+  /** Hand-curated timed brew sequence derived from this recipe's steps for the timer to ingest. */
+  timedSteps?: IBrewStep[];
+}
+

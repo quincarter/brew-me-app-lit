@@ -6,7 +6,10 @@ import "../../components/list-row/brew-list-row";
 import "../../components/stat-tile/brew-stat-tile";
 import "../../components/top-bar/brew-top-bar";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
-import { streakDaysSignal, totalBrewsSignal } from "../../shared/stores/brew.store";
+import {
+  streakDaysSignal,
+  totalBrewsSignal,
+} from "../../shared/stores/brew.store";
 import { startTour } from "../../shared/stores/tour.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getInitial } from "../../shared/utilities/avatar-palette.utility";
@@ -73,13 +76,56 @@ export class MorePage extends SignalWatcher(LitElement) {
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/timer"
           ></brew-list-row>
+
+          <div class="divider"></div>
+          <div class="section-title">Recipes</div>
           <brew-list-row
-            headline="WAC Recipes"
+            headline="Aeropress (WAC) Recipes"
             supporting="World AeroPress Championship winners"
             leading-icon="menu_book"
             leading-bg="var(--brew-color-tertiary-container)"
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/more/aeropress-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Chemex Recipes"
+            supporting="Expert &amp; roastery glass dripper recipes"
+            leading-icon="menu_book"
+            leading-bg="var(--brew-color-tertiary-container)"
+            leading-fg="var(--brew-color-on-tertiary-container)"
+            href="/more/chemex-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Clever Dripper Recipes"
+            supporting="Immersion &amp; barista dripper recipes"
+            leading-icon="menu_book"
+            leading-bg="var(--brew-color-tertiary-container)"
+            leading-fg="var(--brew-color-on-tertiary-container)"
+            href="/more/clever-dripper-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Hario Switch Recipes"
+            supporting="Hybrid immersion &amp; WBrC champion recipes"
+            leading-icon="menu_book"
+            leading-bg="var(--brew-color-tertiary-container)"
+            leading-fg="var(--brew-color-on-tertiary-container)"
+            href="/more/hario-switch-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Kalita Wave Recipes"
+            supporting="Champion &amp; roastery dripper recipes"
+            leading-icon="menu_book"
+            leading-bg="var(--brew-color-tertiary-container)"
+            leading-fg="var(--brew-color-on-tertiary-container)"
+            href="/more/kalita-wave-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Origami Recipes"
+            supporting="Champion &amp; barista dripper recipes"
+            leading-icon="menu_book"
+            leading-bg="var(--brew-color-tertiary-container)"
+            leading-fg="var(--brew-color-on-tertiary-container)"
+            href="/more/origami-recipes"
           ></brew-list-row>
           <brew-list-row
             headline="V60 Recipes"
@@ -91,7 +137,9 @@ export class MorePage extends SignalWatcher(LitElement) {
           ></brew-list-row>
 
           <div class="divider"></div>
-          <div class="section-title" data-tour="more-guides-section">Brew method guide</div>
+          <div class="section-title" data-tour="more-guides-section">
+            Brew method guide
+          </div>
           ${BREW_GUIDE.map(
             (guide, index) => html`
               <brew-list-row
@@ -103,6 +151,17 @@ export class MorePage extends SignalWatcher(LitElement) {
               ></brew-list-row>
             `,
           )}
+
+          <div class="divider"></div>
+          <div class="section-title">Miscellaneous</div>
+          <brew-list-row
+            headline="World Barista Championship"
+            supporting="2026 Panama events &amp; competition videos"
+            leading-icon="emoji_events"
+            leading-bg="var(--brew-color-secondary-container)"
+            leading-fg="var(--brew-color-on-secondary-container)"
+            href="/more/wbc-videos"
+          ></brew-list-row>
         </div>
 
         <brew-bottom-nav active="more"></brew-bottom-nav>

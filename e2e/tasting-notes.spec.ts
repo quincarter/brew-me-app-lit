@@ -6,7 +6,7 @@ const rateAndAddNote = async (page: Page): Promise<void> => {
   await page.locator("brew-list-row").click();
   await page.getByRole("button", { name: "Edit" }).click();
   await page.locator("brew-star-rating[editable] .star").nth(3).click();
-  await page.getByLabel("Tasting note", { exact: true }).fill("Bright and juicy");
+  await page.getByLabel("Tasting note(s)", { exact: true }).fill("Bright and juicy");
   await page.getByRole("button", { name: "Save changes" }).click();
 };
 
@@ -36,7 +36,7 @@ test.describe("rating and tasting notes on a saved brew", () => {
 
     await page.getByRole("button", { name: "Edit" }).click();
     await page.locator("brew-star-rating[editable] .star").nth(3).click();
-    await page.getByLabel("Tasting note", { exact: true }).fill("");
+    await page.getByLabel("Tasting note(s)", { exact: true }).fill("");
     await page.getByRole("button", { name: "Save changes" }).click();
 
     await expect(page.locator("brew-star-rating .star.filled")).toHaveCount(0);

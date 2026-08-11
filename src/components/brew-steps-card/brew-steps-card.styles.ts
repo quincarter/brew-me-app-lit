@@ -3,6 +3,10 @@ import { css } from "lit";
 export const BrewStepsCardStyles = css`
   :host {
     display: block;
+    width: 100%;
+    max-width: 480px;
+    box-sizing: border-box;
+    margin-inline: auto;
   }
 
   .card {

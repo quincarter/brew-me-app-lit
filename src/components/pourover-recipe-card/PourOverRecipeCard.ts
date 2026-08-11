@@ -1,23 +1,23 @@
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { property, state } from "lit/decorators.js";
-import type { IV60Recipe } from "../../shared/interfaces/brew.interface";
+import type { IOrigamiRecipe, IV60Recipe } from "../../shared/interfaces/brew.interface";
 import "../avatar/brew-avatar";
+import "../button/brew-button";
 import "../icon/brew-icon";
 import { PourOverRecipeCardStyles } from "./pourover-recipe-card.styles";
 
 /**
  * # Pour-Over Recipe Card
- * An expandable card for a single named V60/pour-over recipe: collapsed it
+ * An expandable card for a single named V60/Origami pour-over recipe: collapsed it
  * shows an avatar, the recipe title and its author; expanded it reveals
- * the full setup table and numbered method. Same interaction shape as
- * `brew-recipe-card` (the AeroPress WAC recipes), but for recipes that
- * don't have a competition placing/country to show.
+ * the full setup table, numbered method, and a "Brew this recipe now" action.
  * @element brew-pourover-recipe-card
+ * @fires brew-now - `CustomEvent<IV60Recipe | IOrigamiRecipe>` fired with this card's recipe when "Brew this recipe now" is activated.
  */
 export class PourOverRecipeCard extends LitElement {
   static styles = [PourOverRecipeCardStyles];
 
-  @property({ type: Object }) recipe!: IV60Recipe;
+  @property({ type: Object }) recipe!: IV60Recipe | IOrigamiRecipe;
 
   /** Seeds the initial expanded state only; after mount the toggle owns it. */
   @property({ type: Boolean, attribute: "start-open" }) startOpen = false;
@@ -44,6 +44,16 @@ export class PourOverRecipeCard extends LitElement {
 
   private _toggle = (): void => {
     this._expanded = !this._expanded;
+  };
+
+  private _onBrewNow = (): void => {
+    this.dispatchEvent(
+      new CustomEvent<IV60Recipe | IOrigamiRecipe>("brew-now", {
+        detail: this.recipe,
+        bubbles: true,
+        composed: true,
+      }),
+    );
   };
 
   render(): HTMLTemplateResult {
@@ -93,6 +103,11 @@ export class PourOverRecipeCard extends LitElement {
                   </ol>
 
                   ${note ? html`<p class="note">${note}</p>` : nothing}
+
+                  <brew-button variant="filled" full-width @button-click="${this._onBrewNow}"
+                    ><brew-icon name="coffee" size="18"></brew-icon> Brew this recipe
+                    now</brew-button
+                  >
                 </div>
               `
             : nothing

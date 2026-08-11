@@ -4,6 +4,7 @@ import { customElement, query, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
 import "../../components/icon/brew-icon";
+import "../../components/list-row/brew-list-row";
 import "../../components/switch/brew-switch";
 import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
@@ -176,6 +177,60 @@ export class SettingsPage extends SignalWatcher(LitElement) {
                   >
                 `
           }
+
+          <div class="divider"></div>
+          <div class="section-title">Recipes</div>
+          <p class="section-hint">
+            Curated recipes from World competitions and coffee experts.
+          </p>
+          <brew-list-row
+            headline="WAC Recipes"
+            supporting="World AeroPress Championship winners"
+            leading-icon="menu_book"
+            href="/more/aeropress-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="V60 Recipes"
+            supporting="Expert pour-over recipes compared"
+            leading-icon="menu_book"
+            href="/more/v60-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Origami Recipes"
+            supporting="Champion &amp; barista dripper recipes"
+            leading-icon="menu_book"
+            href="/more/origami-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Kalita Wave Recipes"
+            supporting="Champion &amp; roastery dripper recipes"
+            leading-icon="menu_book"
+            href="/more/kalita-wave-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Chemex Recipes"
+            supporting="Expert &amp; roastery glass dripper recipes"
+            leading-icon="menu_book"
+            href="/more/chemex-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Clever Dripper Recipes"
+            supporting="Immersion &amp; barista dripper recipes"
+            leading-icon="menu_book"
+            href="/more/clever-dripper-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Hario Switch Recipes"
+            supporting="Hybrid immersion &amp; WBrC champion recipes"
+            leading-icon="menu_book"
+            href="/more/hario-switch-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="World Barista Championship"
+            supporting="2026 Panama events &amp; competition videos"
+            leading-icon="emoji_events"
+            href="/more/wbc-videos"
+          ></brew-list-row>
 
           <div class="divider"></div>
           <div class="section-title">Appearance</div>
