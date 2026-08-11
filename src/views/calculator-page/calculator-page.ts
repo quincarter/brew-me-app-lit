@@ -16,12 +16,20 @@ import "../../components/saved-card/brew-saved-card";
 import "../../components/top-bar/brew-top-bar";
 import "../../components/type-picker/brew-type-picker";
 import { AEROPRESS_RECIPES } from "../../shared/data/aeropress-recipes.data";
+import { CHEMEX_RECIPES } from "../../shared/data/chemex-recipes.data";
+import { CLEVER_DRIPPER_RECIPES } from "../../shared/data/clever-dripper-recipes.data";
+import { HARIO_SWITCH_RECIPES } from "../../shared/data/hario-switch-recipes.data";
+import { KALITA_WAVE_RECIPES } from "../../shared/data/kalita-wave-recipes.data";
 import { ORIGAMI_RECIPES } from "../../shared/data/origami-recipes.data";
 import { V60_RECIPES } from "../../shared/data/v60-recipes.data";
 import { REFRESH_ICON, SHARE_ICON } from "../../shared/icons/icons";
 import type {
   IAeropressRecipe,
   IBrewStepsConfig,
+  IChemexRecipe,
+  ICleverDripperRecipe,
+  IHarioSwitchRecipe,
+  IKalitaWaveRecipe,
   IOrigamiRecipe,
   ISavedBrew,
   IV60Recipe,
@@ -29,6 +37,10 @@ import type {
 import {
   brewStepsSignal,
   loadAeropressRecipeIntoCalculator,
+  loadChemexRecipeIntoCalculator,
+  loadCleverDripperRecipeIntoCalculator,
+  loadHarioSwitchRecipeIntoCalculator,
+  loadKalitaWaveRecipeIntoCalculator,
   loadOrigamiRecipeIntoCalculator,
   loadV60RecipeIntoCalculator,
   loadedRecipeSourceSignal,
@@ -114,7 +126,15 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
   };
 
   private _onRecipeSelect = (
-    event: CustomEvent<IAeropressRecipe | IV60Recipe | IOrigamiRecipe>,
+    event: CustomEvent<
+      | IAeropressRecipe
+      | IV60Recipe
+      | IOrigamiRecipe
+      | IKalitaWaveRecipe
+      | IChemexRecipe
+      | ICleverDripperRecipe
+      | IHarioSwitchRecipe
+    >,
   ): void => {
     const selectedType = selectedBrewTypeSignal.value;
     if (selectedType === "Aeropress") {
@@ -123,6 +143,14 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
       loadV60RecipeIntoCalculator(event.detail as IV60Recipe);
     } else if (selectedType === "Origami") {
       loadOrigamiRecipeIntoCalculator(event.detail as IOrigamiRecipe);
+    } else if (selectedType === "Kalita Wave") {
+      loadKalitaWaveRecipeIntoCalculator(event.detail as IKalitaWaveRecipe);
+    } else if (selectedType === "Chemex") {
+      loadChemexRecipeIntoCalculator(event.detail as IChemexRecipe);
+    } else if (selectedType === "Clever Dripper" || selectedType === "Clever") {
+      loadCleverDripperRecipeIntoCalculator(event.detail as ICleverDripperRecipe);
+    } else if (selectedType === "Hario Switch" || selectedType === "Switch") {
+      loadHarioSwitchRecipeIntoCalculator(event.detail as IHarioSwitchRecipe);
     }
     this._recipePickerOpen = false;
   };
@@ -202,6 +230,18 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
     const origamiOriginal = ORIGAMI_RECIPES.find(
       (recipe) => recipe.id === source.recipeId,
     );
+    const kalitaOriginal = KALITA_WAVE_RECIPES.find(
+      (recipe) => recipe.id === source.recipeId,
+    );
+    const chemexOriginal = CHEMEX_RECIPES.find(
+      (recipe) => recipe.id === source.recipeId,
+    );
+    const cleverOriginal = CLEVER_DRIPPER_RECIPES.find(
+      (recipe) => recipe.id === source.recipeId,
+    );
+    const switchOriginal = HARIO_SWITCH_RECIPES.find(
+      (recipe) => recipe.id === source.recipeId,
+    );
 
     return html`
       <brew-bottom-sheet
@@ -227,7 +267,27 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
                   .recipe="${origamiOriginal}"
                   start-open
                 ></brew-pourover-recipe-card>`
-              : html`<p>This recipe is no longer available.</p>`}
+              : kalitaOriginal
+                ? html`<brew-pourover-recipe-card
+                    .recipe="${kalitaOriginal}"
+                    start-open
+                  ></brew-pourover-recipe-card>`
+                : chemexOriginal
+                  ? html`<brew-pourover-recipe-card
+                      .recipe="${chemexOriginal}"
+                      start-open
+                    ></brew-pourover-recipe-card>`
+                  : cleverOriginal
+                    ? html`<brew-pourover-recipe-card
+                        .recipe="${cleverOriginal}"
+                        start-open
+                      ></brew-pourover-recipe-card>`
+                    : switchOriginal
+                      ? html`<brew-pourover-recipe-card
+                          .recipe="${switchOriginal}"
+                          start-open
+                        ></brew-pourover-recipe-card>`
+                      : html`<p>This recipe is no longer available.</p>`}
       </brew-bottom-sheet>
     `;
   }
@@ -247,7 +307,13 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
     const hasCuratedRecipes =
       selectedType === "Aeropress" ||
       selectedType === "V60" ||
-      selectedType === "Origami";
+      selectedType === "Origami" ||
+      selectedType === "Kalita Wave" ||
+      selectedType === "Chemex" ||
+      selectedType === "Clever Dripper" ||
+      selectedType === "Clever" ||
+      selectedType === "Hario Switch" ||
+      selectedType === "Switch";
 
     return html`
       <div class="screen">

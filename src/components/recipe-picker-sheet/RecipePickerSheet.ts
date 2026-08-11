@@ -1,10 +1,18 @@
 import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
 import { AEROPRESS_RECIPES } from "../../shared/data/aeropress-recipes.data";
+import { CHEMEX_RECIPES } from "../../shared/data/chemex-recipes.data";
+import { CLEVER_DRIPPER_RECIPES } from "../../shared/data/clever-dripper-recipes.data";
+import { HARIO_SWITCH_RECIPES } from "../../shared/data/hario-switch-recipes.data";
+import { KALITA_WAVE_RECIPES } from "../../shared/data/kalita-wave-recipes.data";
 import { ORIGAMI_RECIPES } from "../../shared/data/origami-recipes.data";
 import { V60_RECIPES } from "../../shared/data/v60-recipes.data";
 import type {
   IAeropressRecipe,
+  IChemexRecipe,
+  ICleverDripperRecipe,
+  IHarioSwitchRecipe,
+  IKalitaWaveRecipe,
   IOrigamiRecipe,
   IV60Recipe,
 } from "../../shared/interfaces/brew.interface";
@@ -14,12 +22,19 @@ import { RecipePickerSheetStyles } from "./recipe-picker-sheet.styles";
 
 const PLACE_LABEL: Record<number, string> = { 1: "1st", 2: "2nd", 3: "3rd" };
 
-export type AnyRecipe = IAeropressRecipe | IV60Recipe | IOrigamiRecipe;
+export type AnyRecipe =
+  | IAeropressRecipe
+  | IV60Recipe
+  | IOrigamiRecipe
+  | IKalitaWaveRecipe
+  | IChemexRecipe
+  | ICleverDripperRecipe
+  | IHarioSwitchRecipe;
 
 /**
  * # Recipe Picker Sheet
  * Generic recipe selection sheet: a `<brew-bottom-sheet>` listing curated
- * recipes for the specified `brewType` ("Aeropress", "V60", "Origami") as tappable rows.
+ * recipes for the specified `brewType` ("Aeropress", "V60", "Origami", "Kalita Wave", "Chemex", "Clever Dripper") as tappable rows.
  * Picking one fires `recipe-select` with the full recipe object.
  * @element brew-recipe-picker-sheet
  * @fires recipe-select - `CustomEvent<AnyRecipe>` fired with the tapped recipe. Consumers are responsible for closing the sheet.
@@ -67,6 +82,58 @@ export class RecipePickerSheet extends LitElement {
         title: "Load an Origami recipe",
         hint: "Auto-fills the ratio, water, coffee, and steps from the selected recipe.",
         items: ORIGAMI_RECIPES.map((recipe) => ({
+          recipe,
+          headline: `${recipe.author} · ${recipe.title}`,
+          supporting: `${recipe.setup.Dose ?? ""} coffee : ${recipe.setup.Water ?? ""} water`,
+          initial: recipe.author.charAt(0),
+        })),
+      };
+    }
+
+    if (this.brewType === "Kalita Wave") {
+      return {
+        title: "Load a Kalita Wave recipe",
+        hint: "Auto-fills the ratio, water, coffee, and steps from the selected recipe.",
+        items: KALITA_WAVE_RECIPES.map((recipe) => ({
+          recipe,
+          headline: `${recipe.author} · ${recipe.title}`,
+          supporting: `${recipe.setup.Dose ?? ""} coffee : ${recipe.setup.Water ?? ""} water`,
+          initial: recipe.author.charAt(0),
+        })),
+      };
+    }
+
+    if (this.brewType === "Chemex") {
+      return {
+        title: "Load a Chemex recipe",
+        hint: "Auto-fills the ratio, water, coffee, and steps from the selected recipe.",
+        items: CHEMEX_RECIPES.map((recipe) => ({
+          recipe,
+          headline: `${recipe.author} · ${recipe.title}`,
+          supporting: `${recipe.setup.Dose ?? ""} coffee : ${recipe.setup.Water ?? ""} water`,
+          initial: recipe.author.charAt(0),
+        })),
+      };
+    }
+
+    if (this.brewType === "Clever Dripper" || this.brewType === "Clever") {
+      return {
+        title: "Load a Clever Dripper recipe",
+        hint: "Auto-fills the ratio, water, coffee, and steps from the selected recipe.",
+        items: CLEVER_DRIPPER_RECIPES.map((recipe) => ({
+          recipe,
+          headline: `${recipe.author} · ${recipe.title}`,
+          supporting: `${recipe.setup.Dose ?? ""} coffee : ${recipe.setup.Water ?? ""} water`,
+          initial: recipe.author.charAt(0),
+        })),
+      };
+    }
+
+    if (this.brewType === "Hario Switch" || this.brewType === "Switch") {
+      return {
+        title: "Load a Hario Switch recipe",
+        hint: "Auto-fills the ratio, water, coffee, and steps from the selected recipe.",
+        items: HARIO_SWITCH_RECIPES.map((recipe) => ({
           recipe,
           headline: `${recipe.author} · ${recipe.title}`,
           supporting: `${recipe.setup.Dose ?? ""} coffee : ${recipe.setup.Water ?? ""} water`,

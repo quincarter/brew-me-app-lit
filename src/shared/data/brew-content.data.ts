@@ -260,6 +260,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Pour in stages, keeping the bed evenly saturated.",
     ],
     videos: CHEMEX_VIDEOS,
+    recipesLink: {
+      label: "Expert & roastery Chemex recipes",
+      description: "Explore Hoffmann, Sweet Bloom, Brandywine, and more",
+      route: "/more/chemex-recipes",
+    },
     externalLinks: [
       {
         label: "Learn more about the Chemex",
@@ -380,7 +385,7 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     ],
   },
   {
-    id: "kalitawave",
+    id: "kalita-wave",
     name: "Kalita Wave",
     desc: "A flat-bottomed pour-over that evens out extraction, making it more forgiving than conical drippers like the V60.",
     ratioHint: "1:16",
@@ -393,6 +398,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Keep pours steady to avoid channeling at the edges.",
     ],
     videos: KALITA_WAVE_VIDEOS,
+    recipesLink: {
+      label: "Champion & roastery Kalita Wave recipes",
+      description: "Explore WBrC champion recipes and specialty roastery methods",
+      route: "/more/kalita-wave-recipes",
+    },
     externalLinks: [
       {
         label: "Learn more about the Kalita Wave",
@@ -459,6 +469,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     id: "hario-switch",
     name: "Hario Switch",
     desc: "A hybrid dripper with a valve at the base — steep it closed like an immersion brewer, then flip the switch to let it draw down like a pour-over, all in one device.",
+    recipesLink: {
+      label: "Hybrid immersion & WBrC champion recipes",
+      description: "Explore Tetsu Kasuya, Weihong Zhang, Kunie Inaba & Charity Cheung Switch recipes",
+      route: "/more/hario-switch-recipes",
+    },
     ratioHint: "1:15",
     grind: "Medium",
     temp: "200°F",
@@ -491,6 +506,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Give it a gentle stir partway through the steep to keep grounds from clumping at the bottom.",
     ],
     videos: CLEVER_DRIPPER_VIDEOS,
+    recipesLink: {
+      label: "Clever Dripper Recipes",
+      description: "Immersion & barista dripper recipes",
+      route: "/more/clever-dripper-recipes",
+    },
     externalLinks: [
       {
         label: "What is a Clever Dripper?",

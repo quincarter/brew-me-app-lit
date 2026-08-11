@@ -3,6 +3,10 @@ import { BREW_STEPS_PRESETS } from "../data/brew-steps-presets.data";
 import type {
   IAeropressRecipe,
   IBrewStepsConfig,
+  IChemexRecipe,
+  ICleverDripperRecipe,
+  IHarioSwitchRecipe,
+  IKalitaWaveRecipe,
   ILoadedRecipeSource,
   IOrigamiRecipe,
   IV60Recipe,
@@ -121,6 +125,104 @@ export const loadV60RecipeIntoCalculator = (recipe: IV60Recipe): void => {
 /** Loads a curated Origami recipe into the calculator. */
 export const loadOrigamiRecipeIntoCalculator = (recipe: IOrigamiRecipe): void => {
   selectedBrewTypeSignal.value = "Origami";
+  const dose = parseDoseGrams(recipe);
+  const water = parseWaterGrams(recipe);
+  const ratio = getPouroverRecipeRatio(recipe);
+  const steps = getPouroverRecipeSteps(recipe);
+
+  ratioSignal.value = String(ratio);
+  waterSignal.value = String(water);
+  ozSignal.value = String(gramsToOunces(water));
+  coffeeSignal.value = dose;
+
+  brewStepsSignal.value = { steps };
+  loadedRecipeSourceSignal.value = {
+    recipeId: recipe.id,
+    label: getPouroverRecipeLabel(recipe),
+    ratio,
+    water,
+    coffee: dose,
+    steps,
+  };
+};
+
+/** Loads a curated Kalita Wave recipe into the calculator. */
+export const loadKalitaWaveRecipeIntoCalculator = (recipe: IKalitaWaveRecipe): void => {
+  selectedBrewTypeSignal.value = "Kalita Wave";
+  const dose = parseDoseGrams(recipe);
+  const water = parseWaterGrams(recipe);
+  const ratio = getPouroverRecipeRatio(recipe);
+  const steps = getPouroverRecipeSteps(recipe);
+
+  ratioSignal.value = String(ratio);
+  waterSignal.value = String(water);
+  ozSignal.value = String(gramsToOunces(water));
+  coffeeSignal.value = dose;
+
+  brewStepsSignal.value = { steps };
+  loadedRecipeSourceSignal.value = {
+    recipeId: recipe.id,
+    label: getPouroverRecipeLabel(recipe),
+    ratio,
+    water,
+    coffee: dose,
+    steps,
+  };
+};
+
+/** Loads a curated Chemex recipe into the calculator. */
+export const loadChemexRecipeIntoCalculator = (recipe: IChemexRecipe): void => {
+  selectedBrewTypeSignal.value = "Chemex";
+  const dose = parseDoseGrams(recipe);
+  const water = parseWaterGrams(recipe);
+  const ratio = getPouroverRecipeRatio(recipe);
+  const steps = getPouroverRecipeSteps(recipe);
+
+  ratioSignal.value = String(ratio);
+  waterSignal.value = String(water);
+  ozSignal.value = String(gramsToOunces(water));
+  coffeeSignal.value = dose;
+
+  brewStepsSignal.value = { steps };
+  loadedRecipeSourceSignal.value = {
+    recipeId: recipe.id,
+    label: getPouroverRecipeLabel(recipe),
+    ratio,
+    water,
+    coffee: dose,
+    steps,
+  };
+};
+
+/** Loads a curated Clever Dripper recipe into the calculator. */
+export const loadCleverDripperRecipeIntoCalculator = (
+  recipe: ICleverDripperRecipe,
+): void => {
+  selectedBrewTypeSignal.value = "Clever Dripper";
+  const dose = parseDoseGrams(recipe);
+  const water = parseWaterGrams(recipe);
+  const ratio = getPouroverRecipeRatio(recipe);
+  const steps = getPouroverRecipeSteps(recipe);
+
+  ratioSignal.value = String(ratio);
+  waterSignal.value = String(water);
+  ozSignal.value = String(gramsToOunces(water));
+  coffeeSignal.value = dose;
+
+  brewStepsSignal.value = { steps };
+  loadedRecipeSourceSignal.value = {
+    recipeId: recipe.id,
+    label: getPouroverRecipeLabel(recipe),
+    ratio,
+    water,
+    coffee: dose,
+    steps,
+  };
+};
+
+/** Loads a curated Hario Switch recipe into the calculator. */
+export const loadHarioSwitchRecipeIntoCalculator = (recipe: IHarioSwitchRecipe): void => {
+  selectedBrewTypeSignal.value = "Hario Switch";
   const dose = parseDoseGrams(recipe);
   const water = parseWaterGrams(recipe);
   const ratio = getPouroverRecipeRatio(recipe);

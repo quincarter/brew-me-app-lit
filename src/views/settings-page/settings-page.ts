@@ -201,6 +201,36 @@ export class SettingsPage extends SignalWatcher(LitElement) {
             leading-icon="menu_book"
             href="/more/origami-recipes"
           ></brew-list-row>
+          <brew-list-row
+            headline="Kalita Wave Recipes"
+            supporting="Champion &amp; roastery dripper recipes"
+            leading-icon="menu_book"
+            href="/more/kalita-wave-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Chemex Recipes"
+            supporting="Expert &amp; roastery glass dripper recipes"
+            leading-icon="menu_book"
+            href="/more/chemex-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Clever Dripper Recipes"
+            supporting="Immersion &amp; barista dripper recipes"
+            leading-icon="menu_book"
+            href="/more/clever-dripper-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Hario Switch Recipes"
+            supporting="Hybrid immersion &amp; WBrC champion recipes"
+            leading-icon="menu_book"
+            href="/more/hario-switch-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="World Barista Championship"
+            supporting="2026 Panama events &amp; competition videos"
+            leading-icon="emoji_events"
+            href="/more/wbc-videos"
+          ></brew-list-row>
 
           <div class="divider"></div>
           <div class="section-title">Appearance</div>

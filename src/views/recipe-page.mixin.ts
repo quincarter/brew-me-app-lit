@@ -1,6 +1,7 @@
 import type { HTMLTemplateResult } from "lit";
 import { html, LitElement } from "lit";
 import "../components/bottom-nav/brew-bottom-nav";
+import "../components/icon/brew-icon";
 import "../components/link-card/brew-link-card";
 import "../components/top-bar/brew-top-bar";
 
@@ -10,6 +11,11 @@ export interface IRecipePageConfig {
   title: string;
   guideId: string;
   intro: string;
+  callout?: {
+    title?: string;
+    text: string;
+    icon?: string;
+  };
   source: {
     name: string;
     url: string;
@@ -21,7 +27,7 @@ export interface IRecipePageConfig {
  * # RecipePageMixin
  * A mixin that provides the common page shell layout (top bar, intro text,
  * source link card, optional filter section, recipe list container, and bottom nav)
- * for recipe archive screens (AeroPress WAC, V60, Origami).
+ * for recipe archive screens (AeroPress WAC, V60, Origami, Kalita Wave, Chemex, Clever, Switch).
  */
 export function RecipePageMixin<T extends Constructor<LitElement>>(superClass: T) {
   abstract class RecipePageClass extends superClass {
@@ -48,6 +54,20 @@ export function RecipePageMixin<T extends Constructor<LitElement>>(superClass: T
 
           <div class="content">
             <p class="intro">${config.intro}</p>
+
+            ${config.callout
+              ? html`
+                  <div class="recipe-callout">
+                    <brew-icon name="${config.callout.icon ?? "info"}" size="20"></brew-icon>
+                    <div class="callout-content">
+                      ${config.callout.title
+                        ? html`<strong class="callout-title">${config.callout.title}</strong>`
+                        : null}
+                      <p class="callout-text">${config.callout.text}</p>
+                    </div>
+                  </div>
+                `
+              : null}
 
             <brew-link-card
               href="${config.source.url}"

@@ -1,17 +1,33 @@
-import type { IBrewStep, IOrigamiRecipe, IV60Recipe } from "../interfaces/brew.interface";
+import type {
+  IBrewStep,
+  IChemexRecipe,
+  ICleverDripperRecipe,
+  IHarioSwitchRecipe,
+  IKalitaWaveRecipe,
+  IOrigamiRecipe,
+  IV60Recipe,
+} from "../interfaces/brew.interface";
 import { round2 } from "./ratio.utility";
 
+export type IPouroverRecipe =
+  | IV60Recipe
+  | IOrigamiRecipe
+  | IKalitaWaveRecipe
+  | IChemexRecipe
+  | ICleverDripperRecipe
+  | IHarioSwitchRecipe;
+
 /** "{author} — {title}" - display label used for a pour-over recipe reference banner and provenance. */
-export const getPouroverRecipeLabel = (recipe: IV60Recipe | IOrigamiRecipe): string =>
+export const getPouroverRecipeLabel = (recipe: IPouroverRecipe): string =>
   `${recipe.author} — ${recipe.title}`;
 
-export const parseDoseGrams = (recipe: IV60Recipe | IOrigamiRecipe): number => {
+export const parseDoseGrams = (recipe: IPouroverRecipe): number => {
   const str = recipe.setup.Dose ?? "";
   const match = str.match(/([0-9.]+)/);
   return match ? Number.parseFloat(match[1]) : 15;
 };
 
-export const parseWaterGrams = (recipe: IV60Recipe | IOrigamiRecipe): number => {
+export const parseWaterGrams = (recipe: IPouroverRecipe): number => {
   const str = recipe.setup.Water ?? "";
   const numbers = str.match(/\d+(\.\d+)?/g);
   if (!numbers || numbers.length === 0) return 250;
@@ -21,13 +37,13 @@ export const parseWaterGrams = (recipe: IV60Recipe | IOrigamiRecipe): number => 
   return Number.parseFloat(numbers[0]);
 };
 
-export const getPouroverRecipeRatio = (recipe: IV60Recipe | IOrigamiRecipe): number => {
+export const getPouroverRecipeRatio = (recipe: IPouroverRecipe): number => {
   const dose = parseDoseGrams(recipe);
   const water = parseWaterGrams(recipe);
   return round2(water / dose);
 };
 
-export const getPouroverRecipeSteps = (recipe: IV60Recipe | IOrigamiRecipe): IBrewStep[] => {
+export const getPouroverRecipeSteps = (recipe: IPouroverRecipe): IBrewStep[] => {
   const setupSteps: IBrewStep[] = Object.entries(recipe.setup).map(([key, value]) => ({
     id: `${recipe.id}-setup-${key}`,
     label: key,

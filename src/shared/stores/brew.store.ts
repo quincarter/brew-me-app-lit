@@ -1,6 +1,10 @@
 import { computed } from "@lit-labs/preact-signals";
 import type {
   IAeropressRecipe,
+  IChemexRecipe,
+  ICleverDripperRecipe,
+  IHarioSwitchRecipe,
+  IKalitaWaveRecipe,
   IOrigamiRecipe,
   IShareableBrew,
   ISavedBrew,
@@ -181,6 +185,118 @@ export const brewOrigamiRecipeNow = (recipe: IOrigamiRecipe): void => {
 
   const savedBrew = addSavedBrew({
     brewType: "Origami",
+    name: `${recipe.author} · ${recipe.title}`,
+    ratio,
+    water,
+    coffee: dose,
+    oz: gramsToOunces(water),
+    brewSteps: { steps },
+    recipeSource: {
+      recipeId: recipe.id,
+      label: getPouroverRecipeLabel(recipe),
+      ratio,
+      water,
+      coffee: dose,
+      steps,
+    },
+  });
+
+  openPostSaveSheet(savedBrew);
+};
+
+/** Saves a curated Kalita Wave recipe as a brand-new brew and opens post-save sheet. */
+export const brewKalitaWaveRecipeNow = (recipe: IKalitaWaveRecipe): void => {
+  const dose = parseDoseGrams(recipe);
+  const water = parseWaterGrams(recipe);
+  const ratio = getPouroverRecipeRatio(recipe);
+  const steps = getPouroverRecipeSteps(recipe);
+
+  const savedBrew = addSavedBrew({
+    brewType: "Kalita Wave",
+    name: `${recipe.author} · ${recipe.title}`,
+    ratio,
+    water,
+    coffee: dose,
+    oz: gramsToOunces(water),
+    brewSteps: { steps },
+    recipeSource: {
+      recipeId: recipe.id,
+      label: getPouroverRecipeLabel(recipe),
+      ratio,
+      water,
+      coffee: dose,
+      steps,
+    },
+  });
+
+  openPostSaveSheet(savedBrew);
+};
+
+/** Saves a curated Chemex recipe as a brand-new brew and opens post-save sheet. */
+export const brewChemexRecipeNow = (recipe: IChemexRecipe): void => {
+  const dose = parseDoseGrams(recipe);
+  const water = parseWaterGrams(recipe);
+  const ratio = getPouroverRecipeRatio(recipe);
+  const steps = getPouroverRecipeSteps(recipe);
+
+  const savedBrew = addSavedBrew({
+    brewType: "Chemex",
+    name: `${recipe.author} · ${recipe.title}`,
+    ratio,
+    water,
+    coffee: dose,
+    oz: gramsToOunces(water),
+    brewSteps: { steps },
+    recipeSource: {
+      recipeId: recipe.id,
+      label: getPouroverRecipeLabel(recipe),
+      ratio,
+      water,
+      coffee: dose,
+      steps,
+    },
+  });
+
+  openPostSaveSheet(savedBrew);
+};
+
+/** Saves a curated Clever Dripper recipe as a brand-new brew and opens post-save sheet. */
+export const brewCleverDripperRecipeNow = (recipe: ICleverDripperRecipe): void => {
+  const dose = parseDoseGrams(recipe);
+  const water = parseWaterGrams(recipe);
+  const ratio = getPouroverRecipeRatio(recipe);
+  const steps = getPouroverRecipeSteps(recipe);
+
+  const savedBrew = addSavedBrew({
+    brewType: "Clever Dripper",
+    name: `${recipe.author} · ${recipe.title}`,
+    ratio,
+    water,
+    coffee: dose,
+    oz: gramsToOunces(water),
+    brewSteps: { steps },
+    recipeSource: {
+      recipeId: recipe.id,
+      label: getPouroverRecipeLabel(recipe),
+      ratio,
+      water,
+      coffee: dose,
+      steps,
+    },
+  });
+
+  openPostSaveSheet(savedBrew);
+};
+
+/** Saves a curated Hario Switch recipe as a brand-new brew and opens post-save sheet. */
+export const brewHarioSwitchRecipeNow = (recipe: IHarioSwitchRecipe): void => {
+  const dose = parseDoseGrams(recipe);
+  const water = parseWaterGrams(recipe);
+  const ratio = getPouroverRecipeRatio(recipe);
+  const steps = getPouroverRecipeSteps(recipe);
+
+  const savedBrew = addSavedBrew({
+    brewType: "Hario Switch",
     name: `${recipe.author} · ${recipe.title}`,
     ratio,
     water,
