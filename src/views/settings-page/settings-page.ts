@@ -16,9 +16,15 @@ import {
   deleteCustomBrewType,
 } from "../../shared/stores/brew-types.store";
 import { deleteAllSavedBrews } from "../../shared/stores/brew.store";
-import { isDarkThemeSignal, setDarkTheme } from "../../shared/stores/theme.store";
+import {
+  isDarkThemeSignal,
+  setDarkTheme,
+} from "../../shared/stores/theme.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
-import { exportAppData, importAppData } from "../../shared/utilities/export-data.utility";
+import {
+  exportAppData,
+  importAppData,
+} from "../../shared/utilities/export-data.utility";
 import { refreshApp } from "../../shared/utilities/register-service-worker.utility";
 import { SettingsPageStyles } from "./settings-page.styles";
 
@@ -120,16 +126,22 @@ export class SettingsPage extends SignalWatcher(LitElement) {
 
     return html`
       <div class="screen">
-        <brew-top-bar title="Settings" icon="arrow_back" href="/more"></brew-top-bar>
+        <brew-top-bar
+          title="Settings"
+          icon="arrow_back"
+          href="/more"
+        ></brew-top-bar>
 
         <div class="content">
           <div class="section-title">Brew types</div>
           <p class="section-hint">
-            These show up as options when saving or editing a ratio. Built-in types can't be
-            removed.
+            These show up as options when saving or editing a ratio. Built-in
+            types can't be removed.
           </p>
           <div class="type-tags">
-            ${BREW_TYPES.map((name) => html`<span class="type-tag">${name}</span>`)}
+            ${BREW_TYPES.map(
+              (name) => html`<span class="type-tag">${name}</span>`,
+            )}
             ${customTypes.map(
               (name) => html`
                 <span class="type-tag custom">
@@ -147,90 +159,38 @@ export class SettingsPage extends SignalWatcher(LitElement) {
             )}
           </div>
 
-          ${
-            this._addingType
-              ? html`
-                  <div class="add-row">
-                    <brew-text-field
-                      label="New brew type"
-                      .value="${this._typeDraft}"
-                      @value-change="${(e: CustomEvent<string>) => {
-                        this._typeDraft = e.detail;
-                      }}"
-                    ></brew-text-field>
-                    <div class="add-actions">
-                      <brew-button variant="text" @button-click="${this._cancelAddType}"
-                        >Cancel</brew-button
-                      >
-                      <brew-button
-                        variant="filled"
-                        ?disabled="${!this._typeDraft.trim()}"
-                        @button-click="${this._confirmAddType}"
-                        >Add</brew-button
-                      >
-                    </div>
+          ${this._addingType
+            ? html`
+                <div class="add-row">
+                  <brew-text-field
+                    label="New brew type"
+                    .value="${this._typeDraft}"
+                    @value-change="${(e: CustomEvent<string>) => {
+                      this._typeDraft = e.detail;
+                    }}"
+                  ></brew-text-field>
+                  <div class="add-actions">
+                    <brew-button
+                      variant="text"
+                      @button-click="${this._cancelAddType}"
+                      >Cancel</brew-button
+                    >
+                    <brew-button
+                      variant="filled"
+                      ?disabled="${!this._typeDraft.trim()}"
+                      @button-click="${this._confirmAddType}"
+                      >Add</brew-button
+                    >
                   </div>
-                `
-              : html`
-                  <brew-button variant="outlined" @button-click="${this._startAddType}"
-                    >Add brew type</brew-button
-                  >
-                `
-          }
-
-          <div class="divider"></div>
-          <div class="section-title">Recipes</div>
-          <p class="section-hint">
-            Curated recipes from World competitions and coffee experts.
-          </p>
-          <brew-list-row
-            headline="WAC Recipes"
-            supporting="World AeroPress Championship winners"
-            leading-icon="menu_book"
-            href="/more/aeropress-recipes"
-          ></brew-list-row>
-          <brew-list-row
-            headline="V60 Recipes"
-            supporting="Expert pour-over recipes compared"
-            leading-icon="menu_book"
-            href="/more/v60-recipes"
-          ></brew-list-row>
-          <brew-list-row
-            headline="Origami Recipes"
-            supporting="Champion &amp; barista dripper recipes"
-            leading-icon="menu_book"
-            href="/more/origami-recipes"
-          ></brew-list-row>
-          <brew-list-row
-            headline="Kalita Wave Recipes"
-            supporting="Champion &amp; roastery dripper recipes"
-            leading-icon="menu_book"
-            href="/more/kalita-wave-recipes"
-          ></brew-list-row>
-          <brew-list-row
-            headline="Chemex Recipes"
-            supporting="Expert &amp; roastery glass dripper recipes"
-            leading-icon="menu_book"
-            href="/more/chemex-recipes"
-          ></brew-list-row>
-          <brew-list-row
-            headline="Clever Dripper Recipes"
-            supporting="Immersion &amp; barista dripper recipes"
-            leading-icon="menu_book"
-            href="/more/clever-dripper-recipes"
-          ></brew-list-row>
-          <brew-list-row
-            headline="Hario Switch Recipes"
-            supporting="Hybrid immersion &amp; WBrC champion recipes"
-            leading-icon="menu_book"
-            href="/more/hario-switch-recipes"
-          ></brew-list-row>
-          <brew-list-row
-            headline="World Barista Championship"
-            supporting="2026 Panama events &amp; competition videos"
-            leading-icon="emoji_events"
-            href="/more/wbc-videos"
-          ></brew-list-row>
+                </div>
+              `
+            : html`
+                <brew-button
+                  variant="outlined"
+                  @button-click="${this._startAddType}"
+                  >Add brew type</brew-button
+                >
+              `}
 
           <div class="divider"></div>
           <div class="section-title">Appearance</div>
@@ -246,19 +206,28 @@ export class SettingsPage extends SignalWatcher(LitElement) {
           <div class="divider"></div>
           <div class="section-title">App</div>
           <p class="section-hint">
-            BrewMe checks for updates automatically and will show a prompt when a new version's
-            ready. If you don't see it but suspect there's an update, force a refresh here.
+            BrewMe checks for updates automatically and will show a prompt when
+            a new version's ready. If you don't see it but suspect there's an
+            update, force a refresh here.
           </p>
-          <brew-button variant="outlined" @button-click="${refreshApp}">Refresh app</brew-button>
+          <brew-button variant="outlined" @button-click="${refreshApp}"
+            >Refresh app</brew-button
+          >
 
           <div class="divider"></div>
           <div class="section-title">Data</div>
-          <p class="section-hint">Download everything saved on this device as a JSON file.</p>
+          <p class="section-hint">
+            Download everything saved on this device as a JSON file.
+          </p>
           <div class="data-actions">
-            <brew-button variant="outlined" @button-click="${this._onExportData}"
+            <brew-button
+              variant="outlined"
+              @button-click="${this._onExportData}"
               >Export data</brew-button
             >
-            <brew-button variant="outlined" @button-click="${this._onChooseImportFile}"
+            <brew-button
+              variant="outlined"
+              @button-click="${this._onChooseImportFile}"
               >Import data</brew-button
             >
           </div>
@@ -268,66 +237,70 @@ export class SettingsPage extends SignalWatcher(LitElement) {
             hidden
             @change="${this._onImportFileSelected}"
           />
-          ${
-            this._confirmingImport && this._pendingImportFile
-              ? html`
-                  <p class="section-hint">
-                    Importing "${this._pendingImportFile.name}" replaces all data on this device
-                    with the contents of this file. This can't be undone.
-                  </p>
-                  <div class="add-actions">
-                    <brew-button variant="text" @button-click="${this._cancelImport}"
-                      >Cancel</brew-button
-                    >
-                    <brew-button variant="filled" @button-click="${this._confirmImport}"
-                      >Yes, import and replace</brew-button
-                    >
-                  </div>
-                `
-              : null
-          }
-          ${this._statusText ? html`<p class="status-text">${this._statusText}</p>` : null}
+          ${this._confirmingImport && this._pendingImportFile
+            ? html`
+                <p class="section-hint">
+                  Importing "${this._pendingImportFile.name}" replaces all data
+                  on this device with the contents of this file. This can't be
+                  undone.
+                </p>
+                <div class="add-actions">
+                  <brew-button
+                    variant="text"
+                    @button-click="${this._cancelImport}"
+                    >Cancel</brew-button
+                  >
+                  <brew-button
+                    variant="filled"
+                    @button-click="${this._confirmImport}"
+                    >Yes, import and replace</brew-button
+                  >
+                </div>
+              `
+            : null}
+          ${this._statusText
+            ? html`<p class="status-text">${this._statusText}</p>`
+            : null}
 
           <div class="divider"></div>
           <div class="danger-zone">
             <div class="section-title danger">Danger zone</div>
-            ${
-              this._confirmingDelete
-                ? html`
-                    <p class="section-hint">
-                      This permanently deletes all saved brews and custom brew types on this device.
-                      This can't be undone.
-                    </p>
-                    <div class="add-actions">
-                      <brew-button
-                        variant="text"
-                        @button-click="${() => {
-                          this._confirmingDelete = false;
-                        }}"
-                        >Cancel</brew-button
-                      >
-                      <brew-button
-                        variant="filled"
-                        tone="danger"
-                        @button-click="${this._onDeleteAllData}"
-                        >Yes, delete everything</brew-button
-                      >
-                    </div>
-                  `
-                : html`
-                    <p class="section-hint">
-                      Permanently erase all saved brews and custom brew types from this device.
-                    </p>
+            ${this._confirmingDelete
+              ? html`
+                  <p class="section-hint">
+                    This permanently deletes all saved brews and custom brew
+                    types on this device. This can't be undone.
+                  </p>
+                  <div class="add-actions">
                     <brew-button
-                      variant="outlined"
-                      tone="danger"
+                      variant="text"
                       @button-click="${() => {
-                        this._confirmingDelete = true;
+                        this._confirmingDelete = false;
                       }}"
-                      >Delete all data</brew-button
+                      >Cancel</brew-button
                     >
-                  `
-            }
+                    <brew-button
+                      variant="filled"
+                      tone="danger"
+                      @button-click="${this._onDeleteAllData}"
+                      >Yes, delete everything</brew-button
+                    >
+                  </div>
+                `
+              : html`
+                  <p class="section-hint">
+                    Permanently erase all saved brews and custom brew types from
+                    this device.
+                  </p>
+                  <brew-button
+                    variant="outlined"
+                    tone="danger"
+                    @button-click="${() => {
+                      this._confirmingDelete = true;
+                    }}"
+                    >Delete all data</brew-button
+                  >
+                `}
           </div>
         </div>
 
