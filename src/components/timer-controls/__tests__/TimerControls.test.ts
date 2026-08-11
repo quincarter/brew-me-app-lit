@@ -22,13 +22,13 @@ describe("brew-timer-controls", () => {
   };
 
   describe("idle", () => {
-    it("renders idle-actions with a 'Start timer now' button and no controls/hint", async () => {
+    it("renders idle-actions with a 'Start timer now' button, no controls, and the empty-state hint", async () => {
       element.idle = true;
       await element.updateComplete;
 
       expect(element.shadowRoot?.querySelector(".idle-actions")).not.toBeNull();
       expect(element.shadowRoot?.querySelector(".controls")).toBeNull();
-      expect(element.shadowRoot?.querySelector(".hint")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".hint")).not.toBeNull();
     });
 
     it("fires start-click when 'Start timer now' is activated", async () => {
@@ -54,6 +54,20 @@ describe("brew-timer-controls", () => {
       expect(buttons).toHaveLength(1);
     });
 
+    it("shows an empty-state hint with a link to the calculator when hasSavedBrews is false", async () => {
+      element.idle = true;
+      element.hasSavedBrews = false;
+      await element.updateComplete;
+
+      const hint = element.shadowRoot?.querySelector(".idle-actions .hint");
+      expect(hint).not.toBeNull();
+      expect(hint?.textContent).toContain("No saved brews yet");
+
+      const link = hint?.querySelector('a[href="/calculate"]');
+      expect(link).not.toBeNull();
+      expect(link?.textContent?.trim()).toBe("save a ratio");
+    });
+
     it("shows 'Choose from saved brews' and fires choose-saved-click when hasSavedBrews is true", async () => {
       element.idle = true;
       element.hasSavedBrews = true;
@@ -63,6 +77,7 @@ describe("brew-timer-controls", () => {
         element.shadowRoot?.querySelectorAll(".idle-actions brew-button") ?? [],
       );
       expect(buttons).toHaveLength(2);
+      expect(element.shadowRoot?.querySelector(".idle-actions .hint")).toBeNull();
 
       const chooseButton = buttons.find(
         (button) => button.textContent?.trim() === "Choose from saved brews",

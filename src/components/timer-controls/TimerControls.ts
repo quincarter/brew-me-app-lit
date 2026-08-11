@@ -1,4 +1,4 @@
-import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
+import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
 import { PAUSE_ICON, PLAY_ICON, REFRESH_ICON } from "../../shared/icons/icons";
 import "../button/brew-button";
@@ -8,10 +8,12 @@ import { TimerControlsStyles } from "./timer-controls.styles";
 /**
  * # Timer Controls
  * The Timer screen's action row: while `idle` (nothing primed, running, or
- * elapsed yet), a "Start timer now" button plus an optional "Choose from
- * saved brews" button; otherwise the reset/play-pause controls plus a hint
- * line, with a "Clear brew" button in place of the reset row's trailing
- * spacer once a recipe is primed (`hasRecipe`).
+ * elapsed yet), a "Start timer now" button plus, when `hasSavedBrews` is
+ * true, a "Choose from saved brews" button — otherwise a compact hint
+ * pointing users at the calculator to save their first ratio. When not
+ * `idle`, the reset/play-pause controls plus a hint line, with a
+ * "Clear brew" button in place of the reset row's trailing spacer once a
+ * recipe is primed (`hasRecipe`).
  * @element brew-timer-controls
  * @fires start-click - Fired from the idle "Start timer now" button.
  * @fires choose-saved-click - Fired from the idle "Choose from saved brews" button.
@@ -50,7 +52,12 @@ export class TimerControls extends LitElement {
                   >Choose from saved brews</brew-button
                 >
               `
-            : nothing
+            : html`
+                <p class="hint">
+                  No saved brews yet — <a href="/calculate">save a ratio</a> to brew from it
+                  here.
+                </p>
+              `
         }
       </div>
     `;

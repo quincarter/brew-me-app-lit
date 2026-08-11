@@ -33,4 +33,15 @@ export const TimerControlsStyles = css`
     text-align: center;
     margin: 0;
   }
+
+  .hint a {
+    color: var(--brew-color-primary);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .hint a:hover,
+  .hint a:focus-visible {
+    text-decoration: underline;
+  }
 `;
