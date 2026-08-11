@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AEROPRESS_RECIPES } from "../../../shared/data/aeropress-recipes.data";
+import { ORIGAMI_RECIPES } from "../../../shared/data/origami-recipes.data";
+import { V60_RECIPES } from "../../../shared/data/v60-recipes.data";
 import type { IAeropressRecipe } from "../../../shared/interfaces/brew.interface";
 import "../brew-recipe-picker-sheet";
 import type { RecipePickerSheet } from "../RecipePickerSheet";
@@ -23,12 +25,32 @@ describe("brew-recipe-picker-sheet", () => {
     expect(sheet?.hasAttribute("open")).toBe(false);
   });
 
-  it("renders every AEROPRESS_RECIPES entry as a row once opened", async () => {
+  it("renders every AEROPRESS_RECIPES entry by default once opened", async () => {
     element.open = true;
     await element.updateComplete;
 
     const rows = element.shadowRoot?.querySelectorAll("brew-list-row");
     expect(rows).toHaveLength(AEROPRESS_RECIPES.length);
+  });
+
+  it("renders V60_RECIPES entries when brewType is set to V60", async () => {
+    element.brewType = "V60";
+    element.open = true;
+    await element.updateComplete;
+
+    const rows = element.shadowRoot?.querySelectorAll("brew-list-row");
+    expect(rows).toHaveLength(V60_RECIPES.length);
+    expect(rows?.[0].getAttribute("headline")).toBe(`${V60_RECIPES[0].author} · ${V60_RECIPES[0].title}`);
+  });
+
+  it("renders ORIGAMI_RECIPES entries when brewType is set to Origami", async () => {
+    element.brewType = "Origami";
+    element.open = true;
+    await element.updateComplete;
+
+    const rows = element.shadowRoot?.querySelectorAll("brew-list-row");
+    expect(rows).toHaveLength(ORIGAMI_RECIPES.length);
+    expect(rows?.[0].getAttribute("headline")).toBe(`${ORIGAMI_RECIPES[0].author} · ${ORIGAMI_RECIPES[0].title}`);
   });
 
   it("renders a row's headline/supporting text from its recipe data", async () => {

@@ -64,6 +64,13 @@ export const routes: IRouteConfig[] = [
     fileName: "v60-recipes-page",
   },
   {
+    name: "Origami Recipes",
+    path: "/more/origami-recipes",
+    tagName: "origami-recipes-page",
+    directory: "origami-recipes-page",
+    fileName: "origami-recipes-page",
+  },
+  {
     name: "Brew Guide",
     path: "/more/guide/:id",
     tagName: "guide-detail-page",

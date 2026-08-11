@@ -89,6 +89,14 @@ export class MorePage extends SignalWatcher(LitElement) {
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/more/v60-recipes"
           ></brew-list-row>
+          <brew-list-row
+            headline="Origami Recipes"
+            supporting="Champion &amp; barista dripper recipes"
+            leading-icon="menu_book"
+            leading-bg="var(--brew-color-tertiary-container)"
+            leading-fg="var(--brew-color-on-tertiary-container)"
+            href="/more/origami-recipes"
+          ></brew-list-row>
 
           <div class="divider"></div>
           <div class="section-title" data-tour="more-guides-section">Brew method guide</div>

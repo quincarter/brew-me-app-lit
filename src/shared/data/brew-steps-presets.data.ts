@@ -5,12 +5,16 @@ import type { IBrewStepsConfig } from "../interfaces/brew.interface";
  * keyed by the same brew type string used everywhere else (`BREW_TYPES`,
  * `BREW_GUIDE`, `ISavedBrew.brewType`). Selecting a brew type on the
  * Calculator seeds `brewStepsSignal` from here; a type with no entry (Cold
- * Brew, Espresso Shot, Drip, Origami, any custom type) gets no Brew Steps
+ * Brew, Espresso Shot, Drip, any custom type) gets no Brew Steps
  * card at all, keeping the plain calculating flow untouched for them.
  */
 export const BREW_STEPS_PRESETS: Record<string, IBrewStepsConfig> = {
   Aeropress: {
     steps: [
+      { id: "aeropress-setup-position", label: "Position", kind: "note", value: "Standard" },
+      { id: "aeropress-setup-grind", label: "Grind", kind: "note", value: "Medium-fine" },
+      { id: "aeropress-setup-temp", label: "Temp", kind: "note", value: "175–185°F" },
+      { id: "aeropress-setup-filter", label: "Filter", kind: "note", value: "Paper" },
       {
         id: "aeropress-bloom",
         label: "Bloom",
@@ -32,11 +36,13 @@ export const BREW_STEPS_PRESETS: Record<string, IBrewStepsConfig> = {
         seconds: 20,
         note: "Slow, steady press",
       },
-      { id: "aeropress-filter", label: "Filter", kind: "note", value: "Paper" },
     ],
   },
   "Hario Switch": {
     steps: [
+      { id: "switch-setup-grind", label: "Grind", kind: "note", value: "Medium" },
+      { id: "switch-setup-temp", label: "Temp", kind: "note", value: "200°F" },
+      { id: "switch-setup-filter", label: "Filter", kind: "note", value: "Paper" },
       {
         id: "switch-steep",
         label: "Switch closed — steep",
@@ -55,6 +61,9 @@ export const BREW_STEPS_PRESETS: Record<string, IBrewStepsConfig> = {
   },
   "Clever Dripper": {
     steps: [
+      { id: "clever-setup-grind", label: "Grind", kind: "note", value: "Medium" },
+      { id: "clever-setup-temp", label: "Temp", kind: "note", value: "200°F" },
+      { id: "clever-setup-filter", label: "Filter", kind: "note", value: "Paper" },
       {
         id: "clever-steep",
         label: "Steep",
@@ -80,6 +89,9 @@ export const BREW_STEPS_PRESETS: Record<string, IBrewStepsConfig> = {
   },
   V60: {
     steps: [
+      { id: "v60-setup-grind", label: "Grind", kind: "note", value: "Medium" },
+      { id: "v60-setup-temp", label: "Temp", kind: "note", value: "200°F" },
+      { id: "v60-setup-filter", label: "Filter", kind: "note", value: "Paper" },
       {
         id: "v60-bloom",
         label: "Bloom",
@@ -112,6 +124,9 @@ export const BREW_STEPS_PRESETS: Record<string, IBrewStepsConfig> = {
   },
   Chemex: {
     steps: [
+      { id: "chemex-setup-grind", label: "Grind", kind: "note", value: "Medium-coarse" },
+      { id: "chemex-setup-temp", label: "Temp", kind: "note", value: "200°F" },
+      { id: "chemex-setup-filter", label: "Filter", kind: "note", value: "Chemex paper" },
       {
         id: "chemex-bloom",
         label: "Bloom",
@@ -137,6 +152,9 @@ export const BREW_STEPS_PRESETS: Record<string, IBrewStepsConfig> = {
   },
   "Kalita Wave": {
     steps: [
+      { id: "kalita-setup-grind", label: "Grind", kind: "note", value: "Medium" },
+      { id: "kalita-setup-temp", label: "Temp", kind: "note", value: "200°F" },
+      { id: "kalita-setup-filter", label: "Filter", kind: "note", value: "Wave paper" },
       {
         id: "kalita-bloom",
         label: "Bloom",
@@ -160,8 +178,45 @@ export const BREW_STEPS_PRESETS: Record<string, IBrewStepsConfig> = {
       },
     ],
   },
+  Origami: {
+    steps: [
+      { id: "origami-setup-grind", label: "Grind", kind: "note", value: "Medium" },
+      { id: "origami-setup-temp", label: "Temp", kind: "note", value: "200°F" },
+      { id: "origami-setup-filter", label: "Filter", kind: "note", value: "Conical paper" },
+      {
+        id: "origami-bloom",
+        label: "Bloom",
+        kind: "timed",
+        seconds: 40,
+        note: "Wet grounds evenly, gentle swirl",
+      },
+      {
+        id: "origami-pulse-1",
+        label: "First pulse",
+        kind: "timed",
+        seconds: 45,
+        note: "Slow center-out spiral pour",
+      },
+      {
+        id: "origami-pulse-2",
+        label: "Second pulse",
+        kind: "timed",
+        seconds: 45,
+        note: "Pour into center to target weight",
+      },
+      {
+        id: "origami-drawdown",
+        label: "Draw down",
+        kind: "timed",
+        seconds: null,
+        note: "Gentle swirl to level bed, let drain",
+      },
+    ],
+  },
   "French Press": {
     steps: [
+      { id: "frenchpress-setup-grind", label: "Grind", kind: "note", value: "Coarse" },
+      { id: "frenchpress-setup-temp", label: "Temp", kind: "note", value: "200°F" },
       {
         id: "frenchpress-steep",
         label: "Steep",

@@ -5,7 +5,7 @@ import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/empty-state/brew-empty-state";
 import "../../components/list-row/brew-list-row";
 import "../../components/top-bar/brew-top-bar";
-import { brewAgain, savedBrewsSignal } from "../../shared/stores/brew.store";
+import { brewAgain, sortedSavedBrewsSignal } from "../../shared/stores/brew.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
@@ -18,7 +18,7 @@ export class SavedPage extends SignalWatcher(LitElement) {
   static styles = [SavedPageStyles, responsiveScreenStyles];
 
   render(): HTMLTemplateResult {
-    const brews = savedBrewsSignal.value;
+    const brews = sortedSavedBrewsSignal.value;
 
     return html`
       <div class="screen">

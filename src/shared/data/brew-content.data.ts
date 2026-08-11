@@ -415,6 +415,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
       "Its ridges make it easy to swirl the slurry mid-pour.",
     ],
     videos: ORIGAMI_VIDEOS,
+    recipesLink: {
+      label: "Champion & barista Origami recipes",
+      description: "Explore WBrC champion recipes and specialty roastery methods",
+      route: "/more/origami-recipes",
+    },
     externalLinks: [
       {
         label: "Learn more about the Origami dripper",

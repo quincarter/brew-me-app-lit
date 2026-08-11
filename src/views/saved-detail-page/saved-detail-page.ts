@@ -7,6 +7,7 @@ import "../../components/brew-steps-card/brew-steps-card";
 import "../../components/button/brew-button";
 import "../../components/icon/brew-icon";
 import "../../components/link-card/brew-link-card";
+import "../../components/pourover-recipe-card/brew-pourover-recipe-card";
 import "../../components/ratio-form/brew-ratio-form";
 import "../../components/ratio-summary/brew-ratio-summary";
 import "../../components/recipe-card/brew-recipe-card";
@@ -16,6 +17,8 @@ import "../../components/top-bar/brew-top-bar";
 import "../../components/type-picker/brew-type-picker";
 import "../../components/video-search/brew-video-search";
 import { AEROPRESS_RECIPES } from "../../shared/data/aeropress-recipes.data";
+import { ORIGAMI_RECIPES } from "../../shared/data/origami-recipes.data";
+import { V60_RECIPES } from "../../shared/data/v60-recipes.data";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
 import { BREW_STEPS_PRESETS } from "../../shared/data/brew-steps-presets.data";
 import type { IBrewStepsConfig, ISavedBrew } from "../../shared/interfaces/brew.interface";
@@ -416,7 +419,9 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
   private _renderOriginalRecipeSheet(brew: ISavedBrew): HTMLTemplateResult | typeof nothing {
     const source = brew.recipeSource;
     if (!this._originalRecipeOpen || !source) return nothing;
-    const original = AEROPRESS_RECIPES.find((recipe) => recipe.id === source.recipeId);
+    const aeroOriginal = AEROPRESS_RECIPES.find((recipe) => recipe.id === source.recipeId);
+    const v60Original = V60_RECIPES.find((recipe) => recipe.id === source.recipeId);
+    const origamiOriginal = ORIGAMI_RECIPES.find((recipe) => recipe.id === source.recipeId);
 
     return html`
       <brew-bottom-sheet
@@ -428,9 +433,13 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
       >
         <div class="title">Original recipe</div>
         ${
-          original
-            ? html`<brew-recipe-card .recipe="${original}" start-open></brew-recipe-card>`
-            : html`<p>This recipe is no longer available.</p>`
+          aeroOriginal
+            ? html`<brew-recipe-card .recipe="${aeroOriginal}" start-open></brew-recipe-card>`
+            : v60Original
+              ? html`<brew-pourover-recipe-card .recipe="${v60Original}" start-open></brew-pourover-recipe-card>`
+              : origamiOriginal
+                ? html`<brew-pourover-recipe-card .recipe="${origamiOriginal}" start-open></brew-pourover-recipe-card>`
+                : html`<p>This recipe is no longer available.</p>`
         }
       </brew-bottom-sheet>
     `;

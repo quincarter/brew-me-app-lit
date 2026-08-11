@@ -1,10 +1,23 @@
 import { computed } from "@lit-labs/preact-signals";
-import type { IAeropressRecipe, IShareableBrew, ISavedBrew } from "../interfaces/brew.interface";
+import type {
+  IAeropressRecipe,
+  IOrigamiRecipe,
+  IShareableBrew,
+  ISavedBrew,
+  IV60Recipe,
+} from "../interfaces/brew.interface";
 import {
   getAeropressRecipeLabel,
   getAeropressRecipeRatio,
   getAeropressRecipeSteps,
 } from "../utilities/aeropress-recipe.utility";
+import {
+  getPouroverRecipeLabel,
+  getPouroverRecipeRatio,
+  getPouroverRecipeSteps,
+  parseDoseGrams,
+  parseWaterGrams,
+} from "../utilities/pourover-recipe.utility";
 import { gramsToOunces } from "../utilities/ratio.utility";
 import { persistentSignal } from "./persistent-signal";
 import { openPostSaveSheet } from "./post-save-sheet.store";
@@ -18,15 +31,22 @@ export const totalBrewsSignal = computed(() => savedBrewsSignal.value.length);
 const RECENT_BREWS_LIMIT = 4;
 
 /**
+ * All saved brews sorted with the most recently active brews first (by `lastBrewedAt` falling back to `createdAt`).
+ */
+export const sortedSavedBrewsSignal = computed(() =>
+  [...savedBrewsSignal.value].sort(
+    (a, b) => (b.lastBrewedAt ?? b.createdAt) - (a.lastBrewedAt ?? a.createdAt),
+  ),
+);
+
+/**
  * The most recently *active* brews, newest first, capped for "Recent brews"
  * style sections - ordered by `lastBrewedAt` (falling back to `createdAt`
  * for a brew that's never been re-brewed), not by save order, so re-brewing
  * an older saved ratio surfaces it here again.
  */
 export const recentSavedBrewsSignal = computed(() =>
-  [...savedBrewsSignal.value]
-    .sort((a, b) => (b.lastBrewedAt ?? b.createdAt) - (a.lastBrewedAt ?? a.createdAt))
-    .slice(0, RECENT_BREWS_LIMIT),
+  sortedSavedBrewsSignal.value.slice(0, RECENT_BREWS_LIMIT),
 );
 
 /** The single most recently brewed saved brew, or null when nothing's saved yet - drives Home's featured "Brew again" card. */
@@ -97,10 +117,7 @@ export const brewAgain = (brew: ISavedBrew, options?: { alreadyOnDetail?: boolea
  * curated AeroPress recipe as a brand-new brew (auto-filled numbers, its
  * curated step sequence, and recipe provenance for the "Pulled from"
  * banner), then opens the post-save sheet so the user can jump straight
- * into a guided timer or view the new brew's detail screen. Mirrors
- * `brewAgain`'s "update, then show the post-save sheet" shape, but for a
- * recipe that's never been brewed in this app before rather than an
- * existing saved brew.
+ * into a guided timer or view the new brew's detail screen.
  */
 export const brewAeropressRecipeNow = (recipe: IAeropressRecipe): void => {
   const ratio = getAeropressRecipeRatio(recipe);
@@ -120,6 +137,62 @@ export const brewAeropressRecipeNow = (recipe: IAeropressRecipe): void => {
       ratio,
       water: recipe.totalWaterGrams,
       coffee: recipe.doseGrams,
+      steps,
+    },
+  });
+
+  openPostSaveSheet(savedBrew);
+};
+
+/** Saves a curated V60 recipe as a brand-new brew and opens post-save sheet. */
+export const brewV60RecipeNow = (recipe: IV60Recipe): void => {
+  const dose = parseDoseGrams(recipe);
+  const water = parseWaterGrams(recipe);
+  const ratio = getPouroverRecipeRatio(recipe);
+  const steps = getPouroverRecipeSteps(recipe);
+
+  const savedBrew = addSavedBrew({
+    brewType: "V60",
+    name: `${recipe.author} · ${recipe.title}`,
+    ratio,
+    water,
+    coffee: dose,
+    oz: gramsToOunces(water),
+    brewSteps: { steps },
+    recipeSource: {
+      recipeId: recipe.id,
+      label: getPouroverRecipeLabel(recipe),
+      ratio,
+      water,
+      coffee: dose,
+      steps,
+    },
+  });
+
+  openPostSaveSheet(savedBrew);
+};
+
+/** Saves a curated Origami recipe as a brand-new brew and opens post-save sheet. */
+export const brewOrigamiRecipeNow = (recipe: IOrigamiRecipe): void => {
+  const dose = parseDoseGrams(recipe);
+  const water = parseWaterGrams(recipe);
+  const ratio = getPouroverRecipeRatio(recipe);
+  const steps = getPouroverRecipeSteps(recipe);
+
+  const savedBrew = addSavedBrew({
+    brewType: "Origami",
+    name: `${recipe.author} · ${recipe.title}`,
+    ratio,
+    water,
+    coffee: dose,
+    oz: gramsToOunces(water),
+    brewSteps: { steps },
+    recipeSource: {
+      recipeId: recipe.id,
+      label: getPouroverRecipeLabel(recipe),
+      ratio,
+      water,
+      coffee: dose,
       steps,
     },
   });

@@ -4,6 +4,7 @@ import { customElement, query, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
 import "../../components/icon/brew-icon";
+import "../../components/list-row/brew-list-row";
 import "../../components/switch/brew-switch";
 import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
@@ -176,6 +177,30 @@ export class SettingsPage extends SignalWatcher(LitElement) {
                   >
                 `
           }
+
+          <div class="divider"></div>
+          <div class="section-title">Recipes</div>
+          <p class="section-hint">
+            Curated recipes from World competitions and coffee experts.
+          </p>
+          <brew-list-row
+            headline="WAC Recipes"
+            supporting="World AeroPress Championship winners"
+            leading-icon="menu_book"
+            href="/more/aeropress-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="V60 Recipes"
+            supporting="Expert pour-over recipes compared"
+            leading-icon="menu_book"
+            href="/more/v60-recipes"
+          ></brew-list-row>
+          <brew-list-row
+            headline="Origami Recipes"
+            supporting="Champion &amp; barista dripper recipes"
+            leading-icon="menu_book"
+            href="/more/origami-recipes"
+          ></brew-list-row>
 
           <div class="divider"></div>
           <div class="section-title">Appearance</div>

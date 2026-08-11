@@ -1,36 +1,42 @@
 import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
 import { AEROPRESS_RECIPES } from "../../shared/data/aeropress-recipes.data";
-import type { IAeropressRecipe } from "../../shared/interfaces/brew.interface";
+import { ORIGAMI_RECIPES } from "../../shared/data/origami-recipes.data";
+import { V60_RECIPES } from "../../shared/data/v60-recipes.data";
+import type {
+  IAeropressRecipe,
+  IOrigamiRecipe,
+  IV60Recipe,
+} from "../../shared/interfaces/brew.interface";
 import "../bottom-sheet/brew-bottom-sheet";
 import "../list-row/brew-list-row";
 import { RecipePickerSheetStyles } from "./recipe-picker-sheet.styles";
 
 const PLACE_LABEL: Record<number, string> = { 1: "1st", 2: "2nd", 3: "3rd" };
 
+export type AnyRecipe = IAeropressRecipe | IV60Recipe | IOrigamiRecipe;
+
 /**
  * # Recipe Picker Sheet
- * AeroPress-only: a `<brew-bottom-sheet>` listing every curated World
- * AeroPress Championship recipe (`AEROPRESS_RECIPES`) as a tappable row.
- * Picking one fires `recipe-select` with the full recipe so the consumer
- * (the Calculator) can auto-fill its numbers and Brew Steps card - this
- * component is just the list, the same "dumb shell + one event" shape
- * `brew-save-sheet` uses for the save flow. Kept as its own component
- * rather than inlined in `calculator-page.ts`, which is already sizable.
+ * Generic recipe selection sheet: a `<brew-bottom-sheet>` listing curated
+ * recipes for the specified `brewType` ("Aeropress", "V60", "Origami") as tappable rows.
+ * Picking one fires `recipe-select` with the full recipe object.
  * @element brew-recipe-picker-sheet
- * @fires recipe-select - `CustomEvent<IAeropressRecipe>` fired with the tapped recipe. Consumers are responsible for closing the sheet.
+ * @fires recipe-select - `CustomEvent<AnyRecipe>` fired with the tapped recipe. Consumers are responsible for closing the sheet.
  */
 export class RecipePickerSheet extends LitElement {
   static styles = [RecipePickerSheetStyles];
 
   @property({ type: Boolean }) open = false;
 
-  private _select(event: Event, recipe: IAeropressRecipe): void {
+  @property({ type: String, attribute: "brew-type" }) brewType = "Aeropress";
+
+  private _select(event: Event, recipe: AnyRecipe): void {
     // Suppresses `brew-list-row`'s default navigation (it renders as an <a>)
     // before the router's own document-level click listener sees it.
     event.preventDefault();
     this.dispatchEvent(
-      new CustomEvent<IAeropressRecipe>("recipe-select", {
+      new CustomEvent<AnyRecipe>("recipe-select", {
         detail: recipe,
         bubbles: true,
         composed: true,
@@ -38,23 +44,71 @@ export class RecipePickerSheet extends LitElement {
     );
   }
 
+  private _getRecipesAndTitle(): {
+    title: string;
+    hint: string;
+    items: { recipe: AnyRecipe; headline: string; supporting: string; initial: string }[];
+  } {
+    if (this.brewType === "V60") {
+      return {
+        title: "Load a V60 recipe",
+        hint: "Auto-fills the ratio, water, coffee, and steps from the selected recipe.",
+        items: V60_RECIPES.map((recipe) => ({
+          recipe,
+          headline: `${recipe.author} · ${recipe.title}`,
+          supporting: `${recipe.setup.Dose ?? ""} coffee : ${recipe.setup.Water ?? ""} water`,
+          initial: recipe.author.charAt(0),
+        })),
+      };
+    }
+
+    if (this.brewType === "Origami") {
+      return {
+        title: "Load an Origami recipe",
+        hint: "Auto-fills the ratio, water, coffee, and steps from the selected recipe.",
+        items: ORIGAMI_RECIPES.map((recipe) => ({
+          recipe,
+          headline: `${recipe.author} · ${recipe.title}`,
+          supporting: `${recipe.setup.Dose ?? ""} coffee : ${recipe.setup.Water ?? ""} water`,
+          initial: recipe.author.charAt(0),
+        })),
+      };
+    }
+
+    // Default: Aeropress (WAC)
+    return {
+      title: "Load a WAC recipe",
+      hint: "Auto-fills the ratio, water, and coffee from the selected recipe.",
+      items: AEROPRESS_RECIPES.map((recipe) => {
+        const placeLabel = PLACE_LABEL[recipe.place] ?? `${recipe.place}th`;
+        return {
+          recipe,
+          headline: `${recipe.competitor} · ${recipe.year}`,
+          supporting: `${placeLabel} place · ${recipe.doseGrams}g coffee : ${recipe.totalWaterGrams}g water`,
+          initial: recipe.competitor.charAt(0),
+        };
+      }),
+    };
+  }
+
   render(): HTMLTemplateResult {
+    const { title, hint, items } = this._getRecipesAndTitle();
+
     return html`
-      <brew-bottom-sheet ?open="${this.open}" label="Load a WAC recipe">
-        <div class="title">Load a WAC recipe</div>
-        <p class="hint">Auto-fills the ratio, water, and coffee from the selected recipe.</p>
+      <brew-bottom-sheet ?open="${this.open}" label="${title}">
+        <div class="title">${title}</div>
+        <p class="hint">${hint}</p>
         <div class="list">
-          ${AEROPRESS_RECIPES.map((recipe) => {
-            const placeLabel = PLACE_LABEL[recipe.place] ?? `${recipe.place}th`;
-            return html`
+          ${items.map(
+            (item) => html`
               <brew-list-row
-                headline="${recipe.competitor} · ${recipe.year}"
-                supporting="${placeLabel} place · ${recipe.doseGrams}g coffee : ${recipe.totalWaterGrams}g water"
-                leading-initial="${recipe.competitor.charAt(0)}"
-                @click="${(e: Event) => this._select(e, recipe)}"
+                headline="${item.headline}"
+                supporting="${item.supporting}"
+                leading-initial="${item.initial}"
+                @click="${(e: Event) => this._select(e, item.recipe)}"
               ></brew-list-row>
-            `;
-          })}
+            `,
+          )}
         </div>
       </brew-bottom-sheet>
     `;
