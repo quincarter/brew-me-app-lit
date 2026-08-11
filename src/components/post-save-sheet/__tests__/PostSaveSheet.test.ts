@@ -43,22 +43,29 @@ describe("brew-post-save-sheet", () => {
     window.history.pushState({}, "", "/");
   });
 
-  it("renders nothing when no brew is set", () => {
+  it("keeps the bottom sheet mounted but empty and closed when no brew is set", () => {
     expect(postSaveSheetBrewSignal.value).toBeNull();
-    expect(element.shadowRoot?.querySelector("brew-bottom-sheet")).toBeNull();
+    const sheet = element.shadowRoot?.querySelector("brew-bottom-sheet");
+    expect(sheet).not.toBeNull();
+    expect(sheet?.hasAttribute("open")).toBe(false);
+    expect(sheet?.querySelector(".header")).toBeNull();
   });
 
-  it("renders nothing once closed, even though the brew is still set", async () => {
+  it("closes the bottom sheet (but keeps it mounted) once closed, even though the brew is still set", async () => {
     postSaveSheetBrewSignal.value = brew;
     postSaveSheetOpenSignal.value = true;
     await element.updateComplete;
-    expect(element.shadowRoot?.querySelector("brew-bottom-sheet")).not.toBeNull();
+    let sheet = element.shadowRoot?.querySelector("brew-bottom-sheet");
+    expect(sheet?.hasAttribute("open")).toBe(true);
 
     postSaveSheetOpenSignal.value = false;
     await element.updateComplete;
 
     expect(postSaveSheetBrewSignal.value).not.toBeNull();
-    expect(element.shadowRoot?.querySelector("brew-bottom-sheet")).toBeNull();
+    sheet = element.shadowRoot?.querySelector("brew-bottom-sheet");
+    expect(sheet).not.toBeNull();
+    expect(sheet?.hasAttribute("open")).toBe(false);
+    expect(sheet?.querySelector(".header")).not.toBeNull();
   });
 
   it("renders the brew's display name and a ratio summary with its stats when the sheet is opened", async () => {

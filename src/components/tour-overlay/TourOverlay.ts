@@ -1,6 +1,6 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing, type PropertyValues } from "lit";
-import { state } from "lit/decorators.js";
+import { query, state } from "lit/decorators.js";
 import type { ITourStep } from "../../shared/interfaces/tour.interface";
 import {
   activeTourStepsSignal,
@@ -33,6 +33,8 @@ export class TourOverlay extends SignalWatcher(LitElement) {
   @state() private _targetRect: DOMRect | null = null;
   @state() private _targetLost = false;
 
+  @query("dialog") private _dialog!: HTMLDialogElement;
+
   /** Which step's target/route activation has already run, so `willUpdate` only re-triggers on a real step change. */
   private _activeStepId: string | null = null;
   private _targetElement: HTMLElement | null = null;
@@ -42,6 +44,12 @@ export class TourOverlay extends SignalWatcher(LitElement) {
   private _onResize = (): void => {
     if (!this._targetElement) return;
     this._targetRect = this._targetElement.getBoundingClientRect();
+  };
+
+  /** Escape triggers "cancel" before the native dialog would auto-close - treat it the same as the close button instead of letting the dialog close out from under `tourActiveSignal`. */
+  private _onCancel = (event: Event): void => {
+    event.preventDefault();
+    skipTour();
   };
 
   connectedCallback(): void {
@@ -62,6 +70,13 @@ export class TourOverlay extends SignalWatcher(LitElement) {
       this._activeStepId = stepId;
       if (step) void this._activateStep(step);
     }
+  }
+
+  protected updated(changed: PropertyValues<this>): void {
+    super.updated(changed);
+    const shouldBeOpen = tourActiveSignal.value && currentTourStepSignal.value !== null;
+    if (shouldBeOpen && !this._dialog.open) this._dialog.showModal();
+    else if (!shouldBeOpen && this._dialog.open) this._dialog.close();
   }
 
   private async _activateStep(step: ITourStep): Promise<void> {
@@ -114,7 +129,7 @@ export class TourOverlay extends SignalWatcher(LitElement) {
   private _renderSlide(step: ITourStep): HTMLTemplateResult {
     return html`
       <div class="scrim bottom-anchored">
-        <div class="card bottom-card" role="dialog" aria-label="${step.title}">
+        <div class="card bottom-card">
           <brew-icon-button
             class="close"
             icon="close"
@@ -156,12 +171,7 @@ export class TourOverlay extends SignalWatcher(LitElement) {
     return html`
       <div class="scrim">
         <div class="cutout" style="${cutoutStyle}"></div>
-        <div
-          class="card spotlight-card"
-          style="${cardStyle}"
-          role="dialog"
-          aria-label="${step.title}"
-        >
+        <div class="card spotlight-card" style="${cardStyle}">
           <brew-icon-button
             class="close"
             icon="close"
@@ -176,16 +186,25 @@ export class TourOverlay extends SignalWatcher(LitElement) {
     `;
   }
 
-  render(): HTMLTemplateResult {
-    if (!tourActiveSignal.value) return html``;
+  private _renderStep(): HTMLTemplateResult | typeof nothing {
+    if (!tourActiveSignal.value) return nothing;
 
     const step = currentTourStepSignal.value;
-    if (!step) return html``;
+    if (!step) return nothing;
 
     if (step.kind === "spotlight" && this._targetRect && !this._targetLost) {
       return this._renderSpotlight(step, this._targetRect);
     }
 
     return this._renderSlide(step);
+  }
+
+  render(): HTMLTemplateResult {
+    const step = tourActiveSignal.value ? currentTourStepSignal.value : null;
+    return html`
+      <dialog aria-label="${step?.title ?? ""}" @cancel="${this._onCancel}">
+        ${this._renderStep()}
+      </dialog>
+    `;
   }
 }

@@ -81,8 +81,6 @@ export class SaveSheet extends SignalWatcher(LitElement) {
   };
 
   render(): HTMLTemplateResult {
-    if (!saveDialogOpenSignal.value) return html``;
-
     const pending = pendingBrewTypeSignal.value;
     const intent = saveIntentSignal.value;
     const title =

@@ -53,6 +53,8 @@ describe("brew-tour-overlay", () => {
     await mount();
 
     expect(element.shadowRoot?.querySelector(".scrim")).toBeNull();
+    const dialog = element.shadowRoot?.querySelector("dialog");
+    expect(dialog?.open).toBe(false);
   });
 
   it("renders the slide card with the step's title and body", async () => {
@@ -108,6 +110,21 @@ describe("brew-tour-overlay", () => {
 
     innerButton.click();
 
+    expect(tourActiveSignal.value).toBe(false);
+  });
+
+  it("shows the step in a native modal dialog and ends the tour on Escape (cancel)", async () => {
+    tourActiveSignal.value = true;
+    tourStepIndexSignal.value = homeWelcomeIndex;
+    await mount();
+
+    const dialog = element.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+    expect(dialog.open).toBe(true);
+
+    const cancelEvent = new Event("cancel", { cancelable: true });
+    dialog.dispatchEvent(cancelEvent);
+
+    expect(cancelEvent.defaultPrevented).toBe(true);
     expect(tourActiveSignal.value).toBe(false);
   });
 

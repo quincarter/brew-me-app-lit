@@ -30,9 +30,11 @@ describe("brew-save-sheet", () => {
     element.remove();
   });
 
-  it("renders nothing when the dialog is closed", () => {
+  it("keeps the bottom sheet mounted but closed so its exit animation can play", () => {
     expect(saveDialogOpenSignal.value).toBe(false);
-    expect(element.shadowRoot?.querySelector("brew-bottom-sheet")).toBeNull();
+    const sheet = element.shadowRoot?.querySelector("brew-bottom-sheet");
+    expect(sheet).not.toBeNull();
+    expect(sheet?.hasAttribute("open")).toBe(false);
   });
 
   it("renders the name field, type picker, and non-share copy when opened normally", async () => {

@@ -31,8 +31,10 @@ describe("brew-saved-brew-picker-sheet", () => {
     savedBrewsSignal.value = [];
   });
 
-  it("renders nothing when closed", () => {
-    expect(element.shadowRoot?.querySelector("brew-bottom-sheet")).toBeNull();
+  it("keeps the bottom sheet mounted but closed so its exit animation can play", () => {
+    const sheet = element.shadowRoot?.querySelector("brew-bottom-sheet");
+    expect(sheet).not.toBeNull();
+    expect(sheet?.hasAttribute("open")).toBe(false);
   });
 
   it("shows a 'no saved brews yet' hint when opened with nothing saved", async () => {
