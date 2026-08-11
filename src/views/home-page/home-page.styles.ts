@@ -107,6 +107,7 @@ export const HomePageStyles = css`
   .see-all {
     font-size: 14px;
     text-decoration: none;
+    color: var(--brew-color-primary);
   }
 
   .recent-empty {
