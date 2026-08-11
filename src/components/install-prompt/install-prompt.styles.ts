@@ -1,44 +1,17 @@
 import { css } from "lit";
 
 export const InstallPromptStyles = css`
-  /*
-	 * No ":host(:empty)" rule - see the note in save-sheet.styles.ts. Empty
-	 * host visibility is handled by render() returning nothing plus
-	 * "pointer-events: none" below.
-	 */
   :host {
-    position: fixed;
-    inset: 0;
-    z-index: 30;
-    display: block;
-    pointer-events: none;
+    display: contents;
   }
 
-  .scrim {
-    position: absolute;
-    inset: 0;
-    background: rgba(32, 27, 19, 0.45);
+  .header {
     display: flex;
-    align-items: flex-end;
-    pointer-events: auto;
-  }
-
-  .sheet {
-    position: relative;
-    width: 100%;
-    box-sizing: border-box;
-    background: var(--brew-color-surface-container-high);
-    border-radius: 28px 28px 0 0;
-    padding: 20px 20px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .close {
-    position: absolute;
-    top: 8px;
-    right: 8px;
+    justify-content: flex-end;
+    /* Pulls the close button back up into the sheet's top padding, so the
+		 * previews below sit where they visually did before this used
+		 * "<brew-bottom-sheet>"'s own padding instead of a bespoke ".sheet". */
+    margin: -8px -8px -8px 0;
   }
 
   .previews {
@@ -107,22 +80,11 @@ export const InstallPromptStyles = css`
     justify-content: flex-end;
   }
 
-  /* Expanded widths: center as a modal card instead of a full-width sheet. */
+  /* Expanded widths: "<brew-bottom-sheet>" itself already switches to a
+	 * centered modal card past this breakpoint (default "--sheet-max-width"
+	 * of 420px matches what this sheet used before) - only the preview
+	 * images still need their own size bump. */
   @media (min-width: 840px) {
-    .scrim {
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      box-sizing: border-box;
-    }
-
-    .sheet {
-      width: 100%;
-      max-width: 420px;
-      border-radius: 28px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
-    }
-
     .preview {
       width: 120px;
     }

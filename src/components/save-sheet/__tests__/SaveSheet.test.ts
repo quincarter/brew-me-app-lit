@@ -49,6 +49,20 @@ describe("brew-save-sheet", () => {
     expect(confirmButton?.textContent?.trim()).toBe("Save");
   });
 
+  it("closes the sheet when Escape triggers the nested dialog's cancel event", async () => {
+    openSaveDialog();
+    await element.updateComplete;
+
+    const dialog = element.shadowRoot
+      ?.querySelector("brew-bottom-sheet")
+      ?.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+    expect(dialog.open).toBe(true);
+
+    dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
+
+    expect(saveDialogOpenSignal.value).toBe(false);
+  });
+
   it("renders the open brew-bottom-sheet with a matching aria-label in its nested shadow root", async () => {
     openSaveDialog();
     await element.updateComplete;

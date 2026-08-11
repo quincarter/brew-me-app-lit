@@ -178,10 +178,7 @@ export class TourOverlay extends SignalWatcher(LitElement) {
     return html`
       <div class="scrim">
         <div class="anchor-proxy" style="${proxyStyle}"></div>
-        <div
-          class="cutout anchored"
-          style="--brew-tour-spotlight-padding: ${padding}px"
-        ></div>
+        <div class="cutout anchored" style="--brew-tour-spotlight-padding: ${padding}px"></div>
         <div class="card spotlight-card anchored">${this._renderCardBody(step)}</div>
       </div>
     `;
