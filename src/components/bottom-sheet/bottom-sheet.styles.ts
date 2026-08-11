@@ -7,6 +7,14 @@ export const BottomSheetStyles = css`
     display: contents;
   }
 
+  /* "display" is deliberately left at the native default (UA stylesheet:
+	 * "dialog:not([open]) { display: none; }") for the closed state - setting
+	 * it here unconditionally would be an *author*-origin rule, which beats
+	 * the UA-origin default regardless of selector specificity, silently
+	 * keeping the (opacity: 0) dialog laid out and hit-testable even while
+	 * closed. "display" only needs to be set explicitly for the open state
+	 * below; "allow-discrete" still lets the close transition play before
+	 * the browser reverts to the native "display: none". */
   .sheet {
     margin: 0;
     inset: auto 0 0 0;
@@ -18,8 +26,6 @@ export const BottomSheetStyles = css`
     background: var(--brew-color-surface-container-high);
     border-radius: 28px 28px 0 0;
     padding: var(--sheet-padding, 24px 20px 28px);
-    display: flex;
-    flex-direction: column;
     gap: var(--sheet-gap, 16px);
     opacity: 0;
     transform: translateY(100%);
@@ -31,6 +37,8 @@ export const BottomSheetStyles = css`
   }
 
   .sheet[open] {
+    display: flex;
+    flex-direction: column;
     opacity: 1;
     transform: translateY(0);
   }
