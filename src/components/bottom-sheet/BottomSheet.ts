@@ -1,16 +1,18 @@
-import { type HTMLTemplateResult, html, LitElement } from "lit";
-import { property } from "lit/decorators.js";
+import { type HTMLTemplateResult, html, LitElement, type PropertyValues } from "lit";
+import { property, query } from "lit/decorators.js";
 import { BottomSheetStyles } from "./bottom-sheet.styles";
 
 /**
  * # Bottom Sheet
- * A generic bottom-sheet/modal shell - a mobile bottom sheet below the
- * 840px breakpoint, a centered modal dialog above it. Dumb by design: it
- * owns no state beyond `open`/`label` and just slots whatever content a
- * consumer (e.g. `brew-save-sheet`, `brew-post-save-sheet`) gives it.
+ * A generic bottom-sheet/modal shell, built on the native `<dialog>` element
+ * for top-layer rendering, a native `::backdrop`, and automatic focus
+ * trapping/restoration - a mobile bottom sheet below the 840px breakpoint, a
+ * centered modal dialog above it. Dumb by design: it owns no state beyond
+ * `open`/`label` and just slots whatever content a consumer (e.g.
+ * `brew-save-sheet`, `brew-post-save-sheet`) gives it.
  * @element brew-bottom-sheet
  * @slot - Sheet content.
- * @fires sheet-scrim-click - Fired when the scrim (outside the sheet) is clicked. Consumers decide whether that should close the sheet.
+ * @fires sheet-scrim-click - Fired when the user tries to dismiss the sheet from outside app control (clicking the backdrop or pressing Escape). Consumers decide whether that should close the sheet.
  */
 export class BottomSheet extends LitElement {
   static styles = [BottomSheetStyles];
@@ -18,25 +20,45 @@ export class BottomSheet extends LitElement {
   @property({ type: Boolean }) open = false;
   @property({ type: String }) label = "";
 
-  private _onScrimClick = (): void => {
+  @query("dialog") private _dialog!: HTMLDialogElement;
+
+  private _dispatchScrimClick(): void {
     this.dispatchEvent(new CustomEvent("sheet-scrim-click", { bubbles: true, composed: true }));
+  }
+
+  /** Escape triggers "cancel" before the dialog would auto-close - prevent the default so `open` (owned by the consumer) stays the single source of truth for showModal()/close(). */
+  private _onCancel = (event: Event): void => {
+    event.preventDefault();
+    this._dispatchScrimClick();
   };
 
-  render(): HTMLTemplateResult {
-    if (!this.open) return html``;
+  /** Clicking the native backdrop dispatches a click on the dialog itself with no descendant target, so a point-in-box check tells backdrop clicks apart from clicks on slotted content. */
+  private _onDialogClick = (event: MouseEvent): void => {
+    const rect = this._dialog.getBoundingClientRect();
+    const clickedInside =
+      event.clientX >= rect.left &&
+      event.clientX <= rect.right &&
+      event.clientY >= rect.top &&
+      event.clientY <= rect.bottom;
+    if (!clickedInside) this._dispatchScrimClick();
+  };
 
+  protected updated(changed: PropertyValues<this>): void {
+    super.updated(changed);
+    if (this.open && !this._dialog.open) this._dialog.showModal();
+    else if (!this.open && this._dialog.open) this._dialog.close();
+  }
+
+  render(): HTMLTemplateResult {
     return html`
-      <div class="scrim" @click="${this._onScrimClick}">
-        <div
-          class="sheet"
-          role="dialog"
-          aria-modal="true"
-          aria-label="${this.label}"
-          @click="${(e: Event) => e.stopPropagation()}"
-        >
-          <slot></slot>
-        </div>
-      </div>
+      <dialog
+        class="sheet"
+        aria-label="${this.label}"
+        @cancel="${this._onCancel}"
+        @click="${this._onDialogClick}"
+      >
+        <slot></slot>
+      </dialog>
     `;
   }
 }

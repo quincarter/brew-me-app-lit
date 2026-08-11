@@ -1,11 +1,47 @@
 import { css } from "lit";
 
 export const TourOverlayStyles = css`
+  /* The visible box is the native "<dialog>" in the top layer - no manual
+	 * z-index needed, and it can no longer be covered by another top-layer
+	 * element (e.g. the theme toggle). */
   :host {
+    display: contents;
+  }
+
+  /* Opacity-only: a transform here would give fixed-position descendants
+	 * (".cutout", ".spotlight-card") a new containing block, throwing off
+	 * their viewport-relative coordinates from "getBoundingClientRect()". */
+  dialog {
     position: fixed;
     inset: 0;
-    z-index: 50;
-    pointer-events: none;
+    margin: 0;
+    padding: 0;
+    border: none;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    background: transparent;
+    overflow: visible;
+    opacity: 0;
+    transition:
+      opacity 0.22s ease,
+      overlay 0.28s allow-discrete,
+      display 0.28s allow-discrete;
+  }
+
+  dialog[open] {
+    opacity: 1;
+  }
+
+  @starting-style {
+    dialog[open] {
+      opacity: 0;
+    }
+  }
+
+  dialog::backdrop {
+    background: transparent;
   }
 
   .scrim {
@@ -47,6 +83,20 @@ export const TourOverlayStyles = css`
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
     position: relative;
     pointer-events: auto;
+    transition:
+      opacity 0.25s ease,
+      transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  /* Entrance-only: each card is a fresh element on every step change (Lit
+	 * swaps the template rather than toggling an "[open]" attribute), so
+	 * "@starting-style" can animate it in but there's no DOM-resident moment
+	 * to animate it back out on step change. */
+  @starting-style {
+    .card {
+      opacity: 0;
+      transform: translateY(16px);
+    }
   }
 
   .bottom-card {

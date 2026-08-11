@@ -1,6 +1,7 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { EDIT_ICON } from "../../shared/icons/icons";
+import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import {
   closePostSaveSheet,
   postSaveSheetAlreadyOnDetailSignal,
@@ -58,13 +59,72 @@ export class PostSaveSheet extends SignalWatcher(LitElement) {
     requestEditBeforeBrewing(brew.id);
   };
 
-  render(): HTMLTemplateResult {
-    const brew = postSaveSheetBrewSignal.value;
-    if (!postSaveSheetOpenSignal.value || !brew) return html``;
-    const alreadyOnDetail = postSaveSheetAlreadyOnDetailSignal.value;
-
+  /** Renders the sheet's content separately from the persistent `<brew-bottom-sheet>` wrapper - `brew` is only unset before the sheet has ever been opened, a state where the sheet is also closed, so `nothing` there is invisible. */
+  private _renderContent(brew: ISavedBrew, alreadyOnDetail: boolean): HTMLTemplateResult {
     const displayName = getBrewDisplayName(brew);
     const colors = getAvatarColors(brew.id);
+
+    return html`
+      <div class="header">
+        <div class="header-text">
+          <brew-icon name="check_circle" size="20" filled></brew-icon>
+          <span>Brew saved</span>
+        </div>
+        <brew-icon-button
+          icon="close"
+          size="18"
+          aria-label="Close"
+          @icon-click="${closePostSaveSheet}"
+        ></brew-icon-button>
+      </div>
+
+      <div class="identity">
+        <brew-avatar
+          initial="${getInitial(displayName)}"
+          background="${colors.background}"
+          foreground="${colors.foreground}"
+          size="40"
+          .icon="${getBrewTypeIcon(brew.brewType, brew.icon) ?? null}"
+        ></brew-avatar>
+        <span class="identity-name">${displayName}</span>
+      </div>
+
+      <brew-ratio-summary
+        ratio="${brew.ratio}"
+        coffee="${brew.coffee}"
+        water="${brew.water}"
+        oz="${brew.oz}"
+      ></brew-ratio-summary>
+
+      <div class="actions">
+        ${
+          alreadyOnDetail
+            ? html`
+                <brew-button variant="outlined" full-width @button-click="${this._onEditBeforeBrewing}"
+                  ><brew-icon .svg="${EDIT_ICON}" size="18"></brew-icon> Edit before
+                  brewing</brew-button
+                >
+                <brew-button variant="filled" full-width @button-click="${this._onStartTimer}"
+                  ><brew-icon name="timer" size="18"></brew-icon> Start guided timer</brew-button
+                >
+              `
+            : html`
+                <brew-button variant="outlined" full-width @button-click="${this._onStartTimer}"
+                  ><brew-icon name="timer" size="18"></brew-icon> Start guided timer</brew-button
+                >
+                <brew-button variant="filled" full-width @button-click="${this._onViewDetail}"
+                  ><brew-icon name="arrow_forward" size="18"></brew-icon> Go to brew
+                  detail</brew-button
+                >
+              `
+        }
+      </div>
+    `;
+  }
+
+  render(): HTMLTemplateResult {
+    const brew = postSaveSheetBrewSignal.value;
+    const alreadyOnDetail = postSaveSheetAlreadyOnDetailSignal.value;
 
     return html`
       <brew-bottom-sheet
@@ -73,63 +133,7 @@ export class PostSaveSheet extends SignalWatcher(LitElement) {
         label="Brew saved"
         @sheet-scrim-click="${closePostSaveSheet}"
       >
-        <div class="header">
-          <div class="header-text">
-            <brew-icon name="check_circle" size="20" filled></brew-icon>
-            <span>Brew saved</span>
-          </div>
-          <brew-icon-button
-            icon="close"
-            size="18"
-            aria-label="Close"
-            @icon-click="${closePostSaveSheet}"
-          ></brew-icon-button>
-        </div>
-
-        <div class="identity">
-          <brew-avatar
-            initial="${getInitial(displayName)}"
-            background="${colors.background}"
-            foreground="${colors.foreground}"
-            size="40"
-            .icon="${getBrewTypeIcon(brew.brewType, brew.icon) ?? null}"
-          ></brew-avatar>
-          <span class="identity-name">${displayName}</span>
-        </div>
-
-        <brew-ratio-summary
-          ratio="${brew.ratio}"
-          coffee="${brew.coffee}"
-          water="${brew.water}"
-          oz="${brew.oz}"
-        ></brew-ratio-summary>
-
-        <div class="actions">
-          ${
-            alreadyOnDetail
-              ? html`
-                  <brew-button
-                    variant="outlined"
-                    full-width
-                    @button-click="${this._onEditBeforeBrewing}"
-                    ><brew-icon .svg="${EDIT_ICON}" size="18"></brew-icon> Edit before
-                    brewing</brew-button
-                  >
-                  <brew-button variant="filled" full-width @button-click="${this._onStartTimer}"
-                    ><brew-icon name="timer" size="18"></brew-icon> Start guided timer</brew-button
-                  >
-                `
-              : html`
-                  <brew-button variant="outlined" full-width @button-click="${this._onStartTimer}"
-                    ><brew-icon name="timer" size="18"></brew-icon> Start guided timer</brew-button
-                  >
-                  <brew-button variant="filled" full-width @button-click="${this._onViewDetail}"
-                    ><brew-icon name="arrow_forward" size="18"></brew-icon> Go to brew
-                    detail</brew-button
-                  >
-                `
-          }
-        </div>
+        ${brew ? this._renderContent(brew, alreadyOnDetail) : nothing}
       </brew-bottom-sheet>
     `;
   }

@@ -1,6 +1,6 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing, type PropertyValues } from "lit";
-import { state } from "lit/decorators.js";
+import { query, state } from "lit/decorators.js";
 import type { ITourStep } from "../../shared/interfaces/tour.interface";
 import {
   activeTourStepsSignal,
@@ -44,6 +44,8 @@ export class TourOverlay extends SignalWatcher(LitElement) {
   @state() private _targetRect: DOMRect | null = null;
   @state() private _targetLost = false;
 
+  @query("dialog") private _dialog!: HTMLDialogElement;
+
   /** Computed once - CSS Anchor Positioning support doesn't change mid-session. */
   private readonly _supportsAnchorPositioning = supportsCssAnchorPositioning();
 
@@ -56,6 +58,12 @@ export class TourOverlay extends SignalWatcher(LitElement) {
   private _onResize = (): void => {
     if (!this._targetElement) return;
     this._targetRect = this._targetElement.getBoundingClientRect();
+  };
+
+  /** Escape triggers "cancel" before the native dialog would auto-close - treat it the same as the close button instead of letting the dialog close out from under `tourActiveSignal`. */
+  private _onCancel = (event: Event): void => {
+    event.preventDefault();
+    skipTour();
   };
 
   connectedCallback(): void {
@@ -80,6 +88,13 @@ export class TourOverlay extends SignalWatcher(LitElement) {
       this._activeStepId = stepId;
       if (step) void this._activateStep(step);
     }
+  }
+
+  protected updated(changed: PropertyValues<this>): void {
+    super.updated(changed);
+    const shouldBeOpen = tourActiveSignal.value && currentTourStepSignal.value !== null;
+    if (shouldBeOpen && !this._dialog.open) this._dialog.showModal();
+    else if (!shouldBeOpen && this._dialog.open) this._dialog.close();
   }
 
   private async _activateStep(step: ITourStep): Promise<void> {
@@ -146,9 +161,7 @@ export class TourOverlay extends SignalWatcher(LitElement) {
   private _renderSlide(step: ITourStep): HTMLTemplateResult {
     return html`
       <div class="scrim bottom-anchored">
-        <div class="card bottom-card" role="dialog" aria-label="${step.title}">
-          ${this._renderCardBody(step)}
-        </div>
+        <div class="card bottom-card">${this._renderCardBody(step)}</div>
       </div>
     `;
   }
@@ -169,9 +182,7 @@ export class TourOverlay extends SignalWatcher(LitElement) {
           class="cutout anchored"
           style="--brew-tour-spotlight-padding: ${padding}px"
         ></div>
-        <div class="card spotlight-card anchored" role="dialog" aria-label="${step.title}">
-          ${this._renderCardBody(step)}
-        </div>
+        <div class="card spotlight-card anchored">${this._renderCardBody(step)}</div>
       </div>
     `;
   }
@@ -205,23 +216,16 @@ export class TourOverlay extends SignalWatcher(LitElement) {
     return html`
       <div class="scrim">
         <div class="cutout" style="${cutoutStyle}"></div>
-        <div
-          class="card spotlight-card"
-          style="${cardStyle}"
-          role="dialog"
-          aria-label="${step.title}"
-        >
-          ${this._renderCardBody(step)}
-        </div>
+        <div class="card spotlight-card" style="${cardStyle}">${this._renderCardBody(step)}</div>
       </div>
     `;
   }
 
-  render(): HTMLTemplateResult {
-    if (!tourActiveSignal.value) return html``;
+  private _renderStep(): HTMLTemplateResult | typeof nothing {
+    if (!tourActiveSignal.value) return nothing;
 
     const step = currentTourStepSignal.value;
-    if (!step) return html``;
+    if (!step) return nothing;
 
     if (step.kind === "spotlight" && this._targetRect && !this._targetLost) {
       return this._supportsAnchorPositioning
@@ -230,5 +234,14 @@ export class TourOverlay extends SignalWatcher(LitElement) {
     }
 
     return this._renderSlide(step);
+  }
+
+  render(): HTMLTemplateResult {
+    const step = tourActiveSignal.value ? currentTourStepSignal.value : null;
+    return html`
+      <dialog aria-label="${step?.title ?? ""}" @cancel="${this._onCancel}">
+        ${this._renderStep()}
+      </dialog>
+    `;
   }
 }

@@ -39,8 +39,6 @@ export class RecipePickerSheet extends LitElement {
   }
 
   render(): HTMLTemplateResult {
-    if (!this.open) return html``;
-
     return html`
       <brew-bottom-sheet ?open="${this.open}" label="Load a WAC recipe">
         <div class="title">Load a WAC recipe</div>

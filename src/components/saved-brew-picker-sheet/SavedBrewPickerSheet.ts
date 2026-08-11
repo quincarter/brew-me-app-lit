@@ -40,8 +40,6 @@ export class SavedBrewPickerSheet extends SignalWatcher(LitElement) {
   }
 
   render(): HTMLTemplateResult {
-    if (!this.open) return html``;
-
     const brews = [...savedBrewsSignal.value].sort(
       (a, b) => (b.lastBrewedAt ?? b.createdAt) - (a.lastBrewedAt ?? a.createdAt),
     );
