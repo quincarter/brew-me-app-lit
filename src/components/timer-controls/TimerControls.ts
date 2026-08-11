@@ -54,8 +54,7 @@ export class TimerControls extends LitElement {
               `
             : html`
                 <p class="hint">
-                  No saved brews yet — <a href="/calculate">save a ratio</a> to brew from it
-                  here.
+                  No saved brews yet — <a href="/calculate">save a ratio</a> to brew from it here.
                 </p>
               `
         }

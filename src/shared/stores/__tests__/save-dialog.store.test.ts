@@ -104,6 +104,14 @@ describe("save-dialog.store", () => {
 
       expect(saveIntentSignal.value).toBe("guided-timer");
     });
+
+    it("resets and re-enables saveDialogOpenSignal even if called when already true", () => {
+      openSaveDialog({ intent: "guided-timer" });
+      expect(saveDialogOpenSignal.value).toBe(true);
+
+      openSaveDialog({ intent: "guided-timer" });
+      expect(saveDialogOpenSignal.value).toBe(true);
+    });
   });
 
   describe("cancelSaveDialog", () => {
