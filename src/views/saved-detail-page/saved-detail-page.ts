@@ -252,7 +252,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                   ></brew-star-rating>
 
                   <brew-text-field
-                    label="Tasting note"
+                    label="Tasting note(s)"
                     .value="${this._editTastingNote}"
                     @value-change="${(e: CustomEvent<string>) => {
                       this._editTastingNote = e.detail;
