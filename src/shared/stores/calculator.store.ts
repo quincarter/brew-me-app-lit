@@ -31,28 +31,42 @@ export const primedFromNameSignal = signal<string | null>(null);
  */
 export const primedBrewTypeSignal = signal<string | null>(null);
 
+/**
+ * Parses a field's raw text into a non-negative number. A value that parses
+ * negative (e.g. mid-typing "-15") is clamped to 0 - both the returned
+ * number *and* the string that should replace the field's raw value - so a
+ * negative number can never flow into a signal or a derived calculation.
+ * `NaN` (empty string, bare "-", "5.") passes through untouched so partial
+ * input while typing isn't stomped on.
+ */
+const parseNonNegative = (raw: string): { raw: string; value: number } => {
+  const parsed = Number.parseFloat(raw);
+  if (Number.isNaN(parsed) || parsed >= 0) return { raw, value: parsed };
+  return { raw: "0", value: 0 };
+};
+
 export const setRatio = (value: string): void => {
-  const ratio = Number.parseFloat(value);
+  const { raw, value: ratio } = parseNonNegative(value);
   const water = Number.parseFloat(waterSignal.value);
-  ratioSignal.value = value;
+  ratioSignal.value = raw;
   if (!Number.isNaN(water) && ratio) {
     coffeeSignal.value = coffeeForWater(water, ratio);
   }
 };
 
 export const setWater = (value: string): void => {
-  const grams = Number.parseFloat(value);
+  const { raw, value: grams } = parseNonNegative(value);
   const ratio = Number.parseFloat(ratioSignal.value);
-  waterSignal.value = value;
+  waterSignal.value = raw;
   ozSignal.value = Number.isNaN(grams) ? "" : String(gramsToOunces(grams));
   coffeeSignal.value = Number.isNaN(grams) || !ratio ? null : coffeeForWater(grams, ratio);
 };
 
 export const setOz = (value: string): void => {
-  const ounces = Number.parseFloat(value);
+  const { raw, value: ounces } = parseNonNegative(value);
   const ratio = Number.parseFloat(ratioSignal.value);
   const grams = Number.isNaN(ounces) ? "" : String(ouncesToGrams(ounces));
-  ozSignal.value = value;
+  ozSignal.value = raw;
   waterSignal.value = grams;
   coffeeSignal.value =
     grams === "" || !ratio ? null : coffeeForWater(Number.parseFloat(grams), ratio);

@@ -97,7 +97,11 @@ export class SaveSheet extends SignalWatcher(LitElement) {
           : "Save";
 
     return html`
-      <brew-bottom-sheet ?open="${saveDialogOpenSignal.value}" label="${title}">
+      <brew-bottom-sheet
+        ?open="${saveDialogOpenSignal.value}"
+        label="${title}"
+        @sheet-scrim-click="${cancelSaveDialog}"
+      >
         <div class="title">${title}</div>
         <brew-text-field
           label="Brew name"

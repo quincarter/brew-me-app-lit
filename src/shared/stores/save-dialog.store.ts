@@ -36,6 +36,9 @@ export const openSaveDialog = (options?: { intent?: SaveDialogIntent }): void =>
   pendingBrewNameSignal.value = "";
   pendingBrewIconSignal.value = "";
   saveIntentSignal.value = options?.intent ?? "save";
+  if (saveDialogOpenSignal.value) {
+    saveDialogOpenSignal.value = false;
+  }
   saveDialogOpenSignal.value = true;
 };
 

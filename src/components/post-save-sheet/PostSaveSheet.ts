@@ -100,7 +100,10 @@ export class PostSaveSheet extends SignalWatcher(LitElement) {
         ${
           alreadyOnDetail
             ? html`
-                <brew-button variant="outlined" full-width @button-click="${this._onEditBeforeBrewing}"
+                <brew-button
+                  variant="outlined"
+                  full-width
+                  @button-click="${this._onEditBeforeBrewing}"
                   ><brew-icon .svg="${EDIT_ICON}" size="18"></brew-icon> Edit before
                   brewing</brew-button
                 >

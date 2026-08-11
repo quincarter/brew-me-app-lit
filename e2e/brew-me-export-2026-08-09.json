@@ -2,9 +2,7 @@
   "exportedAt": "2026-08-10T21:10:33.667Z",
   "app": "brew-me",
   "data": {
-    "custom-brew-types": [
-      "Nitro Cold Brew"
-    ],
+    "custom-brew-types": ["Nitro Cold Brew"],
     "custom-step-labels": [],
     "saved-brews": [
       {

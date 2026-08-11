@@ -116,4 +116,17 @@ describe("brew-bottom-sheet", () => {
     expect(cancelEvent.defaultPrevented).toBe(true);
     expect(dispatchSpy).toHaveBeenCalledTimes(1);
   });
+
+  it("dispatches sheet-scrim-click when native dialog close event fires while open", async () => {
+    element.open = true;
+    await element.updateComplete;
+
+    const dialog = element.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+    const dispatchSpy = vi.fn();
+    element.addEventListener("sheet-scrim-click", dispatchSpy);
+
+    dialog.dispatchEvent(new Event("close"));
+
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+  });
 });
