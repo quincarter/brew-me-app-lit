@@ -12,6 +12,7 @@ import {
   tourActiveSignal,
   tourStepIndexSignal,
 } from "../../shared/stores/tour.store";
+import { supportsCssAnchorPositioning } from "../../shared/utilities/anchor-positioning.utility";
 import { awaitTourTarget } from "../../shared/utilities/tour-target.utility";
 import "../button/brew-button";
 import "../icon-button/brew-icon-button";
@@ -25,6 +26,16 @@ import { TourOverlayStyles } from "./tour-overlay.styles";
  *   time): a centered card, same visual family as `brew-install-prompt`.
  * - `"spotlight"`: a scrim with a cutout punched around a real on-screen
  *   element (found via `awaitTourTarget`) plus a card anchored near it.
+ *   Positioning of the cutout/card uses CSS Anchor Positioning
+ *   (`anchor-name`/`anchor()`) as a progressive enhancement when the
+ *   browser supports it, falling back to the original `getBoundingClientRect`
+ *   JS-geometry math otherwise - see `_supportsAnchorPositioning`.
+ *
+ *   CSS Anchor Positioning only resolves an anchor for a positioned element
+ *   in the *same shadow tree*; the real target elements live in other
+ *   components' shadow roots, so this renders a same-shadow-root proxy
+ *   element (`.anchor-proxy`) mirroring the target's rect and anchors the
+ *   cutout/card to that proxy instead of the target directly.
  * @element brew-tour-overlay
  */
 export class TourOverlay extends SignalWatcher(LitElement) {
@@ -34,6 +45,9 @@ export class TourOverlay extends SignalWatcher(LitElement) {
   @state() private _targetLost = false;
 
   @query("dialog") private _dialog!: HTMLDialogElement;
+
+  /** Computed once - CSS Anchor Positioning support doesn't change mid-session. */
+  private readonly _supportsAnchorPositioning = supportsCssAnchorPositioning();
 
   /** Which step's target/route activation has already run, so `willUpdate` only re-triggers on a real step change. */
   private _activeStepId: string | null = null;
@@ -60,6 +74,10 @@ export class TourOverlay extends SignalWatcher(LitElement) {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     window.removeEventListener("resize", this._onResize);
+    /** Bumping the token here invalidates any `awaitTourTarget` resolution
+     * still pending from `_activateStep`, so a target that resolves after
+     * disconnect can't write state into an unmounted component. */
+    this._activationToken += 1;
   }
 
   protected willUpdate(changed: PropertyValues<this>): void {
@@ -126,25 +144,52 @@ export class TourOverlay extends SignalWatcher(LitElement) {
     `;
   }
 
+  private _renderCardBody(step: ITourStep): HTMLTemplateResult {
+    return html`
+      <brew-icon-button
+        class="close"
+        icon="close"
+        aria-label="Skip tour"
+        @icon-click="${skipTour}"
+      ></brew-icon-button>
+      <h2 class="title">${step.title}</h2>
+      <p class="body">${step.body}</p>
+      ${this._renderControls(step)}
+    `;
+  }
+
   private _renderSlide(step: ITourStep): HTMLTemplateResult {
     return html`
       <div class="scrim bottom-anchored">
-        <div class="card bottom-card">
-          <brew-icon-button
-            class="close"
-            icon="close"
-            aria-label="Skip tour"
-            @icon-click="${skipTour}"
-          ></brew-icon-button>
-          <h2 class="title">${step.title}</h2>
-          <p class="body">${step.body}</p>
-          ${this._renderControls(step)}
-        </div>
+        <div class="card bottom-card">${this._renderCardBody(step)}</div>
       </div>
     `;
   }
 
-  private _renderSpotlight(step: ITourStep, rect: DOMRect): HTMLTemplateResult {
+  /** Anchored path: the only JS geometry left is mirroring `rect` onto a
+   * same-shadow-root proxy element (anchor-name only resolves within one
+   * shadow tree - see the class doc comment); the cutout/card's own
+   * placement comes entirely from `anchor()`/`anchor-size()` in
+   * tour-overlay.styles.ts, keyed off `TourOverlay.ANCHOR_NAME`. */
+  private _renderAnchoredSpotlight(step: ITourStep, rect: DOMRect): HTMLTemplateResult {
+    const padding = step.spotlightPadding ?? 8;
+    const proxyStyle = `top: ${rect.top}px; left: ${rect.left}px; width: ${rect.width}px; height: ${rect.height}px;`;
+
+    return html`
+      <div class="scrim">
+        <div class="anchor-proxy" style="${proxyStyle}"></div>
+        <div
+          class="cutout anchored"
+          style="--brew-tour-spotlight-padding: ${padding}px"
+        ></div>
+        <div class="card spotlight-card anchored">${this._renderCardBody(step)}</div>
+      </div>
+    `;
+  }
+
+  /** JS-geometry fallback for browsers without CSS Anchor Positioning
+   * support - same math as before this component adopted anchoring. */
+  private _renderFallbackSpotlight(step: ITourStep, rect: DOMRect): HTMLTemplateResult {
     const padding = step.spotlightPadding ?? 8;
     const cutoutTop = Math.max(0, rect.top - padding);
     const cutoutLeft = Math.max(0, rect.left - padding);
@@ -171,17 +216,7 @@ export class TourOverlay extends SignalWatcher(LitElement) {
     return html`
       <div class="scrim">
         <div class="cutout" style="${cutoutStyle}"></div>
-        <div class="card spotlight-card" style="${cardStyle}">
-          <brew-icon-button
-            class="close"
-            icon="close"
-            aria-label="Skip tour"
-            @icon-click="${skipTour}"
-          ></brew-icon-button>
-          <h2 class="title">${step.title}</h2>
-          <p class="body">${step.body}</p>
-          ${this._renderControls(step)}
-        </div>
+        <div class="card spotlight-card" style="${cardStyle}">${this._renderCardBody(step)}</div>
       </div>
     `;
   }
@@ -193,7 +228,9 @@ export class TourOverlay extends SignalWatcher(LitElement) {
     if (!step) return nothing;
 
     if (step.kind === "spotlight" && this._targetRect && !this._targetLost) {
-      return this._renderSpotlight(step, this._targetRect);
+      return this._supportsAnchorPositioning
+        ? this._renderAnchoredSpotlight(step, this._targetRect)
+        : this._renderFallbackSpotlight(step, this._targetRect);
     }
 
     return this._renderSlide(step);

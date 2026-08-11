@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { IBrewStep, ISavedBrew } from "../../../shared/interfaces/brew.interface";
+import type { ISavedBrew } from "../../../shared/interfaces/brew.interface";
 import type { IPrimedRecipe } from "../../../shared/interfaces/timer.interface";
 import { savedBrewsSignal } from "../../../shared/stores/brew.store";
 import {
@@ -9,7 +9,6 @@ import {
   resetTimer,
   timerRunningSignal,
   timerSecondsSignal,
-  toggleTimer,
 } from "../../../shared/stores/timer.store";
 import "../timer-page";
 import type { TimerPage } from "../timer-page";
@@ -24,8 +23,6 @@ const makeSavedBrew = (overrides: Partial<ISavedBrew> = {}): ISavedBrew => ({
   createdAt: Date.now(),
   ...overrides,
 });
-
-const steps: IBrewStep[] = [{ id: "s1", label: "Bloom", kind: "timed", seconds: 30 }];
 
 const primedRecipe = (overrides: Partial<IPrimedRecipe> = {}): IPrimedRecipe => ({
   name: "V60",
@@ -46,6 +43,33 @@ describe("timer-page", () => {
     document.body.appendChild(element);
     await element.updateComplete;
   };
+
+  const dial = (): (HTMLElement & { guided: boolean; countdown: boolean; idle: boolean }) | null =>
+    element.shadowRoot?.querySelector("brew-timer-dial") as
+      | (HTMLElement & { guided: boolean; countdown: boolean; idle: boolean })
+      | null;
+
+  const controls = ():
+    | (HTMLElement & {
+        idle: boolean;
+        running: boolean;
+        hasSavedBrews: boolean;
+        hasRecipe: boolean;
+      })
+    | null =>
+    element.shadowRoot?.querySelector("brew-timer-controls") as
+      | (HTMLElement & {
+          idle: boolean;
+          running: boolean;
+          hasSavedBrews: boolean;
+          hasRecipe: boolean;
+        })
+      | null;
+
+  const recipePanel = (): (HTMLElement & { recipe: IPrimedRecipe | null }) | null =>
+    element.shadowRoot?.querySelector("brew-timer-recipe-panel") as
+      | (HTMLElement & { recipe: IPrimedRecipe | null })
+      | null;
 
   beforeEach(() => {
     resetTimer();
@@ -91,74 +115,136 @@ describe("timer-page", () => {
   });
 
   describe("idle state", () => {
-    it("renders idle-actions with a 'Start timer now' button when nothing is primed, running, or elapsed", async () => {
+    it("passes idle down to brew-timer-controls when nothing is primed, running, or elapsed", async () => {
       await mount();
 
-      expect(element.shadowRoot?.querySelector(".idle-actions")).not.toBeNull();
-      expect(element.shadowRoot?.querySelector(".controls")).toBeNull();
-      const startButton = Array.from(
-        element.shadowRoot?.querySelectorAll(".idle-actions brew-button") ?? [],
-      ).find((button) => button.textContent?.trim() === "Start timer now");
-      expect(startButton).not.toBeUndefined();
+      expect(controls()?.idle).toBe(true);
     });
 
-    it("does not show 'Choose from saved brews' when there are no saved brews", async () => {
+    it("does not tell brew-timer-controls there are saved brews when there are none", async () => {
       await mount();
 
-      const pickerButton = Array.from(
-        element.shadowRoot?.querySelectorAll(".idle-actions brew-button") ?? [],
-      ).find((button) => button.textContent?.trim() === "Choose from saved brews");
-      expect(pickerButton).toBeUndefined();
+      expect(controls()?.hasSavedBrews).toBe(false);
     });
 
-    it("shows 'Choose from saved brews' once a brew is saved", async () => {
+    it("tells brew-timer-controls there are saved brews once one is saved", async () => {
       savedBrewsSignal.value = [makeSavedBrew()];
       await mount();
 
-      const pickerButton = Array.from(
-        element.shadowRoot?.querySelectorAll(".idle-actions brew-button") ?? [],
-      ).find((button) => button.textContent?.trim() === "Choose from saved brews");
-      expect(pickerButton).not.toBeUndefined();
+      expect(controls()?.hasSavedBrews).toBe(true);
     });
 
-    it("starts the timer when 'Start timer now' is clicked", async () => {
+    it("starts the timer when brew-timer-controls fires start-click", async () => {
       await mount();
       expect(timerRunningSignal.value).toBe(false);
 
-      const startButton = Array.from(
-        element.shadowRoot?.querySelectorAll(".idle-actions brew-button") ?? [],
-      ).find((button) => button.textContent?.trim() === "Start timer now");
-      const innerButton = startButton?.shadowRoot?.querySelector("button");
-      innerButton?.click();
+      controls()?.dispatchEvent(new CustomEvent("start-click", { bubbles: true, composed: true }));
       await element.updateComplete;
 
       expect(timerRunningSignal.value).toBe(true);
     });
 
-    it("stops rendering idle-actions (and shows controls instead) once the timer is running", async () => {
+    it("passes idle=false to brew-timer-controls once the timer is running", async () => {
       await mount();
 
-      toggleTimer();
+      controls()?.dispatchEvent(new CustomEvent("start-click", { bubbles: true, composed: true }));
       await element.updateComplete;
 
-      expect(element.shadowRoot?.querySelector(".idle-actions")).toBeNull();
-      expect(element.shadowRoot?.querySelector(".controls")).not.toBeNull();
+      expect(controls()?.idle).toBe(false);
     });
 
-    it("stops rendering idle-actions once a recipe is primed, even while not running", async () => {
+    it("passes idle=false once a recipe is primed, even while not running", async () => {
       await mount();
-      expect(element.shadowRoot?.querySelector(".idle-actions")).not.toBeNull();
+      expect(controls()?.idle).toBe(true);
 
       primedRecipeSignal.value = primedRecipe();
       await element.updateComplete;
 
-      expect(element.shadowRoot?.querySelector(".idle-actions")).toBeNull();
-      expect(element.shadowRoot?.querySelector(".controls")).not.toBeNull();
+      expect(controls()?.idle).toBe(false);
+    });
+  });
+
+  describe("dial", () => {
+    it("is not guided and not counting down for a plain, unprimed stopwatch", async () => {
+      await mount();
+
+      expect(dial()?.guided).toBe(false);
+      expect(dial()?.countdown).toBe(false);
+    });
+
+    it("is guided and counting down once a recipe with a target is primed in countdown mode", async () => {
+      primedRecipeSignal.value = primedRecipe({ targetSeconds: 210 });
+      guidedModeSignal.value = "countdown";
+      await mount();
+
+      expect(dial()?.guided).toBe(true);
+      expect(dial()?.countdown).toBe(true);
+    });
+
+    it("is guided but not counting down once switched to count-up mode", async () => {
+      primedRecipeSignal.value = primedRecipe({ targetSeconds: 210 });
+      guidedModeSignal.value = "countup";
+      await mount();
+
+      expect(dial()?.guided).toBe(true);
+      expect(dial()?.countdown).toBe(false);
+    });
+  });
+
+  describe("recipe panel", () => {
+    it("does not render brew-timer-recipe-panel when unprimed", async () => {
+      await mount();
+
+      expect(recipePanel()).toBeNull();
+    });
+
+    it("renders brew-timer-recipe-panel with the primed recipe once one is set", async () => {
+      const recipe = primedRecipe();
+      primedRecipeSignal.value = recipe;
+      await mount();
+
+      expect(recipePanel()?.recipe).toEqual(recipe);
+    });
+
+    it("updates the guided mode when brew-timer-recipe-panel fires mode-change", async () => {
+      primedRecipeSignal.value = primedRecipe();
+      await mount();
+
+      recipePanel()?.dispatchEvent(
+        new CustomEvent("mode-change", { detail: "countup", bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(guidedModeSignal.value).toBe("countup");
+    });
+
+    it("updates the target seconds when brew-timer-recipe-panel fires target-change", async () => {
+      primedRecipeSignal.value = primedRecipe({ targetSeconds: 210 });
+      await mount();
+
+      recipePanel()?.dispatchEvent(
+        new CustomEvent("target-change", { detail: "5", bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(primedRecipeSignal.value?.targetSeconds).toBe(300);
+    });
+
+    it("ignores an invalid target-change value", async () => {
+      primedRecipeSignal.value = primedRecipe({ targetSeconds: 210 });
+      await mount();
+
+      recipePanel()?.dispatchEvent(
+        new CustomEvent("target-change", { detail: "not a number", bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(primedRecipeSignal.value?.targetSeconds).toBe(210);
     });
   });
 
   describe("saved brew picker", () => {
-    it("opens the picker sheet when 'Choose from saved brews' is clicked", async () => {
+    it("opens the picker sheet when brew-timer-controls fires choose-saved-click", async () => {
       savedBrewsSignal.value = [makeSavedBrew()];
       await mount();
 
@@ -167,11 +253,9 @@ describe("timer-page", () => {
         | undefined;
       expect(sheet?.open).toBe(false);
 
-      const pickerButton = Array.from(
-        element.shadowRoot?.querySelectorAll(".idle-actions brew-button") ?? [],
-      ).find((button) => button.textContent?.trim() === "Choose from saved brews");
-      const innerButton = pickerButton?.shadowRoot?.querySelector("button");
-      innerButton?.click();
+      controls()?.dispatchEvent(
+        new CustomEvent("choose-saved-click", { bubbles: true, composed: true }),
+      );
       await element.updateComplete;
 
       expect(sheet?.open).toBe(true);
@@ -181,11 +265,9 @@ describe("timer-page", () => {
       savedBrewsSignal.value = [makeSavedBrew()];
       await mount();
 
-      const pickerButton = Array.from(
-        element.shadowRoot?.querySelectorAll(".idle-actions brew-button") ?? [],
-      ).find((button) => button.textContent?.trim() === "Choose from saved brews");
-      const innerButton = pickerButton?.shadowRoot?.querySelector("button");
-      innerButton?.click();
+      controls()?.dispatchEvent(
+        new CustomEvent("choose-saved-click", { bubbles: true, composed: true }),
+      );
       await element.updateComplete;
 
       const sheet = element.shadowRoot?.querySelector("brew-saved-brew-picker-sheet") as
@@ -209,64 +291,33 @@ describe("timer-page", () => {
     });
   });
 
-  describe("brew steps card", () => {
-    it("does not render a brew-steps-card when the primed recipe has no steps", async () => {
-      primedRecipeSignal.value = primedRecipe({ steps: null });
-      await mount();
-
-      expect(element.shadowRoot?.querySelector("brew-steps-card")).toBeNull();
-    });
-
-    it("renders a brew-steps-card wired to the timer's elapsed seconds when the primed recipe has steps", async () => {
-      primedRecipeSignal.value = primedRecipe({ steps });
-      timerSecondsSignal.value = 12;
-      await mount();
-
-      const stepsCard = element.shadowRoot?.querySelector("brew-steps-card") as
-        | (HTMLElement & { startOpen: boolean; elapsedSeconds: number | null })
-        | undefined;
-      expect(stepsCard).not.toBeNull();
-      expect(stepsCard?.startOpen).toBe(false);
-      expect(stepsCard?.elapsedSeconds).toBe(12);
-    });
-  });
-
   describe("clearing a primed recipe", () => {
-    it("does not show a 'Clear brew' control on the plain, unprimed stopwatch", async () => {
+    it("does not tell brew-timer-controls there's a recipe on the plain, unprimed stopwatch", async () => {
       await mount();
-      toggleTimer();
+      controls()?.dispatchEvent(new CustomEvent("start-click", { bubbles: true, composed: true }));
       await element.updateComplete;
 
-      expect(
-        element.shadowRoot?.querySelector('brew-icon-button[aria-label="Clear brew"]'),
-      ).toBeNull();
-      expect(element.shadowRoot?.querySelector(".controls .spacer")).not.toBeNull();
+      expect(controls()?.hasRecipe).toBe(false);
     });
 
-    it("shows a 'Clear brew' control instead of the spacer once a recipe is primed", async () => {
+    it("tells brew-timer-controls there's a recipe once one is primed", async () => {
       primedRecipeSignal.value = primedRecipe();
       await mount();
 
-      expect(
-        element.shadowRoot?.querySelector('brew-icon-button[aria-label="Clear brew"]'),
-      ).not.toBeNull();
-      expect(element.shadowRoot?.querySelector(".controls .spacer")).toBeNull();
+      expect(controls()?.hasRecipe).toBe(true);
     });
 
-    it("unprimes the recipe and drops back to the idle base stopwatch when clicked", async () => {
+    it("unprimes the recipe and drops back to the idle base stopwatch on clear-click", async () => {
       primedRecipeSignal.value = primedRecipe();
       timerSecondsSignal.value = 30;
       await mount();
 
-      const clearButton = element.shadowRoot?.querySelector(
-        'brew-icon-button[aria-label="Clear brew"]',
-      );
-      clearButton?.dispatchEvent(new CustomEvent("icon-click", { bubbles: true, composed: true }));
+      controls()?.dispatchEvent(new CustomEvent("clear-click", { bubbles: true, composed: true }));
       await element.updateComplete;
 
       expect(primedRecipeSignal.value).toBeNull();
       expect(timerSecondsSignal.value).toBe(0);
-      expect(element.shadowRoot?.querySelector(".idle-actions")).not.toBeNull();
+      expect(controls()?.idle).toBe(true);
     });
   });
 });

@@ -2,14 +2,11 @@ import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
-import "../../components/brew-steps-card/brew-steps-card";
-import "../../components/button/brew-button";
-import "../../components/chip/brew-chip";
-import "../../components/icon-button/brew-icon-button";
 import "../../components/saved-brew-picker-sheet/brew-saved-brew-picker-sheet";
-import "../../components/text-field/brew-text-field";
+import "../../components/timer-controls/brew-timer-controls";
+import "../../components/timer-dial/brew-timer-dial";
+import "../../components/timer-recipe-panel/brew-timer-recipe-panel";
 import "../../components/top-bar/brew-top-bar";
-import { PAUSE_ICON, PLAY_ICON, REFRESH_ICON } from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
 import {
@@ -26,8 +23,6 @@ import {
   toggleTimer,
 } from "../../shared/stores/timer.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
-import { formatRatio } from "../../shared/utilities/format-ratio.utility";
-import { formatSeconds } from "../../shared/utilities/format-time.utility";
 import { TimerPageStyles } from "./timer-page.styles";
 
 @customElement("timer-page")
@@ -71,126 +66,39 @@ export class TimerPage extends SignalWatcher(LitElement) {
         <brew-top-bar title="${title}" icon="arrow_back" href="/more"></brew-top-bar>
 
         <div class="content">
-          <div class="dial ${recipe ? "guided" : ""}">
-            ${
-              isCountdown
-                ? html`
-                    <div class="dial-value">${formatSeconds(dialSeconds)}</div>
-                    <div class="dial-label">total brew time</div>
-                  `
-                : html`
-                    <div class="dial-label">${isIdle ? "Ready" : "Brewing"}</div>
-                    <div class="dial-value">${formatSeconds(dialSeconds)}</div>
-                  `
-            }
-          </div>
+          <brew-timer-dial
+            ?guided="${recipe !== null}"
+            ?countdown="${isCountdown}"
+            ?idle="${isIdle}"
+            seconds="${dialSeconds}"
+          ></brew-timer-dial>
 
           ${
             recipe
               ? html`
-                  <div class="recipe-caption">
-                    <p class="recipe-caption-name">${recipe.name} · ${formatRatio(recipe.ratio)}</p>
-                    <p class="recipe-caption-detail">
-                      ${recipe.coffee}g coffee · ${recipe.water}g water
-                    </p>
-                  </div>
-
-                  <div class="guided-options">
-                    <div class="mode-toggle">
-                      <brew-chip
-                        label="Count down"
-                        ?selected="${mode === "countdown"}"
-                        @chip-click="${() => setGuidedMode("countdown")}"
-                      ></brew-chip>
-                      <brew-chip
-                        label="Count up"
-                        ?selected="${mode === "countup"}"
-                        @chip-click="${() => setGuidedMode("countup")}"
-                      ></brew-chip>
-                    </div>
-                    ${
-                      mode === "countdown"
-                        ? html`
-                            <brew-text-field
-                              label="Target (minutes)"
-                              type="number"
-                              .value="${String(
-                                Math.round(((targetSeconds ?? 0) / 60) * 100) / 100,
-                              )}"
-                              @value-change="${(e: CustomEvent<string>) =>
-                                this._onTargetMinutesChange(e.detail)}"
-                            ></brew-text-field>
-                          `
-                        : nothing
-                    }
-                  </div>
-
-                  ${
-                    recipe.steps
-                      ? html`
-                          <brew-steps-card
-                            .config="${{ steps: recipe.steps }}"
-                            elapsed-seconds="${timerSecondsSignal.value}"
-                          ></brew-steps-card>
-                        `
-                      : nothing
-                  }
+                  <brew-timer-recipe-panel
+                    .recipe="${recipe}"
+                    mode="${mode}"
+                    elapsed-seconds="${timerSecondsSignal.value}"
+                    @mode-change="${(e: CustomEvent<GuidedTimerMode>) => setGuidedMode(e.detail)}"
+                    @target-change="${(e: CustomEvent<string>) =>
+                      this._onTargetMinutesChange(e.detail)}"
+                  ></brew-timer-recipe-panel>
                 `
-              : null
+              : nothing
           }
-          ${
-            isIdle
-              ? html`
-                  <div class="idle-actions">
-                    <brew-button variant="filled" full-width large @button-click="${toggleTimer}">
-                      Start timer now
-                    </brew-button>
-                    ${
-                      hasSavedBrews
-                        ? html`
-                            <brew-button
-                              variant="outlined"
-                              full-width
-                              @button-click="${this._openPicker}"
-                              >Choose from saved brews</brew-button
-                            >
-                          `
-                        : nothing
-                    }
-                  </div>
-                `
-              : html`
-                  <div class="controls">
-                    <brew-icon-button
-                      .svgIcon="${REFRESH_ICON}"
-                      aria-label="Reset"
-                      @icon-click="${resetTimer}"
-                    ></brew-icon-button>
-                    <brew-icon-button
-                      .svgIcon="${running ? PAUSE_ICON : PLAY_ICON}"
-                      variant="fab"
-                      size="28"
-                      aria-label="${running ? "Pause" : "Start"}"
-                      @icon-click="${toggleTimer}"
-                    ></brew-icon-button>
-                    ${
-                      recipe
-                        ? html`
-                            <brew-icon-button
-                              icon="close"
-                              aria-label="Clear brew"
-                              @icon-click="${clearPrimedRecipe}"
-                            ></brew-icon-button>
-                          `
-                        : html`<span class="spacer"></span>`
-                    }
-                  </div>
 
-                  <p class="hint">
-                    ${running ? "Brewing in progress…" : "Tap play to start your pour-over timer."}
-                  </p>
-                `
-          }
+          <brew-timer-controls
+            ?idle="${isIdle}"
+            ?running="${running}"
+            ?has-saved-brews="${hasSavedBrews}"
+            ?has-recipe="${recipe !== null}"
+            @start-click="${toggleTimer}"
+            @choose-saved-click="${this._openPicker}"
+            @reset-click="${resetTimer}"
+            @toggle-click="${toggleTimer}"
+            @clear-click="${clearPrimedRecipe}"
+          ></brew-timer-controls>
         </div>
 
         <brew-bottom-nav active="more"></brew-bottom-nav>

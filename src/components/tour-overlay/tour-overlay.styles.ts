@@ -106,7 +106,7 @@ export const TourOverlayStyles = css`
 
   .spotlight-card {
     position: fixed;
-    max-width: 320px;
+    max-width: min(320px, calc(100vw - 32px));
   }
 
   .close {
@@ -159,5 +159,46 @@ export const TourOverlayStyles = css`
     background: var(--brew-color-primary);
     width: 20px;
     border-radius: 3px;
+  }
+
+  /* CSS Anchor Positioning progressive enhancement. TourOverlay.ts's
+   * "anchorName" in style feature detection (anchor-positioning.utility.ts)
+   * is the single source of truth for whether these rules apply - they're
+   * unconditional (no "@supports (anchor-name: --foo)" wrapper) because
+   * that check is known to false-positive in a couple of older engines
+   * that parse the property but don't implement positioning; gating here
+   * too would risk the JS and CSS disagreeing and collapsing the
+   * spotlight to the scrim's top-left corner. The ".anchored" classes
+   * below only ever render once the JS check has already passed. The
+   * custom ident (--brew-tour-target) must match TourOverlay.ANCHOR_NAME
+   * exactly.
+   *
+   * .anchor-proxy is an invisible element TourOverlay.ts positions to
+   * mirror the real target's rect - anchor() only resolves against an
+   * anchor in the *same shadow tree* as the positioned element, and the
+   * real target lives in a different component's shadow root, so the
+   * proxy is what .cutout.anchored/.spotlight-card.anchored actually
+   * anchor to. */
+  .anchor-proxy {
+    position: fixed;
+    anchor-name: --brew-tour-target;
+    pointer-events: none;
+  }
+
+  .cutout.anchored {
+    position-anchor: --brew-tour-target;
+    top: calc(anchor(top) - var(--brew-tour-spotlight-padding, 8px));
+    left: calc(anchor(left) - var(--brew-tour-spotlight-padding, 8px));
+    width: calc(anchor-size(width) + var(--brew-tour-spotlight-padding, 8px) * 2);
+    height: calc(anchor-size(height) + var(--brew-tour-spotlight-padding, 8px) * 2);
+  }
+
+  .spotlight-card.anchored {
+    position-anchor: --brew-tour-target;
+    top: anchor(bottom);
+    left: anchor(center);
+    translate: -50% 0;
+    margin-top: 12px;
+    position-try-fallbacks: flip-block, flip-inline;
   }
 `;
