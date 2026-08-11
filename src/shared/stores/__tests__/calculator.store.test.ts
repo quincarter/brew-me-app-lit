@@ -49,6 +49,33 @@ describe("calculator.store", () => {
     expect(coffeeSignal.value).toBe(32);
   });
 
+  describe("negative-number clamping (gh-13)", () => {
+    it("clamps a negative water value to 0 instead of computing a negative brew", () => {
+      setWater("-15");
+      expect(waterSignal.value).toBe("0");
+      expect(ozSignal.value).toBe("0");
+    });
+
+    it("clamps a negative oz value to 0 and keeps water in sync", () => {
+      setOz("-8");
+      expect(ozSignal.value).toBe("0");
+      expect(waterSignal.value).toBe("0");
+    });
+
+    it("clamps a negative ratio to 0 rather than a negative coffee-needed figure", () => {
+      setWater("480");
+      setRatio("-16");
+      expect(ratioSignal.value).toBe("0");
+      // A zero ratio can't compute a coffee figure - it's dropped, not negative.
+      expect(coffeeSignal.value).toBe(30);
+    });
+
+    it("leaves partial/in-progress input (bare '-') untouched rather than forcing it to 0", () => {
+      setWater("-");
+      expect(waterSignal.value).toBe("-");
+    });
+  });
+
   it("resets to defaults", () => {
     setWater("480");
     resetCalculator();

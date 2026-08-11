@@ -57,6 +57,7 @@ export class RatioForm extends LitElement {
       <brew-text-field
         label="Coffee : Water ratio"
         type="number"
+        min="0"
         prefix-text="1:"
         .value="${this.ratio}"
         @value-change="${(e: CustomEvent<string>) => this._emit("ratio-change", e.detail)}"
@@ -69,12 +70,14 @@ export class RatioForm extends LitElement {
         <brew-text-field
           label="Water (g)"
           type="number"
+          min="0"
           .value="${this.water}"
           @value-change="${(e: CustomEvent<string>) => this._emit("water-change", e.detail)}"
         ></brew-text-field>
         <brew-text-field
           label="Cup size (oz)"
           type="number"
+          min="0"
           .value="${this.oz}"
           @value-change="${(e: CustomEvent<string>) => this._emit("oz-change", e.detail)}"
         ></brew-text-field>
