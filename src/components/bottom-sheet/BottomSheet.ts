@@ -32,6 +32,13 @@ export class BottomSheet extends LitElement {
     this._dispatchScrimClick();
   };
 
+  /** In case native dialog closes (e.g. browser dismissal), notify consumer if state was out of sync. */
+  private _onClose = (): void => {
+    if (this.open) {
+      this._dispatchScrimClick();
+    }
+  };
+
   /** Clicking the native backdrop dispatches a click on the dialog itself with no descendant target, so a point-in-box check tells backdrop clicks apart from clicks on slotted content. */
   private _onDialogClick = (event: MouseEvent): void => {
     const rect = this._dialog.getBoundingClientRect();
@@ -55,6 +62,7 @@ export class BottomSheet extends LitElement {
         class="sheet"
         aria-label="${this.label}"
         @cancel="${this._onCancel}"
+        @close="${this._onClose}"
         @click="${this._onDialogClick}"
       >
         <slot></slot>
