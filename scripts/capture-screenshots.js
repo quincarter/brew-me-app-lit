@@ -30,6 +30,9 @@ async function capture() {
     viewport: { width: 412, height: 915 },
     deviceScaleFactor: 2,
   });
+  await context.addInitScript(() => {
+    localStorage.setItem("brewme-tour-seen", "1");
+  });
   const page = await context.newPage();
 
   // Captured first, against a fresh (unseeded) IndexedDB, so these are the
