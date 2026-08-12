@@ -75,9 +75,24 @@ describe("brew-timer-recipe-panel", () => {
     expect((await modeChange).detail).toBe("countup");
   });
 
-  it("shows the target-minutes field while counting down, seeded from the recipe's target seconds", async () => {
+  it("shows the compact target chip by default while counting down", async () => {
     element.recipe = primedRecipe({ targetSeconds: 210 });
     element.mode = "countdown";
+    await element.updateComplete;
+
+    const chip = element.shadowRoot?.querySelector(".target-chip");
+    expect(chip).not.toBeNull();
+    expect(chip?.textContent?.trim()).toContain("3.5 min target");
+    expect(element.shadowRoot?.querySelector("brew-text-field")).toBeNull();
+  });
+
+  it("reveals the target-minutes field when the target chip is clicked", async () => {
+    element.recipe = primedRecipe({ targetSeconds: 210 });
+    element.mode = "countdown";
+    await element.updateComplete;
+
+    const chip = element.shadowRoot?.querySelector<HTMLButtonElement>(".target-chip");
+    chip?.click();
     await element.updateComplete;
 
     const field = element.shadowRoot?.querySelector("brew-text-field") as
@@ -87,17 +102,22 @@ describe("brew-timer-recipe-panel", () => {
     expect(field?.value).toBe("3.5");
   });
 
-  it("hides the target-minutes field while counting up", async () => {
+  it("hides target chip and edit field while counting up", async () => {
     element.recipe = primedRecipe();
     element.mode = "countup";
     await element.updateComplete;
 
+    expect(element.shadowRoot?.querySelector(".target-chip")).toBeNull();
     expect(element.shadowRoot?.querySelector("brew-text-field")).toBeNull();
   });
 
-  it("fires target-change with the raw field value on input", async () => {
+  it("fires target-change with the raw field value on valid positive input", async () => {
     element.recipe = primedRecipe();
     element.mode = "countdown";
+    await element.updateComplete;
+
+    const chip = element.shadowRoot?.querySelector<HTMLButtonElement>(".target-chip");
+    chip?.click();
     await element.updateComplete;
 
     const targetChange = new Promise<CustomEvent<string>>((resolve) => {
@@ -110,6 +130,27 @@ describe("brew-timer-recipe-panel", () => {
     );
 
     expect((await targetChange).detail).toBe("5");
+  });
+
+  it("clamps negative target-minutes input values to 0 (Fixes #27)", async () => {
+    element.recipe = primedRecipe();
+    element.mode = "countdown";
+    await element.updateComplete;
+
+    const chip = element.shadowRoot?.querySelector<HTMLButtonElement>(".target-chip");
+    chip?.click();
+    await element.updateComplete;
+
+    const targetChange = new Promise<CustomEvent<string>>((resolve) => {
+      element.addEventListener("target-change", (e) => resolve(e as CustomEvent<string>));
+    });
+
+    const field = element.shadowRoot?.querySelector("brew-text-field");
+    field?.dispatchEvent(
+      new CustomEvent<string>("value-change", { detail: "-3", bubbles: true, composed: true }),
+    );
+
+    expect((await targetChange).detail).toBe("0");
   });
 
   it("does not render a brew-steps-card when the recipe has no steps", async () => {

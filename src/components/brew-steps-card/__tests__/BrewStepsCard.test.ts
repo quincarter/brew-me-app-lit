@@ -147,7 +147,7 @@ describe("brew-steps-card", () => {
   });
 
   describe("condensed collapsed view", () => {
-    it("renders timeline and condensed cue when collapsed (startOpen = false)", async () => {
+    it("renders timeline and condensed cue with up-next step when collapsed (startOpen = false)", async () => {
       const card = document.createElement("brew-steps-card") as BrewStepsCard;
       document.body.appendChild(card);
       card.config = baseConfig;
@@ -157,10 +157,15 @@ describe("brew-steps-card", () => {
       const cue = card.shadowRoot?.querySelector(".condensed-cue");
       expect(cue).not.toBeNull();
       expect(cue?.querySelector(".cue-label")?.textContent).toBe("Bloom");
+
+      const upNext = cue?.querySelector(".up-next-row");
+      expect(upNext).not.toBeNull();
+      expect(upNext?.querySelector(".up-next-tag")?.textContent).toBe("Up next");
+      expect(upNext?.querySelector(".up-next-label")?.textContent).toBe("Plunge");
       card.remove();
     });
 
-    it("renders active step and countdown in condensed cue when elapsedSeconds is provided", async () => {
+    it("renders active step, countdown, and up-next step in condensed cue when elapsedSeconds is provided", async () => {
       const card = document.createElement("brew-steps-card") as BrewStepsCard;
       document.body.appendChild(card);
       card.config = progressConfig;
@@ -170,6 +175,25 @@ describe("brew-steps-card", () => {
       const cue = card.shadowRoot?.querySelector(".condensed-cue");
       expect(cue?.querySelector(".cue-label")?.textContent).toBe("Pour");
       expect(cue?.querySelector(".pill")?.textContent?.trim()).toBe("00:35 left");
+
+      const upNext = cue?.querySelector(".up-next-row");
+      expect(upNext).not.toBeNull();
+      expect(upNext?.querySelector(".up-next-label")?.textContent).toBe("Draw down");
+      card.remove();
+    });
+
+    it("does not render up-next row when there is no next step available", async () => {
+      const singleStepConfig: IBrewStepsConfig = {
+        steps: [{ id: "single", label: "Steep", kind: "timed", seconds: 120 }],
+      };
+      const card = document.createElement("brew-steps-card") as BrewStepsCard;
+      document.body.appendChild(card);
+      card.config = singleStepConfig;
+      await card.updateComplete;
+
+      const cue = card.shadowRoot?.querySelector(".condensed-cue");
+      expect(cue?.querySelector(".cue-label")?.textContent).toBe("Steep");
+      expect(cue?.querySelector(".up-next-row")).toBeNull();
       card.remove();
     });
   });

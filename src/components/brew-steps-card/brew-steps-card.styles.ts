@@ -61,10 +61,60 @@ export const BrewStepsCardStyles = css`
 
   .condensed-cue {
     display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 2px;
+  }
+
+  .cue-row {
+    display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding-top: 2px;
+  }
+
+  .cue-row.step-active .cue-label {
+    color: var(--brew-color-primary);
+    font-weight: 700;
+  }
+
+  .cue-row.step-active .active-pill {
+    background: var(--brew-color-primary);
+    color: var(--brew-color-on-primary);
+  }
+
+  .up-next-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--brew-color-outline-variant, rgba(255, 255, 255, 0.12));
+  }
+
+  .up-next-tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--brew-color-tertiary, #81c784);
+  }
+
+  .up-next-label {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--brew-color-on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pill-sm {
+    height: 22px;
+    padding: 0 8px;
+    font-size: 11px;
+    border-radius: 11px;
   }
 
   .cue-text {

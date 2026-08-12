@@ -567,67 +567,114 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   ): HTMLTemplateResult | typeof nothing {
     if (steps.length === 0) return nothing;
 
-    const activeRow = progress?.find((row) => row.status === "active");
-    if (activeRow) {
-      const step = activeRow.step;
-      const remainingSeconds =
-        step.kind === "timed" && typeof step.seconds === "number" && this.elapsedSeconds !== null
-          ? Math.max(0, step.seconds - (this.elapsedSeconds - activeRow.startSeconds))
-          : null;
-      const pillText =
-        step.kind === "timed"
+    let currentStep: IBrewStep | null = null;
+    let nextStep: IBrewStep | null = null;
+    let currentStatus: "done" | "active" | "upcoming" | null = null;
+    let remainingSeconds: number | null = null;
+    let isAllComplete = false;
+
+    if (progress) {
+      const activeIndex = progress.findIndex((row) => row.status === "active");
+      if (activeIndex !== -1) {
+        const activeRow = progress[activeIndex];
+        currentStep = activeRow.step;
+        currentStatus = "active";
+        if (
+          currentStep.kind === "timed" &&
+          typeof currentStep.seconds === "number" &&
+          this.elapsedSeconds !== null
+        ) {
+          remainingSeconds = Math.max(
+            0,
+            currentStep.seconds - (this.elapsedSeconds - activeRow.startSeconds),
+          );
+        }
+        if (activeIndex + 1 < steps.length) {
+          nextStep = steps[activeIndex + 1];
+        }
+      } else {
+        const hasTimed = steps.some((s) => s.kind === "timed");
+        const totalTimedSeconds = steps
+          .filter(
+            (s): s is IBrewStep & { seconds: number } =>
+              s.kind === "timed" && typeof s.seconds === "number",
+          )
+          .reduce((sum, s) => sum + s.seconds, 0);
+
+        if (hasTimed && this.elapsedSeconds !== null && this.elapsedSeconds >= totalTimedSeconds) {
+          isAllComplete = true;
+        } else {
+          currentStep = steps[0];
+          nextStep = steps.length > 1 ? steps[1] : null;
+        }
+      }
+    } else {
+      currentStep = steps[0];
+      nextStep = steps.length > 1 ? steps[1] : null;
+    }
+
+    if (isAllComplete) {
+      return html`
+        <div class="condensed-cue">
+          <div class="cue-row">
+            <div class="cue-text">
+              <span class="cue-label">All steps complete</span>
+            </div>
+            <span class="pill pill-timed">Done</span>
+          </div>
+        </div>
+      `;
+    }
+
+    if (!currentStep) return nothing;
+
+    const currentPillText =
+      currentStep.kind === "timed"
+        ? typeof currentStep.seconds === "number"
           ? remainingSeconds !== null
             ? `${formatSeconds(remainingSeconds)} left`
-            : "Now"
-          : (step.value ?? "");
+            : formatSeconds(currentStep.seconds)
+          : "Now"
+        : (currentStep.value ?? "");
 
-      return html`
-        <div class="condensed-cue">
-          <div class="cue-text">
-            <span class="cue-label">${step.label}</span>
-            ${step.note ? html`<span class="cue-note">${step.note}</span>` : nothing}
-          </div>
-          ${pillText ? html`<span class="pill pill-${step.kind}">${pillText}</span>` : nothing}
-        </div>
-      `;
-    }
-
-    const hasTimed = steps.some((s) => s.kind === "timed");
-    const totalTimedSeconds = steps
-      .filter(
-        (s): s is IBrewStep & { seconds: number } =>
-          s.kind === "timed" && typeof s.seconds === "number",
-      )
-      .reduce((sum, s) => sum + s.seconds, 0);
-
-    if (hasTimed && this.elapsedSeconds !== null && this.elapsedSeconds >= totalTimedSeconds) {
-      return html`
-        <div class="condensed-cue">
-          <div class="cue-text">
-            <span class="cue-label">All steps complete</span>
-          </div>
-          <span class="pill pill-timed">Done</span>
-        </div>
-      `;
-    }
-
-    const firstStep = steps.find((s) => s.kind === "timed") ?? steps[0];
-    if (!firstStep) return nothing;
-
-    const durationText =
-      firstStep.kind === "timed" && typeof firstStep.seconds === "number"
-        ? formatSeconds(firstStep.seconds)
-        : (firstStep.value ?? "");
+    const nextPillText = nextStep
+      ? nextStep.kind === "timed"
+        ? typeof nextStep.seconds === "number"
+          ? formatSeconds(nextStep.seconds)
+          : "Now"
+        : (nextStep.value ?? "")
+      : "";
 
     return html`
       <div class="condensed-cue">
-        <div class="cue-text">
-          <span class="cue-label">${firstStep.label}</span>
-          ${firstStep.note ? html`<span class="cue-note">${firstStep.note}</span>` : nothing}
+        <div class="cue-row ${currentStatus ? `step-${currentStatus}` : ""}">
+          <div class="cue-text">
+            <span class="cue-label">${currentStep.label}</span>
+            ${currentStep.note ? html`<span class="cue-note">${currentStep.note}</span>` : nothing}
+          </div>
+          ${
+            currentPillText
+              ? html`<span
+                  class="pill pill-${currentStep.kind} ${currentStatus === "active" ? "active-pill" : ""}"
+                  >${currentPillText}</span
+                >`
+              : nothing
+          }
         </div>
+
         ${
-          durationText
-            ? html`<span class="pill pill-${firstStep.kind}">${durationText}</span>`
+          nextStep
+            ? html`
+                <div class="up-next-row">
+                  <span class="up-next-tag">Up next</span>
+                  <span class="up-next-label">${nextStep.label}</span>
+                  ${
+                    nextPillText
+                      ? html`<span class="pill pill-sm pill-${nextStep.kind}">${nextPillText}</span>`
+                      : nothing
+                  }
+                </div>
+              `
             : nothing
         }
       </div>
