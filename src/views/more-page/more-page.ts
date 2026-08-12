@@ -81,17 +81,19 @@ export class MorePage extends SignalWatcher(LitElement) {
           <div class="section-title" data-tour="more-guides-section">
             Brew method guide
           </div>
-          ${BREW_GUIDE.map(
-            (guide, index) => html`
-              <brew-list-row
-                headline="${guide.name}"
-                supporting="${guide.ratioHint} · ${guide.grind} grind"
-                leading-initial="${getInitial(guide.name)}"
-                data-tour="${index === 0 ? "more-guide-row" : nothing}"
-                href="/more/guide/${guide.id}"
-              ></brew-list-row>
-            `,
-          )}
+          ${[...BREW_GUIDE]
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(
+              (guide, index) => html`
+                <brew-list-row
+                  headline="${guide.name}"
+                  supporting="${guide.ratioHint} · ${guide.grind} grind"
+                  leading-initial="${getInitial(guide.name)}"
+                  data-tour="${index === 0 ? "more-guide-row" : nothing}"
+                  href="/more/guide/${guide.id}"
+                ></brew-list-row>
+              `,
+            )}
 
           <div class="divider"></div>
           <div class="section-title">Recipes</div>
