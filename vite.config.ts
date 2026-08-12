@@ -123,11 +123,11 @@ export default defineConfig({
         // custom `brew-install-prompt` bottom sheet - same two screens.
         screenshots: [
           {
-            src: "screenshots/home.png",
+            src: "screenshots/home-with-data.png",
             sizes: "824x1830",
             type: "image/png",
             form_factor: "narrow",
-            label: "Home screen",
+            label: "Home screen (with saved brews)",
           },
           {
             src: "screenshots/calculator.png",
@@ -137,18 +137,18 @@ export default defineConfig({
             label: "Ratio calculator",
           },
           {
-            src: "screenshots/timer.png",
+            src: "screenshots/timer-with-recipe.png",
             sizes: "824x1830",
             type: "image/png",
             form_factor: "narrow",
-            label: "Pour-over timer",
+            label: "Guided timer with recipe",
           },
           {
-            src: "screenshots/saved.png",
+            src: "screenshots/saved-with-data.png",
             sizes: "824x1830",
             type: "image/png",
             form_factor: "narrow",
-            label: "Saved brews",
+            label: "Saved brews (populated)",
           },
           {
             src: "screenshots/guide-detail.png",
@@ -184,27 +184,6 @@ export default defineConfig({
             type: "image/png",
             form_factor: "narrow",
             label: "Settings",
-          },
-          {
-            src: "screenshots/home-with-data.png",
-            sizes: "824x1830",
-            type: "image/png",
-            form_factor: "narrow",
-            label: "Home screen (with saved brews)",
-          },
-          {
-            src: "screenshots/saved-with-data.png",
-            sizes: "824x1830",
-            type: "image/png",
-            form_factor: "narrow",
-            label: "Saved brews (populated)",
-          },
-          {
-            src: "screenshots/timer-with-recipe.png",
-            sizes: "824x1830",
-            type: "image/png",
-            form_factor: "narrow",
-            label: "Guided timer with recipe",
           },
         ],
       },
