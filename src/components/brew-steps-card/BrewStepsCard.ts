@@ -749,6 +749,9 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
 
     if (!currentStep) return nothing;
 
+    const isTimerMode = this.elapsedSeconds !== null;
+    const showNextStep = isTimerMode && nextStep !== null;
+
     const currentPillText =
       currentStep.kind === "timed"
         ? typeof currentStep.seconds === "number"
@@ -758,7 +761,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
           : "Now"
         : (currentStep.value ?? "");
 
-    const nextPillText = nextStep
+    const nextPillText = showNextStep && nextStep
       ? nextStep.kind === "timed"
         ? typeof nextStep.seconds === "number"
           ? formatSeconds(nextStep.seconds)
@@ -773,7 +776,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
         pillText: currentPillText,
         kind: currentStep.kind,
       },
-      next: nextStep
+      next: showNextStep && nextStep
         ? {
             label: nextStep.label,
             pillText: nextPillText,
@@ -805,7 +808,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
                       >`
                     : nothing}
                 </div>
-                ${this._leavingCue.next
+                ${showNextStep && this._leavingCue.next
                   ? html`
                       <div class="up-next-row">
                         <span class="up-next-tag">Up next</span>
@@ -849,7 +852,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
               : nothing}
           </div>
 
-          ${nextStep
+          ${showNextStep && nextStep
             ? html`
                 <div class="up-next-row">
                   <span class="up-next-tag">Up next</span>

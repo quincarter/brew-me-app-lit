@@ -147,7 +147,7 @@ describe("brew-steps-card", () => {
   });
 
   describe("condensed collapsed view", () => {
-    it("renders timeline and condensed cue with up-next step when collapsed (startOpen = false)", async () => {
+    it("omits up-next row when collapsed on static non-timer views (elapsedSeconds = null)", async () => {
       const card = document.createElement("brew-steps-card") as BrewStepsCard;
       document.body.appendChild(card);
       card.config = baseConfig;
@@ -159,9 +159,7 @@ describe("brew-steps-card", () => {
       expect(cue?.querySelector(".cue-label")?.textContent).toBe("Bloom");
 
       const upNext = cue?.querySelector(".up-next-row");
-      expect(upNext).not.toBeNull();
-      expect(upNext?.querySelector(".up-next-tag")?.textContent).toBe("Up next");
-      expect(upNext?.querySelector(".up-next-label")?.textContent).toBe("Plunge");
+      expect(upNext).toBeNull();
       card.remove();
     });
 
