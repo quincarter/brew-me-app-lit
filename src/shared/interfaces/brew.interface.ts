@@ -262,4 +262,3 @@ export interface IHarioSwitchRecipe {
   /** Hand-curated timed brew sequence derived from this recipe's steps for the timer to ingest. */
   timedSteps?: IBrewStep[];
 }
-

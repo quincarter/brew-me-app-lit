@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
-const screenshotsDir = path.join(rootDir, "screenshots");
+const screenshotsDir = path.join(rootDir, "public/screenshots");
 const mockDataPath = path.join(rootDir, "e2e", "brew-me-export-2026-08-09.json");
 
 if (!existsSync(screenshotsDir)) {
@@ -29,6 +29,9 @@ async function capture() {
   const context = await browser.newContext({
     viewport: { width: 412, height: 915 },
     deviceScaleFactor: 2,
+  });
+  await context.addInitScript(() => {
+    localStorage.setItem("brewme-tour-seen", "1");
   });
   const page = await context.newPage();
 

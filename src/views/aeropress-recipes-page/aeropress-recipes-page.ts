@@ -57,7 +57,7 @@ export class AeropressRecipesPage extends RecipePageMixin(LitElement) {
         ${YEARS.map(
           (year) => html`
             <brew-chip
-              label="${year}"
+              label="${year.toString()}"
               ?selected="${this._year === year}"
               @chip-click="${() => {
                 this._year = year;

@@ -1,7 +1,10 @@
 import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
 import "../../components/pourover-recipe-card/brew-pourover-recipe-card";
-import { CLEVER_DRIPPER_RECIPES, CLEVER_DRIPPER_RECIPES_SOURCE } from "../../shared/data/clever-dripper-recipes.data";
+import {
+  CLEVER_DRIPPER_RECIPES,
+  CLEVER_DRIPPER_RECIPES_SOURCE,
+} from "../../shared/data/clever-dripper-recipes.data";
 import type { ICleverDripperRecipe } from "../../shared/interfaces/brew.interface";
 import { brewCleverDripperRecipeNow } from "../../shared/stores/brew.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";

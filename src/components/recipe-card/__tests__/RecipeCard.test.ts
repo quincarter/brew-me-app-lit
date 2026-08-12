@@ -101,4 +101,17 @@ describe("brew-recipe-card", () => {
     expect(event.bubbles).toBe(true);
     expect(event.composed).toBe(true);
   });
+
+  it("omits the brew button when hide-brew-button is set", async () => {
+    element.remove();
+    element = document.createElement("brew-recipe-card") as RecipeCard;
+    element.startOpen = true;
+    element.hideBrewButton = true;
+    element.recipe = recipe;
+    document.body.appendChild(element);
+    await element.updateComplete;
+
+    const brewButton = element.shadowRoot?.querySelector("brew-button");
+    expect(brewButton).toBeNull();
+  });
 });

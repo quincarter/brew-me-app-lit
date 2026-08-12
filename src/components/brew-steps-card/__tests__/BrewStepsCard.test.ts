@@ -147,7 +147,7 @@ describe("brew-steps-card", () => {
   });
 
   describe("condensed collapsed view", () => {
-    it("renders timeline and condensed cue when collapsed (startOpen = false)", async () => {
+    it("omits up-next row when collapsed on static non-timer views (elapsedSeconds = null)", async () => {
       const card = document.createElement("brew-steps-card") as BrewStepsCard;
       document.body.appendChild(card);
       card.config = baseConfig;
@@ -157,10 +157,13 @@ describe("brew-steps-card", () => {
       const cue = card.shadowRoot?.querySelector(".condensed-cue");
       expect(cue).not.toBeNull();
       expect(cue?.querySelector(".cue-label")?.textContent).toBe("Bloom");
+
+      const upNext = cue?.querySelector(".up-next-row");
+      expect(upNext).toBeNull();
       card.remove();
     });
 
-    it("renders active step and countdown in condensed cue when elapsedSeconds is provided", async () => {
+    it("renders active step, countdown, and up-next step in condensed cue when elapsedSeconds is provided", async () => {
       const card = document.createElement("brew-steps-card") as BrewStepsCard;
       document.body.appendChild(card);
       card.config = progressConfig;
@@ -170,6 +173,25 @@ describe("brew-steps-card", () => {
       const cue = card.shadowRoot?.querySelector(".condensed-cue");
       expect(cue?.querySelector(".cue-label")?.textContent).toBe("Pour");
       expect(cue?.querySelector(".pill")?.textContent?.trim()).toBe("00:35 left");
+
+      const upNext = cue?.querySelector(".up-next-row");
+      expect(upNext).not.toBeNull();
+      expect(upNext?.querySelector(".up-next-label")?.textContent).toBe("Draw down");
+      card.remove();
+    });
+
+    it("does not render up-next row when there is no next step available", async () => {
+      const singleStepConfig: IBrewStepsConfig = {
+        steps: [{ id: "single", label: "Steep", kind: "timed", seconds: 120 }],
+      };
+      const card = document.createElement("brew-steps-card") as BrewStepsCard;
+      document.body.appendChild(card);
+      card.config = singleStepConfig;
+      await card.updateComplete;
+
+      const cue = card.shadowRoot?.querySelector(".condensed-cue");
+      expect(cue?.querySelector(".cue-label")?.textContent).toBe("Steep");
+      expect(cue?.querySelector(".up-next-row")).toBeNull();
       card.remove();
     });
   });
@@ -382,6 +404,29 @@ describe("brew-steps-card", () => {
 
       select.value = "Steep";
       select.dispatchEvent(new Event("change", { bubbles: true }));
+
+      const event = await changed;
+      expect(event.detail.steps[2]).toMatchObject({ id: "s3", label: "Steep" });
+    });
+
+    it("opens custom label dropdown menu on button click and selects label", async () => {
+      const labelBtn =
+        element.shadowRoot?.querySelectorAll<HTMLButtonElement>(".label-select-btn")[2];
+      if (!labelBtn) throw new Error("expected the Filter row's label button");
+
+      labelBtn.click();
+      await element.updateComplete;
+
+      const dropdown = element.shadowRoot?.querySelector(".label-menu-dropdown");
+      expect(dropdown).not.toBeNull();
+
+      const item = Array.from(
+        dropdown?.querySelectorAll<HTMLButtonElement>(".label-menu-item") ?? [],
+      ).find((b) => b.textContent?.includes("Steep"));
+      if (!item) throw new Error("expected Steep item in dropdown");
+
+      const changed = waitForConfigChange();
+      item.click();
 
       const event = await changed;
       expect(event.detail.steps[2]).toMatchObject({ id: "s3", label: "Steep" });

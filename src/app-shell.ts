@@ -15,6 +15,19 @@ import { initInstallPromptListener } from "./shared/stores/install-prompt.store"
 import { maybeAutoStartTour } from "./shared/stores/tour.store";
 import { registerServiceWorker } from "./shared/utilities/register-service-worker.utility";
 
+const syncAppHeight = (): void => {
+  if (typeof window === "undefined") return;
+  const vh = window.innerHeight;
+  document.documentElement.style.setProperty("--app-height", `${vh}px`);
+};
+
+syncAppHeight();
+if (typeof window !== "undefined") {
+  window.addEventListener("resize", syncAppHeight, { passive: true });
+  window.addEventListener("orientationchange", syncAppHeight, { passive: true });
+  window.addEventListener("pageshow", syncAppHeight, { passive: true });
+}
+
 // Attach the beforeinstallprompt/appinstalled listeners as early as possible
 // so the event is never missed while `brew-install-prompt` isn't mounted yet.
 initInstallPromptListener();

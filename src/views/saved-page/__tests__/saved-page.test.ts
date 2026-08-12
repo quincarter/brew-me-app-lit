@@ -1,6 +1,10 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { addSavedBrew, deleteAllSavedBrews, markBrewedNow } from "../../../shared/stores/brew.store";
+import {
+  addSavedBrew,
+  deleteAllSavedBrews,
+  markBrewedNow,
+} from "../../../shared/stores/brew.store";
 import "../saved-page";
 import type { SavedPage } from "../saved-page";
 

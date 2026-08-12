@@ -55,19 +55,23 @@ export function RecipePageMixin<T extends Constructor<LitElement>>(superClass: T
           <div class="content">
             <p class="intro">${config.intro}</p>
 
-            ${config.callout
-              ? html`
-                  <div class="recipe-callout">
-                    <brew-icon name="${config.callout.icon ?? "info"}" size="20"></brew-icon>
-                    <div class="callout-content">
-                      ${config.callout.title
-                        ? html`<strong class="callout-title">${config.callout.title}</strong>`
-                        : null}
-                      <p class="callout-text">${config.callout.text}</p>
+            ${
+              config.callout
+                ? html`
+                    <div class="recipe-callout">
+                      <brew-icon name="${config.callout.icon ?? "info"}" size="20"></brew-icon>
+                      <div class="callout-content">
+                        ${
+                          config.callout.title
+                            ? html`<strong class="callout-title">${config.callout.title}</strong>`
+                            : null
+                        }
+                        <p class="callout-text">${config.callout.text}</p>
+                      </div>
                     </div>
-                  </div>
-                `
-              : null}
+                  `
+                : null
+            }
 
             <brew-link-card
               href="${config.source.url}"
@@ -79,9 +83,7 @@ export function RecipePageMixin<T extends Constructor<LitElement>>(superClass: T
 
             ${this.renderFilters() ?? null}
 
-            <div class="recipes">
-              ${this.renderRecipes()}
-            </div>
+            <div class="recipes">${this.renderRecipes()}</div>
           </div>
 
           <brew-bottom-nav active="more"></brew-bottom-nav>

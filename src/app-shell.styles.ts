@@ -9,11 +9,14 @@ export const AppShellStyles = css`
 	 */
   :host {
     display: block;
-    height: 100vh;
+    height: 100%;
     height: 100dvh;
+    height: var(--app-height, 100dvh);
+    height: -webkit-fill-available;
     background: var(--brew-page-background);
     box-sizing: border-box;
     overflow: hidden;
+    padding-top: env(safe-area-inset-top, 0px);
   }
 
   main {

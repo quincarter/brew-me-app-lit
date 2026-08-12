@@ -33,7 +33,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <div class="stats">
             <brew-stat-tile
               icon="bookmark_added"
-              value="${totalBrewsSignal.value}"
+              value="${String(totalBrewsSignal.value)}"
               label="saved brews"
             ></brew-stat-tile>
             <brew-stat-tile
@@ -76,6 +76,24 @@ export class MorePage extends SignalWatcher(LitElement) {
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/timer"
           ></brew-list-row>
+
+          <div class="divider"></div>
+          <div class="section-title" data-tour="more-guides-section">
+            Brew method guide
+          </div>
+          ${[...BREW_GUIDE]
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(
+              (guide, index) => html`
+                <brew-list-row
+                  headline="${guide.name}"
+                  supporting="${guide.ratioHint} · ${guide.grind} grind"
+                  leading-initial="${getInitial(guide.name)}"
+                  data-tour="${index === 0 ? "more-guide-row" : nothing}"
+                  href="/more/guide/${guide.id}"
+                ></brew-list-row>
+              `,
+            )}
 
           <div class="divider"></div>
           <div class="section-title">Recipes</div>
@@ -135,22 +153,6 @@ export class MorePage extends SignalWatcher(LitElement) {
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/more/v60-recipes"
           ></brew-list-row>
-
-          <div class="divider"></div>
-          <div class="section-title" data-tour="more-guides-section">
-            Brew method guide
-          </div>
-          ${BREW_GUIDE.map(
-            (guide, index) => html`
-              <brew-list-row
-                headline="${guide.name}"
-                supporting="${guide.ratioHint} · ${guide.grind} grind"
-                leading-initial="${getInitial(guide.name)}"
-                data-tour="${index === 0 ? "more-guide-row" : nothing}"
-                href="/more/guide/${guide.id}"
-              ></brew-list-row>
-            `,
-          )}
 
           <div class="divider"></div>
           <div class="section-title">Miscellaneous</div>

@@ -74,18 +74,44 @@ export default defineConfig({
         icons: [
           { src: "icons/icon-72x72.png", sizes: "72x72", type: "image/png" },
           { src: "icons/icon-96x96.png", sizes: "96x96", type: "image/png" },
-          { src: "icons/icon-128x128.png", sizes: "128x128", type: "image/png" },
-          { src: "icons/icon-144x144.png", sizes: "144x144", type: "image/png" },
-          { src: "icons/icon-152x152.png", sizes: "152x152", type: "image/png" },
-          { src: "icons/icon-192x192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          {
+            src: "icons/icon-128x128.png",
+            sizes: "128x128",
+            type: "image/png",
+          },
+          {
+            src: "icons/icon-144x144.png",
+            sizes: "144x144",
+            type: "image/png",
+          },
+          {
+            src: "icons/icon-152x152.png",
+            sizes: "152x152",
+            type: "image/png",
+          },
+          {
+            src: "icons/icon-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any",
+          },
           {
             src: "icons/icon-192x192.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "maskable",
           },
-          { src: "icons/icon-384x384.png", sizes: "384x384", type: "image/png" },
-          { src: "icons/icon-512x512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          {
+            src: "icons/icon-384x384.png",
+            sizes: "384x384",
+            type: "image/png",
+          },
+          {
+            src: "icons/icon-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any",
+          },
           {
             src: "icons/icon-512x512.png",
             sizes: "512x512",
@@ -97,11 +123,11 @@ export default defineConfig({
         // custom `brew-install-prompt` bottom sheet - same two screens.
         screenshots: [
           {
-            src: "screenshots/home.png",
+            src: "screenshots/home-with-data.png",
             sizes: "824x1830",
             type: "image/png",
             form_factor: "narrow",
-            label: "Home screen",
+            label: "Home screen (with saved brews)",
           },
           {
             src: "screenshots/calculator.png",
@@ -111,18 +137,18 @@ export default defineConfig({
             label: "Ratio calculator",
           },
           {
-            src: "screenshots/timer.png",
+            src: "screenshots/timer-with-recipe.png",
             sizes: "824x1830",
             type: "image/png",
             form_factor: "narrow",
-            label: "Pour-over timer",
+            label: "Guided timer with recipe",
           },
           {
-            src: "screenshots/saved.png",
+            src: "screenshots/saved-with-data.png",
             sizes: "824x1830",
             type: "image/png",
             form_factor: "narrow",
-            label: "Saved brews",
+            label: "Saved brews (populated)",
           },
           {
             src: "screenshots/guide-detail.png",
@@ -159,27 +185,6 @@ export default defineConfig({
             form_factor: "narrow",
             label: "Settings",
           },
-          {
-            src: "screenshots/home-with-data.png",
-            sizes: "824x1830",
-            type: "image/png",
-            form_factor: "narrow",
-            label: "Home screen (with saved brews)",
-          },
-          {
-            src: "screenshots/saved-with-data.png",
-            sizes: "824x1830",
-            type: "image/png",
-            form_factor: "narrow",
-            label: "Saved brews (populated)",
-          },
-          {
-            src: "screenshots/timer-with-recipe.png",
-            sizes: "824x1830",
-            type: "image/png",
-            form_factor: "narrow",
-            label: "Guided timer with recipe",
-          },
         ],
       },
       devOptions: {
@@ -201,7 +206,12 @@ export default defineConfig({
     // and fail to even load under the wrong test runner.
     exclude: [...configDefaults.exclude, "e2e/**"],
     coverage: {
-      exclude: ["**/node_modules", "**/vite.config.*", "**/vite-env.d.ts", "**/shared/data/**"],
+      exclude: [
+        "**/node_modules",
+        "**/vite.config.*",
+        "**/vite-env.d.ts",
+        "**/shared/data/**",
+      ],
       enabled: true,
     },
   },

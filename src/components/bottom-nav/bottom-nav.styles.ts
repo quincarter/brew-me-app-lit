@@ -9,7 +9,7 @@ export const BottomNavStyles = css`
   .nav {
     display: flex;
     background: var(--brew-color-surface-container);
-    padding: 8px 0 10px;
+    padding: 8px 0 calc(10px + env(safe-area-inset-bottom, 0px));
   }
 
   .tab {
