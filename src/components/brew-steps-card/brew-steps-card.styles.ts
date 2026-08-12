@@ -10,9 +10,9 @@ export const BrewStepsCardStyles = css`
   }
 
   .card {
+    position: relative;
     background: var(--brew-color-surface-container-low);
     border-radius: 20px;
-    overflow: hidden;
   }
 
   .header {
@@ -254,15 +254,128 @@ export const BrewStepsCardStyles = css`
     --icon-button-cursor: grabbing;
   }
 
-  .label-select,
-  .value-input {
-    height: 40px;
+  .label-picker-container {
+    position: relative;
+    flex: 1.4;
+    min-width: 0;
+  }
+
+  .label-select-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    width: 100%;
+    height: 44px;
+    padding: 0 10px;
     border: 1px solid var(--brew-color-outline);
     border-radius: 10px;
     background: var(--brew-color-surface-container-lowest);
     color: var(--brew-color-on-surface);
     font-family: inherit;
-    font-size: 13px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    box-sizing: border-box;
+    text-align: left;
+  }
+
+  .label-select-btn:focus-visible {
+    outline: 2px solid var(--brew-color-primary);
+    outline-offset: -1px;
+  }
+
+  .label-select-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .label-select-text.placeholder {
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .label-menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+  }
+
+  .label-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: max(100%, 210px);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 100;
+    background: var(--brew-color-surface-container-high, #2b2927);
+    border: 1px solid var(--brew-color-outline-variant, rgba(255, 255, 255, 0.15));
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-sizing: border-box;
+  }
+
+  .label-menu-dropdown.upward {
+    top: auto;
+    bottom: calc(100% + 4px);
+  }
+
+  .label-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--brew-color-on-surface);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    box-sizing: border-box;
+  }
+
+  .label-menu-item:hover,
+  .label-menu-item:focus-visible {
+    background: var(--brew-color-surface-container-highest, rgba(255, 255, 255, 0.08));
+    outline: none;
+  }
+
+  .label-menu-item.selected {
+    background: var(--brew-color-primary-container, rgba(224, 169, 109, 0.18));
+    color: var(--brew-color-primary, #e0a96d);
+    font-weight: 600;
+  }
+
+  .label-menu-item.add-custom-item {
+    color: var(--brew-color-primary, #e0a96d);
+    border-top: 1px solid var(--brew-color-outline-variant, rgba(255, 255, 255, 0.1));
+    margin-top: 4px;
+    padding-top: 10px;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .label-select,
+  .value-input {
+    height: 44px;
+    border: 1px solid var(--brew-color-outline);
+    border-radius: 10px;
+    background: var(--brew-color-surface-container-lowest);
+    color: var(--brew-color-on-surface);
+    font-family: inherit;
+    font-size: 16px;
     padding: 0 10px;
     box-sizing: border-box;
   }
@@ -270,6 +383,21 @@ export const BrewStepsCardStyles = css`
   .label-select {
     flex: 1.4;
     min-width: 0;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .label-select option {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    background-color: var(--brew-color-surface-container-high, #2c2825);
+    color: var(--brew-color-on-surface, #f0e6dd);
+    padding: 12px 14px;
+  }
+
+  .label-select option:disabled {
+    color: var(--brew-color-on-surface-variant, #9a8f85);
   }
 
   .value-input {

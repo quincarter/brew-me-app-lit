@@ -471,7 +471,8 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     desc: "A hybrid dripper with a valve at the base — steep it closed like an immersion brewer, then flip the switch to let it draw down like a pour-over, all in one device.",
     recipesLink: {
       label: "Hybrid immersion & WBrC champion recipes",
-      description: "Explore Tetsu Kasuya, Weihong Zhang, Kunie Inaba & Charity Cheung Switch recipes",
+      description:
+        "Explore Tetsu Kasuya, Weihong Zhang, Kunie Inaba & Charity Cheung Switch recipes",
       route: "/more/hario-switch-recipes",
     },
     ratioHint: "1:15",

@@ -387,6 +387,29 @@ describe("brew-steps-card", () => {
       expect(event.detail.steps[2]).toMatchObject({ id: "s3", label: "Steep" });
     });
 
+    it("opens custom label dropdown menu on button click and selects label", async () => {
+      const labelBtn =
+        element.shadowRoot?.querySelectorAll<HTMLButtonElement>(".label-select-btn")[2];
+      if (!labelBtn) throw new Error("expected the Filter row's label button");
+
+      labelBtn.click();
+      await element.updateComplete;
+
+      const dropdown = element.shadowRoot?.querySelector(".label-menu-dropdown");
+      expect(dropdown).not.toBeNull();
+
+      const item = Array.from(
+        dropdown?.querySelectorAll<HTMLButtonElement>(".label-menu-item") ?? [],
+      ).find((b) => b.textContent?.includes("Steep"));
+      if (!item) throw new Error("expected Steep item in dropdown");
+
+      const changed = waitForConfigChange();
+      item.click();
+
+      const event = await changed;
+      expect(event.detail.steps[2]).toMatchObject({ id: "s3", label: "Steep" });
+    });
+
     it("fires config-change toggling a timed row to a note row, clearing seconds and seeding an empty value", async () => {
       const toggle = element.shadowRoot?.querySelectorAll<HTMLButtonElement>(".kind-toggle")[0];
       if (!toggle) throw new Error("expected the Bloom row's kind toggle");

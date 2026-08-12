@@ -26,6 +26,8 @@ export class RecipeCard extends LitElement {
   /** Seeds the initial expanded state only; after mount the toggle owns it. */
   @property({ type: Boolean, attribute: "start-open" }) startOpen = false;
 
+  @property({ type: Boolean, attribute: "hide-brew-button" }) hideBrewButton = false;
+
   @state() private _expanded = false;
 
   private _seeded = false;
@@ -97,11 +99,17 @@ export class RecipeCard extends LitElement {
                   </ol>
 
                   ${note ? html`<p class="note">${note}</p>` : nothing}
-
-                  <brew-button variant="filled" full-width @button-click="${this._onBrewNow}"
-                    ><brew-icon name="coffee" size="18"></brew-icon> Brew this recipe
-                    now</brew-button
-                  >
+                  ${
+                    !this.hideBrewButton
+                      ? html`<brew-button
+                          variant="filled"
+                          full-width
+                          @button-click="${this._onBrewNow}"
+                          ><brew-icon name="coffee" size="18"></brew-icon> Brew this recipe
+                          now</brew-button
+                        >`
+                      : nothing
+                  }
                 </div>
               `
             : nothing

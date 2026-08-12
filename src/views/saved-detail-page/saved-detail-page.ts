@@ -16,19 +16,11 @@ import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
 import "../../components/type-picker/brew-type-picker";
 import "../../components/video-search/brew-video-search";
-import { AEROPRESS_RECIPES } from "../../shared/data/aeropress-recipes.data";
-import { ORIGAMI_RECIPES } from "../../shared/data/origami-recipes.data";
-import { V60_RECIPES } from "../../shared/data/v60-recipes.data";
+import { renderRecipeCard } from "../../shared/utilities/recipe-registry.utility";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
 import { BREW_STEPS_PRESETS } from "../../shared/data/brew-steps-presets.data";
-import type {
-  IBrewStepsConfig,
-  ISavedBrew,
-} from "../../shared/interfaces/brew.interface";
-import {
-  addCustomBrewType,
-  allBrewTypesSignal,
-} from "../../shared/stores/brew-types.store";
+import type { IBrewStepsConfig, ISavedBrew } from "../../shared/interfaces/brew.interface";
+import { addCustomBrewType, allBrewTypesSignal } from "../../shared/stores/brew-types.store";
 import {
   brewAgain,
   deleteSavedBrew,
@@ -36,40 +28,21 @@ import {
   updateSavedBrew,
 } from "../../shared/stores/brew.store";
 import { editBeforeBrewingIdSignal } from "../../shared/stores/post-save-sheet.store";
-import {
-  DELETE_ICON,
-  EDIT_ICON,
-  REPLAY_ICON,
-  SHARE_ICON,
-} from "../../shared/icons/icons";
+import { DELETE_ICON, EDIT_ICON, REPLAY_ICON, SHARE_ICON } from "../../shared/icons/icons";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
-import {
-  BREW_ICON_MAP,
-  normalizeBrewIconKey,
-} from "../../shared/utilities/brew-icon.utility";
+import { BREW_ICON_MAP, normalizeBrewIconKey } from "../../shared/utilities/brew-icon.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
 import { isRecipeModified } from "../../shared/utilities/recipe-modified.utility";
-import {
-  coffeeForWater,
-  gramsToOunces,
-  ouncesToGrams,
-} from "../../shared/utilities/ratio.utility";
-import {
-  SHARE_OUTCOME_MESSAGES,
-  shareBrew,
-} from "../../shared/utilities/share.utility";
+import { coffeeForWater, gramsToOunces, ouncesToGrams } from "../../shared/utilities/ratio.utility";
+import { SHARE_OUTCOME_MESSAGES, shareBrew } from "../../shared/utilities/share.utility";
 import { SavedDetailPageStyles } from "./saved-detail-page.styles";
-import { HARIO_SWITCH_RECIPES } from "../../shared/data/hario-switch-recipes.data";
-import { CLEVER_DRIPPER_RECIPES } from "../../shared/data/clever-dripper-recipes.data";
-import { KALITA_WAVE_RECIPES } from "../../shared/data/kalita-wave-recipes.data";
 
 @customElement("saved-detail-page")
 export class SavedDetailPage extends SignalWatcher(LitElement) {
   static styles = [SavedDetailPageStyles, responsiveScreenStyles];
 
-  @property({ type: Object }) routeParams: Record<string, string | undefined> =
-    {};
+  @property({ type: Object }) routeParams: Record<string, string | undefined> = {};
 
   @state() private _editing = false;
   @state() private _editBrewType = "";
@@ -127,8 +100,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     const ratio = Number.parseFloat(value);
     const water = Number.parseFloat(this._editWater);
     this._editRatio = value;
-    this._editCoffee =
-      Number.isNaN(water) || !ratio ? null : coffeeForWater(water, ratio);
+    this._editCoffee = Number.isNaN(water) || !ratio ? null : coffeeForWater(water, ratio);
   }
 
   private _setEditWater(value: string): void {
@@ -136,8 +108,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     const ratio = Number.parseFloat(this._editRatio);
     this._editWater = value;
     this._editOz = Number.isNaN(grams) ? "" : String(gramsToOunces(grams));
-    this._editCoffee =
-      Number.isNaN(grams) || !ratio ? null : coffeeForWater(grams, ratio);
+    this._editCoffee = Number.isNaN(grams) || !ratio ? null : coffeeForWater(grams, ratio);
   }
 
   private _setEditOz(value: string): void {
@@ -147,9 +118,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     this._editOz = value;
     this._editWater = grams;
     this._editCoffee =
-      grams === "" || !ratio
-        ? null
-        : coffeeForWater(Number.parseFloat(grams), ratio);
+      grams === "" || !ratio ? null : coffeeForWater(Number.parseFloat(grams), ratio);
   }
 
   /** Toggling on seeds fresh from the saved brew; toggling off discards any unsaved edits. */
@@ -169,8 +138,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     // A brew saved before this feature shipped has no `brewSteps` of its own -
     // fall back to the type's canned preset (if any), same as the
     // Calculator's own `primeCalculatorForBrew`.
-    this._editBrewSteps =
-      brew.brewSteps ?? BREW_STEPS_PRESETS[brew.brewType] ?? null;
+    this._editBrewSteps = brew.brewSteps ?? BREW_STEPS_PRESETS[brew.brewType] ?? null;
     this._editing = true;
   }
 
@@ -179,16 +147,11 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     const ratio = Number.parseFloat(this._editRatio);
     const coffee = coffeeForWater(water, ratio);
     if (coffee === null || !this._editBrewType) return;
-    const oz = this._editOz
-      ? Number.parseFloat(this._editOz)
-      : gramsToOunces(water);
+    const oz = this._editOz ? Number.parseFloat(this._editOz) : gramsToOunces(water);
     /** A retyped brew that now has its own automatic icon match must drop any stale manual override from its old (custom) type. */
-    const hasAutomaticIcon = Boolean(
-      BREW_ICON_MAP[normalizeBrewIconKey(this._editBrewType)],
-    );
+    const hasAutomaticIcon = Boolean(BREW_ICON_MAP[normalizeBrewIconKey(this._editBrewType)]);
     /** `recipeSource` is provenance for a specific loaded recipe - it's cleared, not edited, if the brew type changed away from the one it was loaded for. */
-    const droppedRecipeType =
-      Boolean(brew.recipeSource) && this._editBrewType !== brew.brewType;
+    const droppedRecipeType = Boolean(brew.recipeSource) && this._editBrewType !== brew.brewType;
     updateSavedBrew(brew.id, {
       brewType: this._editBrewType,
       name: this._editBrewName.trim() || undefined,
@@ -224,11 +187,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     if (!brew) {
       return html`
         <div class="screen">
-          <brew-top-bar
-            title="Not found"
-            icon="arrow_back"
-            href="/saved"
-          ></brew-top-bar>
+          <brew-top-bar title="Not found" icon="arrow_back" href="/saved"></brew-top-bar>
           <div class="content"><p>This saved ratio no longer exists.</p></div>
           <brew-bottom-nav active="saved"></brew-bottom-nav>
         </div>
@@ -236,15 +195,10 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     }
 
     const canSaveEdit = Boolean(
-      this._editBrewType &&
-      this._editWater &&
-      this._editOz &&
-      this._editCoffee !== null,
+      this._editBrewType && this._editWater && this._editOz && this._editCoffee !== null,
     );
     /** No match means a custom brew type - there's no curated guide to link to. */
-    const matchingGuide = BREW_GUIDE.find(
-      (item) => item.name === brew.brewType,
-    );
+    const matchingGuide = BREW_GUIDE.find((item) => item.name === brew.brewType);
 
     return html`
       <div class="screen">
@@ -255,169 +209,173 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
         ></brew-top-bar>
 
         <div class="content">
-          ${this._editing
-            ? html`
-                <brew-text-field
-                  label="Brew name"
-                  .value="${this._editBrewName}"
-                  @value-change="${(e: CustomEvent<string>) => {
-                    this._editBrewName = e.detail;
-                  }}"
-                ></brew-text-field>
+          ${
+            this._editing
+              ? html`
+                  <brew-text-field
+                    label="Brew name"
+                    .value="${this._editBrewName}"
+                    @value-change="${(e: CustomEvent<string>) => {
+                      this._editBrewName = e.detail;
+                    }}"
+                  ></brew-text-field>
 
-                <div class="field-label">Brew type</div>
-                <brew-type-picker
-                  .types="${allBrewTypesSignal.value}"
-                  selected="${this._editBrewType}"
-                  @type-select="${(e: CustomEvent<string>) => {
-                    this._editBrewType = e.detail;
-                  }}"
-                  @type-add="${this._onTypeAdd}"
-                ></brew-type-picker>
+                  <div class="field-label">Brew type</div>
+                  <brew-type-picker
+                    .types="${allBrewTypesSignal.value}"
+                    selected="${this._editBrewType}"
+                    @type-select="${(e: CustomEvent<string>) => {
+                      this._editBrewType = e.detail;
+                    }}"
+                    @type-add="${this._onTypeAdd}"
+                  ></brew-type-picker>
 
-                <brew-ratio-form
-                  ratio="${this._editRatio}"
-                  water="${this._editWater}"
-                  oz="${this._editOz}"
-                  .coffee="${this._editCoffee}"
-                  @ratio-change="${(e: CustomEvent<string>) =>
-                    this._setEditRatio(e.detail)}"
-                  @water-change="${(e: CustomEvent<string>) =>
-                    this._setEditWater(e.detail)}"
-                  @oz-change="${(e: CustomEvent<string>) =>
-                    this._setEditOz(e.detail)}"
-                ></brew-ratio-form>
+                  <brew-ratio-form
+                    ratio="${this._editRatio}"
+                    water="${this._editWater}"
+                    oz="${this._editOz}"
+                    .coffee="${this._editCoffee}"
+                    @ratio-change="${(e: CustomEvent<string>) => this._setEditRatio(e.detail)}"
+                    @water-change="${(e: CustomEvent<string>) => this._setEditWater(e.detail)}"
+                    @oz-change="${(e: CustomEvent<string>) => this._setEditOz(e.detail)}"
+                  ></brew-ratio-form>
 
-                <div class="field-label">Rating</div>
-                <brew-star-rating
-                  editable
-                  .value="${this._editRating}"
-                  @rating-change="${(e: CustomEvent<number>) => {
-                    this._editRating = e.detail;
-                  }}"
-                ></brew-star-rating>
-
-                <brew-text-field
-                  label="Tasting note(s)"
-                  .value="${this._editTastingNote}"
-                  @value-change="${(e: CustomEvent<string>) => {
-                    this._editTastingNote = e.detail;
-                  }}"
-                ></brew-text-field>
-
-                ${this._editBrewSteps
-                  ? html`
-                      <brew-steps-card
-                        editing
-                        start-open
-                        .config="${this._editBrewSteps}"
-                        @config-change="${(
-                          e: CustomEvent<IBrewStepsConfig>,
-                        ) => {
-                          this._editBrewSteps = e.detail;
-                        }}"
-                      ></brew-steps-card>
-                    `
-                  : nothing}
-              `
-            : html`
-                <brew-ratio-summary
-                  ratio="${brew.ratio}"
-                  coffee="${brew.coffee}"
-                  water="${brew.water}"
-                  oz="${brew.oz}"
-                ></brew-ratio-summary>
-
-                <div class="rating">
+                  <div class="field-label">Rating</div>
                   <brew-star-rating
                     editable
-                    .value="${brew.rating ?? 0}"
-                    @rating-change="${(e: CustomEvent<number>) =>
-                      updateSavedBrew(brew.id, {
-                        rating: e.detail || undefined,
-                      })}"
+                    .value="${this._editRating}"
+                    @rating-change="${(e: CustomEvent<number>) => {
+                      this._editRating = e.detail;
+                    }}"
                   ></brew-star-rating>
-                  ${brew.tastingNote
-                    ? html`<p class="tasting-note">"${brew.tastingNote}"</p>`
-                    : null}
-                </div>
-              `}
-          ${this._editing
-            ? html`
-                <brew-button
-                  variant="filled"
-                  full-width
-                  ?disabled="${!canSaveEdit}"
-                  @button-click="${() => this._onSaveEdit(brew)}"
-                  >Save changes</brew-button
-                >
-              `
-            : html`
-                <brew-button
-                  variant="filled"
-                  full-width
-                  large
-                  @button-click="${() =>
-                    brewAgain(brew, { alreadyOnDetail: true })}"
-                  ><brew-icon .svg="${REPLAY_ICON}" size="22"></brew-icon> Brew
-                  again</brew-button
-                >
 
-                <div class="action-row">
-                  <brew-button
-                    variant="outlined"
-                    full-width
-                    @button-click="${() => this._toggleEditing(brew)}"
-                    ><brew-icon .svg="${EDIT_ICON}" size="18"></brew-icon>
-                    Edit</brew-button
-                  >
-                  <brew-button
-                    variant="outlined"
-                    full-width
-                    @button-click="${() => this._onShare(brew)}"
-                    ><brew-icon .svg="${SHARE_ICON}" size="18"></brew-icon>
-                    Share</brew-button
-                  >
-                  <brew-button
-                    variant="outlined"
-                    tone="danger"
-                    full-width
-                    @button-click="${() => this._onDelete(brew.id)}"
-                    ><brew-icon .svg="${DELETE_ICON}" size="18"></brew-icon>
-                    Delete</brew-button
-                  >
-                </div>
+                  <brew-text-field
+                    label="Tasting note(s)"
+                    .value="${this._editTastingNote}"
+                    @value-change="${(e: CustomEvent<string>) => {
+                      this._editTastingNote = e.detail;
+                    }}"
+                  ></brew-text-field>
 
-                ${this._shareStatusText
-                  ? html`<p class="share-status">${this._shareStatusText}</p>`
-                  : null}
-              `}
-          ${this._editing
-            ? null
-            : html`
-                ${brew.brewSteps
-                  ? html`<brew-steps-card
-                      .config="${brew.brewSteps}"
-                    ></brew-steps-card>`
-                  : nothing}
-                ${brew.recipeSource ? this._renderRecipeBanner(brew) : nothing}
+                  ${
+                    this._editBrewSteps
+                      ? html`
+                          <brew-steps-card
+                            editing
+                            start-open
+                            .config="${this._editBrewSteps}"
+                            @config-change="${(e: CustomEvent<IBrewStepsConfig>) => {
+                              this._editBrewSteps = e.detail;
+                            }}"
+                          ></brew-steps-card>
+                        `
+                      : nothing
+                  }
+                `
+              : html`
+                  <brew-ratio-summary
+                    ratio="${brew.ratio}"
+                    coffee="${brew.coffee}"
+                    water="${brew.water}"
+                    oz="${brew.oz}"
+                  ></brew-ratio-summary>
 
-                <div class="section-title">Brew guide</div>
-                ${matchingGuide
-                  ? html`
-                      <brew-link-card
-                        href="/more/guide/${matchingGuide.id}"
-                        icon="menu_book"
-                        label="${matchingGuide.name} Brew Guide"
-                        description="Ratio tips, grind size, and video walkthroughs"
-                      ></brew-link-card>
-                    `
-                  : html`
-                      <brew-video-search
-                        query="${brew.brewType} Brew Guide"
-                      ></brew-video-search>
-                    `}
-              `}
+                  <div class="rating">
+                    <brew-star-rating
+                      editable
+                      .value="${brew.rating ?? 0}"
+                      @rating-change="${(e: CustomEvent<number>) =>
+                        updateSavedBrew(brew.id, {
+                          rating: e.detail || undefined,
+                        })}"
+                    ></brew-star-rating>
+                    ${
+                      brew.tastingNote
+                        ? html`<p class="tasting-note">"${brew.tastingNote}"</p>`
+                        : null
+                    }
+                  </div>
+                `
+          }
+          ${
+            this._editing
+              ? html`
+                  <brew-button
+                    variant="filled"
+                    full-width
+                    ?disabled="${!canSaveEdit}"
+                    @button-click="${() => this._onSaveEdit(brew)}"
+                    >Save changes</brew-button
+                  >
+                `
+              : html`
+                  <brew-button
+                    variant="filled"
+                    full-width
+                    large
+                    @button-click="${() => brewAgain(brew, { alreadyOnDetail: true })}"
+                    ><brew-icon .svg="${REPLAY_ICON}" size="22"></brew-icon> Brew again</brew-button
+                  >
+
+                  <div class="action-row">
+                    <brew-button
+                      variant="outlined"
+                      full-width
+                      @button-click="${() => this._toggleEditing(brew)}"
+                      ><brew-icon .svg="${EDIT_ICON}" size="18"></brew-icon> Edit</brew-button
+                    >
+                    <brew-button
+                      variant="outlined"
+                      full-width
+                      @button-click="${() => this._onShare(brew)}"
+                      ><brew-icon .svg="${SHARE_ICON}" size="18"></brew-icon> Share</brew-button
+                    >
+                    <brew-button
+                      variant="outlined"
+                      tone="danger"
+                      full-width
+                      @button-click="${() => this._onDelete(brew.id)}"
+                      ><brew-icon .svg="${DELETE_ICON}" size="18"></brew-icon> Delete</brew-button
+                    >
+                  </div>
+
+                  ${
+                    this._shareStatusText
+                      ? html`<p class="share-status">${this._shareStatusText}</p>`
+                      : null
+                  }
+                `
+          }
+          ${
+            this._editing
+              ? null
+              : html`
+                  ${
+                    brew.brewSteps
+                      ? html`<brew-steps-card .config="${brew.brewSteps}"></brew-steps-card>`
+                      : nothing
+                  }
+                  ${brew.recipeSource ? this._renderRecipeBanner(brew) : nothing}
+
+                  <div class="section-title">Brew guide</div>
+                  ${
+                    matchingGuide
+                      ? html`
+                          <brew-link-card
+                            href="/more/guide/${matchingGuide.id}"
+                            icon="menu_book"
+                            label="${matchingGuide.name} Brew Guide"
+                            description="Ratio tips, grind size, and video walkthroughs"
+                          ></brew-link-card>
+                        `
+                      : html`
+                          <brew-video-search
+                            query="${brew.brewType} Brew Guide"
+                          ></brew-video-search>
+                        `
+                  }
+                `
+          }
         </div>
 
         <brew-bottom-nav active="saved"></brew-bottom-nav>
@@ -426,9 +384,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     `;
   }
 
-  private _renderRecipeBanner(
-    brew: ISavedBrew,
-  ): HTMLTemplateResult | typeof nothing {
+  private _renderRecipeBanner(brew: ISavedBrew): HTMLTemplateResult | typeof nothing {
     const source = brew.recipeSource;
     if (!source) return nothing;
 
@@ -452,37 +408,19 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
       >
         <brew-icon name="menu_book" size="18"></brew-icon>
         <span class="primed-banner-text"
-          >${modified
-            ? html`Modified from ${source.label} — tap to see the original`
-            : html`Pulled from ${source.label}`}</span
+          >${
+            modified
+              ? html`Modified from ${source.label} — tap to see the original`
+              : html`Pulled from ${source.label}`
+          }</span
         >
       </button>
     `;
   }
-  
-  private _renderOriginalRecipeSheet(
-    brew: ISavedBrew,
-  ): HTMLTemplateResult | typeof nothing {
+
+  private _renderOriginalRecipeSheet(brew: ISavedBrew): HTMLTemplateResult | typeof nothing {
     const source = brew.recipeSource;
     if (!this._originalRecipeOpen || !source) return nothing;
-    const aeroOriginal = AEROPRESS_RECIPES.find(
-      (recipe) => recipe.id === source.recipeId,
-    );
-    const v60Original = V60_RECIPES.find(
-      (recipe) => recipe.id === source.recipeId,
-    );
-    const origamiOriginal = ORIGAMI_RECIPES.find(
-      (recipe) => recipe.id === source.recipeId,
-    );
-    const harioOriginal = HARIO_SWITCH_RECIPES.find(
-      (recipe) => recipe.id === source.recipeId,
-    );
-    const cleverOriginal = CLEVER_DRIPPER_RECIPES.find(
-      (recipe) => recipe.id === source.recipeId,
-    );
-    const kalitaWaveOriginal = KALITA_WAVE_RECIPES.find(
-      (recipe) => recipe.id === source.recipeId,
-    );
 
     return html`
       <brew-bottom-sheet
@@ -493,37 +431,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
         }}"
       >
         <div class="title">Original recipe</div>
-        ${aeroOriginal
-          ? html`<brew-recipe-card
-              .recipe="${aeroOriginal}"
-              start-open
-            ></brew-recipe-card>`
-          : v60Original
-            ? html`<brew-pourover-recipe-card
-                .recipe="${v60Original}"
-                start-open
-              ></brew-pourover-recipe-card>`
-            : origamiOriginal
-              ? html`<brew-pourover-recipe-card
-                  .recipe="${origamiOriginal}"
-                  start-open
-                ></brew-pourover-recipe-card>`
-              : harioOriginal
-                ? html`<brew-pourover-recipe-card
-                    .recipe="${harioOriginal}"
-                    start-open
-                  ></brew-pourover-recipe-card>`
-                : cleverOriginal
-                  ? html`<brew-pourover-recipe-card
-                      .recipe="${cleverOriginal}"
-                      start-open
-                    ></brew-pourover-recipe-card>`
-                  : kalitaWaveOriginal
-                    ? html`<brew-pourover-recipe-card
-                        .recipe="${kalitaWaveOriginal}"
-                        start-open
-                      ></brew-pourover-recipe-card>`
-                    : html`<p>This recipe is no longer available.</p>`}
+        ${renderRecipeCard(source.recipeId, { hideBrewButton: true })}
       </brew-bottom-sheet>
     `;
   }

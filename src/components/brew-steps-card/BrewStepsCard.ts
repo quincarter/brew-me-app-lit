@@ -111,6 +111,8 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   @state() private _expanded = false;
   @state() private _addingCustomLabelForRowId: string | null = null;
   @state() private _customLabelDraft = "";
+  @state() private _openLabelMenuStepId: string | null = null;
+  @state() private _openLabelMenuUpward = false;
   /** Id of the row currently being drag-reordered, or `null` when no drag is in progress. */
   @state() private _draggingId: string | null = null;
   /** Live-reordered working copy shown while a drag is in progress; `null` outside of a drag, in which case `config.steps` renders as-is. */
@@ -152,6 +154,32 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
     this._emitChange(
       this.config.steps.map((step) => (step.id === id ? { ...step, ...patch } : step)),
     );
+  }
+
+  private _toggleLabelMenu(stepId: string, event: Event): void {
+    if (this._openLabelMenuStepId === stepId) {
+      this._openLabelMenuStepId = null;
+      return;
+    }
+    const button = event.currentTarget as HTMLElement;
+    const rect = button.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    this._openLabelMenuUpward = spaceBelow < 260 && rect.top > spaceBelow;
+    this._openLabelMenuStepId = stepId;
+  }
+
+  private _closeLabelMenu = (): void => {
+    this._openLabelMenuStepId = null;
+  };
+
+  private _selectLabelOption(step: IBrewStep, value: string): void {
+    this._openLabelMenuStepId = null;
+    if (value === ADD_CUSTOM_LABEL_OPTION) {
+      this._addingCustomLabelForRowId = step.id;
+      this._customLabelDraft = "";
+      return;
+    }
+    this._updateRow(step.id, { label: value });
   }
 
   private _onLabelSelect(row: IBrewStep, event: Event): void {
@@ -392,19 +420,75 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
           @keydown="${(e: KeyboardEvent) => this._onDragHandleKeydown(step, e)}"
         ></brew-icon-button>
 
-        <select
-          class="label-select"
-          .value="${step.label}"
-          @change="${(e: Event) => this._onLabelSelect(step, e)}"
-        >
-          <option value="" disabled ?selected="${!step.label}">Choose a label…</option>
-          ${this._labelOptions(step.label).map(
-            (label) => html`<option value="${label}" ?selected="${label === step.label}">
-              ${label}
-            </option>`,
-          )}
-          <option value="${ADD_CUSTOM_LABEL_OPTION}">Add custom…</option>
-        </select>
+        <div class="label-picker-container">
+          <button
+            class="label-select-btn"
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded="${this._openLabelMenuStepId === step.id}"
+            @click="${(e: Event) => this._toggleLabelMenu(step.id, e)}"
+          >
+            <span class="label-select-text ${!step.label ? "placeholder" : ""}">
+              ${step.label || "Choose a label…"}
+            </span>
+            <brew-icon name="arrow_drop_down" size="18"></brew-icon>
+          </button>
+
+          <!-- Hidden select kept for backwards compatibility with tests & form bindings -->
+          <select
+            class="label-select"
+            style="display: none;"
+            .value="${step.label}"
+            @change="${(e: Event) => this._onLabelSelect(step, e)}"
+          >
+            <option value="" disabled ?selected="${!step.label}">Choose a label…</option>
+            ${this._labelOptions(step.label).map(
+              (label) => html`<option value="${label}" ?selected="${label === step.label}">
+                ${label}
+              </option>`,
+            )}
+            <option value="${ADD_CUSTOM_LABEL_OPTION}">Add custom…</option>
+          </select>
+
+          ${
+            this._openLabelMenuStepId === step.id
+              ? html`
+                  <div class="label-menu-overlay" @click="${this._closeLabelMenu}"></div>
+                  <div
+                    class="label-menu-dropdown ${this._openLabelMenuUpward ? "upward" : ""}"
+                    role="listbox"
+                  >
+                    ${this._labelOptions(step.label).map(
+                      (label) => html`
+                        <button
+                          class="label-menu-item ${label === step.label ? "selected" : ""}"
+                          type="button"
+                          role="option"
+                          aria-selected="${label === step.label}"
+                          @click="${() => this._selectLabelOption(step, label)}"
+                        >
+                          <span class="item-text">${label}</span>
+                          ${
+                            label === step.label
+                              ? html`<brew-icon name="check" size="18"></brew-icon>`
+                              : nothing
+                          }
+                        </button>
+                      `,
+                    )}
+                    <button
+                      class="label-menu-item add-custom-item"
+                      type="button"
+                      @click="${() => this._selectLabelOption(step, ADD_CUSTOM_LABEL_OPTION)}"
+                    >
+                      <brew-icon name="add" size="18"></brew-icon>
+                      <span class="item-text">Add custom…</span>
+                    </button>
+                  </div>
+                `
+              : nothing
+          }
+        </div>
 
         ${
           step.kind === "timed"

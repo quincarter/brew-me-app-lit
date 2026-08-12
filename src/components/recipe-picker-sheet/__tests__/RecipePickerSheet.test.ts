@@ -40,7 +40,9 @@ describe("brew-recipe-picker-sheet", () => {
 
     const rows = element.shadowRoot?.querySelectorAll("brew-list-row");
     expect(rows).toHaveLength(V60_RECIPES.length);
-    expect(rows?.[0].getAttribute("headline")).toBe(`${V60_RECIPES[0].author} · ${V60_RECIPES[0].title}`);
+    expect(rows?.[0].getAttribute("headline")).toBe(
+      `${V60_RECIPES[0].author} · ${V60_RECIPES[0].title}`,
+    );
   });
 
   it("renders ORIGAMI_RECIPES entries when brewType is set to Origami", async () => {
@@ -50,7 +52,9 @@ describe("brew-recipe-picker-sheet", () => {
 
     const rows = element.shadowRoot?.querySelectorAll("brew-list-row");
     expect(rows).toHaveLength(ORIGAMI_RECIPES.length);
-    expect(rows?.[0].getAttribute("headline")).toBe(`${ORIGAMI_RECIPES[0].author} · ${ORIGAMI_RECIPES[0].title}`);
+    expect(rows?.[0].getAttribute("headline")).toBe(
+      `${ORIGAMI_RECIPES[0].author} · ${ORIGAMI_RECIPES[0].title}`,
+    );
   });
 
   it("renders a row's headline/supporting text from its recipe data", async () => {

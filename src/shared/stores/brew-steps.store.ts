@@ -195,9 +195,7 @@ export const loadChemexRecipeIntoCalculator = (recipe: IChemexRecipe): void => {
 };
 
 /** Loads a curated Clever Dripper recipe into the calculator. */
-export const loadCleverDripperRecipeIntoCalculator = (
-  recipe: ICleverDripperRecipe,
-): void => {
+export const loadCleverDripperRecipeIntoCalculator = (recipe: ICleverDripperRecipe): void => {
   selectedBrewTypeSignal.value = "Clever Dripper";
   const dose = parseDoseGrams(recipe);
   const water = parseWaterGrams(recipe);

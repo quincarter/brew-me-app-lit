@@ -61,10 +61,7 @@ export const WBC_MISC_VIDEOS: IWbcVideo[] = [
   },
 ];
 
-export const WBC_FEATURED_VIDEOS: IWbcVideo[] = [
-  ...WBC_ROUTINES,
-  ...WBC_MISC_VIDEOS,
-];
+export const WBC_FEATURED_VIDEOS: IWbcVideo[] = [...WBC_ROUTINES, ...WBC_MISC_VIDEOS];
 
 export const WBC_PLAYLISTS: IWbcPlaylist[] = [
   {

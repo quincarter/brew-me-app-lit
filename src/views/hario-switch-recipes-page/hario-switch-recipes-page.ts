@@ -1,7 +1,10 @@
 import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
 import "../../components/pourover-recipe-card/brew-pourover-recipe-card";
-import { HARIO_SWITCH_RECIPES, HARIO_SWITCH_RECIPES_SOURCE } from "../../shared/data/hario-switch-recipes.data";
+import {
+  HARIO_SWITCH_RECIPES,
+  HARIO_SWITCH_RECIPES_SOURCE,
+} from "../../shared/data/hario-switch-recipes.data";
 import type { IHarioSwitchRecipe } from "../../shared/interfaces/brew.interface";
 import { brewHarioSwitchRecipeNow } from "../../shared/stores/brew.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
