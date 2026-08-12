@@ -118,6 +118,17 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   /** Live-reordered working copy shown while a drag is in progress; `null` outside of a drag, in which case `config.steps` renders as-is. */
   @state() private _previewSteps: IBrewStep[] | null = null;
 
+  @state() private _leavingCue: {
+    current: { label: string; note?: string; pillText?: string; kind: string } | null;
+    next: { label: string; pillText?: string; kind: string } | null;
+  } | null = null;
+
+  private _activeStepId: string | null = null;
+  private _lastRenderedCue: {
+    current: { label: string; note?: string; pillText?: string; kind: string } | null;
+    next: { label: string; pillText?: string; kind: string } | null;
+  } | null = null;
+  private _clearLeavingTimeout: number | null = null;
   private _seeded = false;
 
   connectedCallback(): void {
@@ -132,6 +143,31 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   protected willUpdate(changed: PropertyValues<this>): void {
     if (changed.has("editing") && this.editing) {
       this._expanded = true;
+    }
+
+    if (!this.editing && this.config) {
+      const steps = this.config.steps;
+      const progress =
+        this.elapsedSeconds !== null ? getBrewStepProgress(steps, this.elapsedSeconds) : null;
+      const activeRow = progress?.find((r) => r.status === "active");
+      const currentActiveId = activeRow ? activeRow.step.id : steps[0]?.id ?? null;
+
+      if (
+        this._activeStepId !== null &&
+        currentActiveId !== null &&
+        this._activeStepId !== currentActiveId
+      ) {
+        if (this._lastRenderedCue) {
+          this._leavingCue = this._lastRenderedCue;
+          if (this._clearLeavingTimeout !== null) {
+            window.clearTimeout(this._clearLeavingTimeout);
+          }
+          this._clearLeavingTimeout = window.setTimeout(() => {
+            this._leavingCue = null;
+          }, 350);
+        }
+      }
+      this._activeStepId = currentActiveId;
     }
   }
 
@@ -614,6 +650,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
     }
 
     if (isAllComplete) {
+      this._lastRenderedCue = null;
       return html`
         <div class="condensed-cue">
           <div class="cue-row">
@@ -645,38 +682,102 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
         : (nextStep.value ?? "")
       : "";
 
-    return html`
-      <div class="condensed-cue">
-        <div class="cue-row ${currentStatus ? `step-${currentStatus}` : ""}">
-          <div class="cue-text">
-            <span class="cue-label">${currentStep.label}</span>
-            ${currentStep.note ? html`<span class="cue-note">${currentStep.note}</span>` : nothing}
-          </div>
-          ${
-            currentPillText
-              ? html`<span
-                  class="pill pill-${currentStep.kind} ${currentStatus === "active" ? "active-pill" : ""}"
-                  >${currentPillText}</span
-                >`
-              : nothing
+    this._lastRenderedCue = {
+      current: {
+        label: currentStep.label,
+        note: currentStep.note,
+        pillText: currentPillText,
+        kind: currentStep.kind,
+      },
+      next: nextStep
+        ? {
+            label: nextStep.label,
+            pillText: nextPillText,
+            kind: nextStep.kind,
           }
-        </div>
+        : null,
+    };
 
+    return html`
+      <div class="condensed-cue-viewport">
         ${
-          nextStep
+          this._leavingCue
             ? html`
-                <div class="up-next-row">
-                  <span class="up-next-tag">Up next</span>
-                  <span class="up-next-label">${nextStep.label}</span>
+                <div class="condensed-cue condensed-cue-group slide-up-exit">
+                  <div class="cue-row">
+                    <div class="cue-text">
+                      <span class="cue-label">${this._leavingCue.current?.label}</span>
+                      ${
+                        this._leavingCue.current?.note
+                          ? html`<span class="cue-note">${this._leavingCue.current.note}</span>`
+                          : nothing
+                      }
+                    </div>
+                    ${
+                      this._leavingCue.current?.pillText
+                        ? html`<span class="pill pill-${this._leavingCue.current.kind}"
+                            >${this._leavingCue.current.pillText}</span
+                          >`
+                        : nothing
+                    }
+                  </div>
                   ${
-                    nextPillText
-                      ? html`<span class="pill pill-sm pill-${nextStep.kind}">${nextPillText}</span>`
+                    this._leavingCue.next
+                      ? html`
+                          <div class="up-next-row">
+                            <span class="up-next-tag">Up next</span>
+                            <span class="up-next-label">${this._leavingCue.next.label}</span>
+                            ${
+                              this._leavingCue.next.pillText
+                                ? html`<span
+                                    class="pill pill-sm pill-${this._leavingCue.next.kind}"
+                                    >${this._leavingCue.next.pillText}</span
+                                  >`
+                                : nothing
+                            }
+                          </div>
+                        `
                       : nothing
                   }
                 </div>
               `
             : nothing
         }
+
+        <div class="condensed-cue condensed-cue-group ${this._leavingCue ? "slide-up-enter" : ""}">
+          <div class="cue-row ${currentStatus ? `step-${currentStatus}` : ""}">
+            <div class="cue-text">
+              <span class="cue-label">${currentStep.label}</span>
+              ${currentStep.note ? html`<span class="cue-note">${currentStep.note}</span>` : nothing}
+            </div>
+            ${
+              currentPillText
+                ? html`<span
+                    class="pill pill-${currentStep.kind} ${currentStatus === "active" ? "active-pill" : ""}"
+                    >${currentPillText}</span
+                  >`
+                : nothing
+            }
+          </div>
+
+          ${
+            nextStep
+              ? html`
+                  <div class="up-next-row">
+                    <span class="up-next-tag">Up next</span>
+                    <span class="up-next-label">${nextStep.label}</span>
+                    ${
+                      nextPillText
+                        ? html`<span class="pill pill-sm pill-${nextStep.kind}"
+                            >${nextPillText}</span
+                          >`
+                        : nothing
+                    }
+                  </div>
+                `
+              : nothing
+          }
+        </div>
       </div>
     `;
   }

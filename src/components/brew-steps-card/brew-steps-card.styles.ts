@@ -59,6 +59,62 @@ export const BrewStepsCardStyles = css`
     gap: 10px;
   }
 
+  .condensed-cue-viewport {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .condensed-cue-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .condensed-cue-group.slide-up-exit {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    animation: cueSlideUpExit 350ms cubic-bezier(0.2, 0, 0, 1) forwards;
+    pointer-events: none;
+  }
+
+  .condensed-cue-group.slide-up-enter {
+    animation: cueSlideUpEnter 350ms cubic-bezier(0.2, 0, 0, 1) forwards;
+  }
+
+  @keyframes cueSlideUpExit {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes cueSlideUpEnter {
+    0% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .condensed-cue-group.slide-up-exit,
+    .condensed-cue-group.slide-up-enter {
+      animation: none;
+    }
+  }
+
   .condensed-cue {
     display: flex;
     flex-direction: column;
