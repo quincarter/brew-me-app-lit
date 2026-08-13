@@ -19,8 +19,16 @@ export const CONTENT_MAX_WIDTH_PX = 640;
  * edge-to-edge on wide screens.
  */
 export const responsiveScreenStyles = css`
+  :host {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
   .screen {
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -29,6 +37,9 @@ export const responsiveScreenStyles = css`
 
   .content,
   .scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
     touch-action: pan-y;
