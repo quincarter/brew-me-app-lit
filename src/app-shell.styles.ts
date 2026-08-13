@@ -8,19 +8,20 @@ export const AppShellStyles = css`
 	 * "100vh" is taller than what's actually visible under the address bar.
 	 */
   :host {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
     height: 100%;
+    height: 100vh;
     height: 100dvh;
-    height: var(--app-height, 100dvh);
-    height: -webkit-fill-available;
     background: var(--brew-page-background);
     box-sizing: border-box;
     overflow: hidden;
-    padding-top: env(safe-area-inset-top, 0px);
   }
 
   main {
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
   }
@@ -29,5 +30,7 @@ export const AppShellStyles = css`
   main > * {
     flex: 1;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 `;

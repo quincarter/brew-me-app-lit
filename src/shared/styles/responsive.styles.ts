@@ -19,6 +19,32 @@ export const CONTENT_MAX_WIDTH_PX = 640;
  * edge-to-edge on wide screens.
  */
 export const responsiveScreenStyles = css`
+  :host {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .screen {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .content,
+  .scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+  }
+
   @media (min-width: 840px) {
     .screen {
       padding-left: 88px;
