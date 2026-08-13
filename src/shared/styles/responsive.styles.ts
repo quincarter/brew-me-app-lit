@@ -40,6 +40,7 @@ export const responsiveScreenStyles = css`
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
     touch-action: pan-y;
@@ -57,6 +58,7 @@ export const responsiveScreenStyles = css`
       width: 100%;
       margin-inline: auto;
       box-sizing: border-box;
+      padding-bottom: 20px;
     }
   }
 `;
