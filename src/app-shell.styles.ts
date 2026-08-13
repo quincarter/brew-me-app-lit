@@ -9,7 +9,10 @@ export const AppShellStyles = css`
 	 */
   :host {
     display: block;
+    width: 100%;
     height: 100%;
+    height: 100vh;
+    height: 100dvh;
     background: var(--brew-page-background);
     box-sizing: border-box;
     overflow: hidden;
