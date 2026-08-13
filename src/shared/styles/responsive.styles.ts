@@ -19,6 +19,13 @@ export const CONTENT_MAX_WIDTH_PX = 640;
  * edge-to-edge on wide screens.
  */
 export const responsiveScreenStyles = css`
+  .content,
+  .scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+  }
+
   @media (min-width: 840px) {
     .screen {
       padding-left: 88px;

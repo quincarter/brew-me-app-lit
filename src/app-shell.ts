@@ -17,12 +17,18 @@ import { registerServiceWorker } from "./shared/utilities/register-service-worke
 
 const syncAppHeight = (): void => {
   if (typeof window === "undefined") return;
-  const vh = window.innerHeight;
+  const vv = window.visualViewport;
+  const vh = vv ? vv.height : window.innerHeight;
   document.documentElement.style.setProperty("--app-height", `${vh}px`);
 };
 
 syncAppHeight();
 if (typeof window !== "undefined") {
+  const vv = window.visualViewport;
+  if (vv) {
+    vv.addEventListener("resize", syncAppHeight, { passive: true });
+    vv.addEventListener("scroll", syncAppHeight, { passive: true });
+  }
   window.addEventListener("resize", syncAppHeight, { passive: true });
   window.addEventListener("orientationchange", syncAppHeight, { passive: true });
   window.addEventListener("pageshow", syncAppHeight, { passive: true });
