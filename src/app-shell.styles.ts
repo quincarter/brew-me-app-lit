@@ -13,7 +13,6 @@ export const AppShellStyles = css`
     background: var(--brew-page-background);
     box-sizing: border-box;
     overflow: hidden;
-    padding-top: env(safe-area-inset-top, 0px);
   }
 
   main {
