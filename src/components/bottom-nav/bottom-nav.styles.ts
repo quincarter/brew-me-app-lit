@@ -2,9 +2,13 @@ import { css } from "lit";
 
 export const BottomNavStyles = css`
   :host {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
     display: block;
     width: 100%;
-    flex-shrink: 0;
   }
 
   .nav {

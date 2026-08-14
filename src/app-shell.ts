@@ -15,7 +15,29 @@ import { initInstallPromptListener } from "./shared/stores/install-prompt.store"
 import { maybeAutoStartTour } from "./shared/stores/tour.store";
 import { registerServiceWorker } from "./shared/utilities/register-service-worker.utility";
 
+/**
+ * Detects whether the app was launched from the Home Screen (iOS WebClip / PWA
+ * standalone mode). On iOS WebKit, `100dvh` incorrectly subtracts Safari's
+ * address bar height even when running standalone without an address bar.
+ * Setting `data-standalone="true"` allows CSS to override `100dvh` with `100vh`.
+ */
+const checkStandalone = (): void => {
+  if (typeof window === "undefined") return;
+  const isStandalone =
+    (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
+    window.matchMedia("(display-mode: standalone)").matches;
 
+  if (isStandalone) {
+    document.documentElement.setAttribute("data-standalone", "true");
+  } else {
+    document.documentElement.removeAttribute("data-standalone");
+  }
+};
+
+checkStandalone();
+if (typeof window !== "undefined") {
+  window.addEventListener("pageshow", checkStandalone, { passive: true });
+}
 
 // Attach the beforeinstallprompt/appinstalled listeners as early as possible
 // so the event is never missed while `brew-install-prompt` isn't mounted yet.
