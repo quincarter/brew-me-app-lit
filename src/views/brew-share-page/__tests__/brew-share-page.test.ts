@@ -143,4 +143,46 @@ describe("brew-share-page", () => {
       "Original recipe",
     );
   });
+
+  describe("brew steps view toggle (recipeSource present)", () => {
+    it("renders no inline toggle and no sheet toggle for an unmodified (Pulled from) brew - nothing to diff means the toggle would just be a confusing no-op", async () => {
+      await mount({
+        brewType: "Aeropress",
+        ratio: 9.44,
+        water: 170,
+        coffee: 18,
+        oz: 5.75,
+        brewSteps: { steps: RECIPE_SOURCE.steps },
+        recipeSource: RECIPE_SOURCE,
+      });
+
+      expect(element.shadowRoot?.querySelector(".brew-steps-view-toggle")).toBeNull();
+
+      element.shadowRoot?.querySelector<HTMLButtonElement>(".recipe-banner")?.click();
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector("brew-bottom-sheet")).not.toBeNull();
+      expect(element.shadowRoot?.querySelector(".brew-steps-view-toggle")).toBeNull();
+    });
+
+    it("renders both the inline toggle and the sheet toggle for a modified brew", async () => {
+      await mount({
+        brewType: "Aeropress",
+        ratio: 16,
+        water: 170,
+        coffee: 10.63,
+        oz: 5.75,
+        brewSteps: { steps: [] },
+        recipeSource: RECIPE_SOURCE,
+      });
+
+      expect(element.shadowRoot?.querySelector(".brew-steps-view-toggle")).not.toBeNull();
+
+      element.shadowRoot?.querySelector<HTMLButtonElement>(".recipe-banner")?.click();
+      await element.updateComplete;
+
+      const toggles = element.shadowRoot?.querySelectorAll(".brew-steps-view-toggle");
+      expect(toggles?.length).toBe(2);
+    });
+  });
 });

@@ -71,6 +71,10 @@ import {
 } from "../../shared/utilities/brew-steps-view.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
 import {
+  isRecipeModified,
+  type IRecipeModifiedCurrent,
+} from "../../shared/utilities/recipe-modified.utility";
+import {
   renderOriginalRecipeSheet,
   renderRecipeProvenanceBanner,
 } from "../../shared/utilities/recipe-provenance.utility";
@@ -202,9 +206,18 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
 
     const hasCuratedRecipes = curatedRecipes.includes(selectedType);
     const recipeSource = isQuickCalculator ? null : loadedRecipeSourceSignal.value;
-    /** The toggle+diff-aware card only applies to the static display - while `_stepsEditing`, behavior is unchanged (plain editable card, no toggle). */
+    const recipeCurrent: IRecipeModifiedCurrent = {
+      ratio: ratioSignal.value,
+      water: waterSignal.value,
+      coffee: coffeeSignal.value,
+      steps: brewStepsSignal.value?.steps ?? [],
+    };
+    /** The toggle+diff-aware card only applies to the static display of an actually-modified recipe - while `_stepsEditing`, or when nothing's actually changed (nothing to diff), behavior is unchanged (plain card, no toggle). */
+    const isRecipeActuallyModified = recipeSource
+      ? isRecipeModified(recipeCurrent, recipeSource)
+      : false;
     const resolvedSteps =
-      recipeSource && !this._stepsEditing
+      recipeSource && !this._stepsEditing && isRecipeActuallyModified
         ? resolveBrewStepsForMode(brewSteps, recipeSource, this._stepsViewMode)
         : null;
 
@@ -246,18 +259,9 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
           ${
             isQuickCalculator
               ? nothing
-              : renderRecipeProvenanceBanner(
-                  loadedRecipeSourceSignal.value,
-                  {
-                    ratio: ratioSignal.value,
-                    water: waterSignal.value,
-                    coffee: coffeeSignal.value,
-                    steps: brewStepsSignal.value?.steps ?? [],
-                  },
-                  () => {
-                    this._originalRecipeOpen = true;
-                  },
-                )
+              : renderRecipeProvenanceBanner(loadedRecipeSourceSignal.value, recipeCurrent, () => {
+                  this._originalRecipeOpen = true;
+                })
           }
 
           <brew-ratio-form
@@ -433,7 +437,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
                   () => {
                     this._originalRecipeOpen = false;
                   },
-                  brewStepsSignal.value?.steps ?? [],
+                  recipeCurrent,
                   this._originalRecipeViewMode,
                   (mode) => {
                     this._originalRecipeViewMode = mode;

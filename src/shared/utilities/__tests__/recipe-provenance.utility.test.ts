@@ -81,20 +81,37 @@ describe("recipe-provenance.utility", () => {
   describe("renderOriginalRecipeSheet", () => {
     it("renders nothing when isOpen is false, even with a source", () => {
       render(
-        renderOriginalRecipeSheet(RECIPE_SOURCE, false, vi.fn(), [], "original", vi.fn()),
+        renderOriginalRecipeSheet(
+          RECIPE_SOURCE,
+          false,
+          vi.fn(),
+          modifiedCurrent,
+          "original",
+          vi.fn(),
+        ),
         container,
       );
       expect(container.querySelector("brew-bottom-sheet")).toBeNull();
     });
 
     it("renders nothing when source is missing, even when isOpen is true", () => {
-      render(renderOriginalRecipeSheet(null, true, vi.fn(), [], "original", vi.fn()), container);
+      render(
+        renderOriginalRecipeSheet(null, true, vi.fn(), modifiedCurrent, "original", vi.fn()),
+        container,
+      );
       expect(container.querySelector("brew-bottom-sheet")).toBeNull();
     });
 
     it("renders the 'Original recipe' sheet with the recipe card when open with a source", () => {
       render(
-        renderOriginalRecipeSheet(RECIPE_SOURCE, true, vi.fn(), [], "original", vi.fn()),
+        renderOriginalRecipeSheet(
+          RECIPE_SOURCE,
+          true,
+          vi.fn(),
+          modifiedCurrent,
+          "original",
+          vi.fn(),
+        ),
         container,
       );
 
@@ -103,9 +120,16 @@ describe("recipe-provenance.utility", () => {
       expect(container.querySelector(".title")?.textContent?.trim()).toBe("Original recipe");
     });
 
-    it("renders the Original/Diff toggle whenever the sheet is open with a source", () => {
+    it("renders the Original/Diff toggle when the sheet is open with a source AND the brew is actually modified", () => {
       render(
-        renderOriginalRecipeSheet(RECIPE_SOURCE, true, vi.fn(), [], "original", vi.fn()),
+        renderOriginalRecipeSheet(
+          RECIPE_SOURCE,
+          true,
+          vi.fn(),
+          modifiedCurrent,
+          "original",
+          vi.fn(),
+        ),
         container,
       );
 
@@ -114,9 +138,28 @@ describe("recipe-provenance.utility", () => {
       expect(toggle?.querySelectorAll(".brew-steps-view-toggle-btn")).toHaveLength(2);
     });
 
+    it("renders no toggle - and always forces the plain recipe card, ignoring viewMode - when the brew is unmodified (nothing to diff)", () => {
+      render(
+        renderOriginalRecipeSheet(RECIPE_SOURCE, true, vi.fn(), matchingCurrent, "diff", vi.fn()),
+        container,
+      );
+
+      expect(container.querySelector(".brew-steps-view-toggle")).toBeNull();
+      const card = container.querySelector("brew-recipe-card, brew-pourover-recipe-card");
+      expect(card).not.toBeNull();
+      expect((card as unknown as { diffAgainst: unknown }).diffAgainst).toBeNull();
+    });
+
     it("renders no toggle when the sheet is closed", () => {
       render(
-        renderOriginalRecipeSheet(RECIPE_SOURCE, false, vi.fn(), [], "original", vi.fn()),
+        renderOriginalRecipeSheet(
+          RECIPE_SOURCE,
+          false,
+          vi.fn(),
+          modifiedCurrent,
+          "original",
+          vi.fn(),
+        ),
         container,
       );
 
@@ -125,29 +168,46 @@ describe("recipe-provenance.utility", () => {
 
     it("in 'original' mode, renders the curated recipe card - not brew-steps-card", () => {
       render(
-        renderOriginalRecipeSheet(RECIPE_SOURCE, true, vi.fn(), [], "original", vi.fn()),
+        renderOriginalRecipeSheet(
+          RECIPE_SOURCE,
+          true,
+          vi.fn(),
+          modifiedCurrent,
+          "original",
+          vi.fn(),
+        ),
         container,
       );
 
       expect(container.querySelector("brew-steps-card")).toBeNull();
     });
 
-    it("in 'diff' mode, still renders the curated recipe card - not brew-steps-card - with the brew's current steps as diffAgainst", () => {
-      const currentSteps = [{ id: "y", label: "Steep", kind: "note" as const, value: "Custom" }];
+    it("in 'diff' mode on a modified brew, still renders the curated recipe card - not brew-steps-card - with the brew's current steps as diffAgainst", () => {
+      const current: IRecipeModifiedCurrent = {
+        ...modifiedCurrent,
+        steps: [{ id: "y", label: "Steep", kind: "note" as const, value: "Custom" }],
+      };
       render(
-        renderOriginalRecipeSheet(RECIPE_SOURCE, true, vi.fn(), currentSteps, "diff", vi.fn()),
+        renderOriginalRecipeSheet(RECIPE_SOURCE, true, vi.fn(), current, "diff", vi.fn()),
         container,
       );
 
       expect(container.querySelector("brew-steps-card")).toBeNull();
       const card = container.querySelector("brew-recipe-card, brew-pourover-recipe-card");
       expect(card).not.toBeNull();
-      expect((card as unknown as { diffAgainst: unknown }).diffAgainst).toEqual(currentSteps);
+      expect((card as unknown as { diffAgainst: unknown }).diffAgainst).toEqual(current.steps);
     });
 
-    it("in 'original' mode, passes null diffAgainst to the curated recipe card", () => {
+    it("in 'original' mode on a modified brew, passes null diffAgainst to the curated recipe card", () => {
       render(
-        renderOriginalRecipeSheet(RECIPE_SOURCE, true, vi.fn(), [], "original", vi.fn()),
+        renderOriginalRecipeSheet(
+          RECIPE_SOURCE,
+          true,
+          vi.fn(),
+          modifiedCurrent,
+          "original",
+          vi.fn(),
+        ),
         container,
       );
 
@@ -159,7 +219,14 @@ describe("recipe-provenance.utility", () => {
     it("calls onViewModeChange with the newly selected mode when a toggle control is activated", () => {
       const onViewModeChange = vi.fn();
       render(
-        renderOriginalRecipeSheet(RECIPE_SOURCE, true, vi.fn(), [], "original", onViewModeChange),
+        renderOriginalRecipeSheet(
+          RECIPE_SOURCE,
+          true,
+          vi.fn(),
+          modifiedCurrent,
+          "original",
+          onViewModeChange,
+        ),
         container,
       );
 
@@ -177,7 +244,7 @@ describe("recipe-provenance.utility", () => {
           { ...RECIPE_SOURCE, recipeId: "does-not-exist" },
           true,
           vi.fn(),
-          [],
+          modifiedCurrent,
           "original",
           vi.fn(),
         ),
@@ -190,7 +257,14 @@ describe("recipe-provenance.utility", () => {
     it("calls onClose when the sheet fires sheet-scrim-click", () => {
       const onClose = vi.fn();
       render(
-        renderOriginalRecipeSheet(RECIPE_SOURCE, true, onClose, [], "original", vi.fn()),
+        renderOriginalRecipeSheet(
+          RECIPE_SOURCE,
+          true,
+          onClose,
+          modifiedCurrent,
+          "original",
+          vi.fn(),
+        ),
         container,
       );
 

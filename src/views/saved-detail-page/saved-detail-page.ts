@@ -37,6 +37,10 @@ import {
 } from "../../shared/utilities/brew-steps-view.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
 import {
+  isRecipeModified,
+  type IRecipeModifiedCurrent,
+} from "../../shared/utilities/recipe-modified.utility";
+import {
   renderOriginalRecipeSheet,
   renderRecipeProvenanceBanner,
 } from "../../shared/utilities/recipe-provenance.utility";
@@ -209,9 +213,20 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     );
     /** No match means a custom brew type - there's no curated guide to link to. */
     const matchingGuide = BREW_GUIDE.find((item) => item.name === brew.brewType);
-    const resolvedSteps = brew.recipeSource
-      ? resolveBrewStepsForMode(brew.brewSteps, brew.recipeSource, this._stepsViewMode)
-      : null;
+    const recipeCurrent: IRecipeModifiedCurrent = {
+      ratio: String(brew.ratio),
+      water: String(brew.water),
+      coffee: brew.coffee,
+      steps: brew.brewSteps?.steps ?? [],
+    };
+    /** The toggle+diff-aware card only applies to an actually-modified recipe - an unmodified one has nothing to diff, so showing Modified/Original/Diff for it would just be a confusing no-op. */
+    const isRecipeActuallyModified = brew.recipeSource
+      ? isRecipeModified(recipeCurrent, brew.recipeSource)
+      : false;
+    const resolvedSteps =
+      brew.recipeSource && isRecipeActuallyModified
+        ? resolveBrewStepsForMode(brew.brewSteps, brew.recipeSource, this._stepsViewMode)
+        : null;
 
     return html`
       <div class="screen">
@@ -378,18 +393,9 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                         : html`<brew-steps-card .config="${brew.brewSteps}"></brew-steps-card>`
                       : nothing
                   }
-                  ${renderRecipeProvenanceBanner(
-                    brew.recipeSource,
-                    {
-                      ratio: String(brew.ratio),
-                      water: String(brew.water),
-                      coffee: brew.coffee,
-                      steps: brew.brewSteps?.steps ?? [],
-                    },
-                    () => {
-                      this._originalRecipeOpen = true;
-                    },
-                  )}
+                  ${renderRecipeProvenanceBanner(brew.recipeSource, recipeCurrent, () => {
+                    this._originalRecipeOpen = true;
+                  })}
 
                   <div class="section-title">Brew guide</div>
                   ${
@@ -419,7 +425,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
           () => {
             this._originalRecipeOpen = false;
           },
-          brew.brewSteps?.steps ?? [],
+          recipeCurrent,
           this._originalRecipeViewMode,
           (mode) => {
             this._originalRecipeViewMode = mode;
