@@ -1,16 +1,7 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
-import {
-  type HTMLTemplateResult,
-  html,
-  LitElement,
-  nothing,
-  type PropertyValues,
-} from "lit";
+import { type HTMLTemplateResult, html, LitElement, nothing, type PropertyValues } from "lit";
 import { property, state } from "lit/decorators.js";
-import type {
-  IBrewStep,
-  IBrewStepsConfig,
-} from "../../shared/interfaces/brew.interface";
+import type { IBrewStep, IBrewStepsConfig } from "../../shared/interfaces/brew.interface";
 import type { IBrewStepProgress } from "../../shared/interfaces/timer.interface";
 import {
   addCustomStepLabel,
@@ -56,10 +47,7 @@ const deepElementFromPoint = (x: number, y: number): Element | null => {
  * Same walk as `closest()`, but hops from a shadow root's top to its host
  * and keeps going instead of stopping there.
  */
-const composedClosest = (
-  start: Element | null,
-  selector: string,
-): HTMLElement | null => {
+const composedClosest = (start: Element | null, selector: string): HTMLElement | null => {
   let node: Element | null = start;
   while (node) {
     if (node.matches(selector)) return node as HTMLElement;
@@ -118,9 +106,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   /** Seeds the initial expanded state only; after mount the toggle owns it (same convention as `brew-recipe-card`). */
   @property({ type: Boolean, attribute: "start-open" }) startOpen = false;
   /** When set (and not `editing`), each timed row is shown as done/active/upcoming against this many elapsed seconds, and the timeline gets a progress marker - the Timer screen's live "honor the brew steps" view. Null renders the plain static card used on the Calculator/Saved Detail. */
-  @property({ type: Number, attribute: "elapsed-seconds" }) elapsedSeconds:
-    | number
-    | null = null;
+  @property({ type: Number, attribute: "elapsed-seconds" }) elapsedSeconds: number | null = null;
 
   @state() private _expanded = false;
   @state() private _addingCustomLabelForRowId: string | null = null;
@@ -172,13 +158,9 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
     if (!this.editing && this.config) {
       const steps = this.config.steps;
       const progress =
-        this.elapsedSeconds !== null
-          ? getBrewStepProgress(steps, this.elapsedSeconds)
-          : null;
+        this.elapsedSeconds !== null ? getBrewStepProgress(steps, this.elapsedSeconds) : null;
       const activeRow = progress?.find((r) => r.status === "active");
-      const currentActiveId = activeRow
-        ? activeRow.step.id
-        : (steps[0]?.id ?? null);
+      const currentActiveId = activeRow ? activeRow.step.id : (steps[0]?.id ?? null);
 
       if (
         this._activeStepId !== null &&
@@ -216,9 +198,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   private _updateRow(id: string, patch: Partial<IBrewStep>): void {
     if (!this.config) return;
     this._emitChange(
-      this.config.steps.map((step) =>
-        step.id === id ? { ...step, ...patch } : step,
-      ),
+      this.config.steps.map((step) => (step.id === id ? { ...step, ...patch } : step)),
     );
   }
 
@@ -274,10 +254,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
     if (row.kind === "timed") {
       const parsed = Number.parseFloat(value);
       this._updateRow(row.id, {
-        seconds:
-          value === "" || Number.isNaN(parsed)
-            ? null
-            : Math.max(0, Math.round(parsed)),
+        seconds: value === "" || Number.isNaN(parsed) ? null : Math.max(0, Math.round(parsed)),
       });
       return;
     }
@@ -309,9 +286,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   };
 
   private _resetToPreset = (): void => {
-    this.dispatchEvent(
-      new CustomEvent("reset-to-preset", { bubbles: true, composed: true }),
-    );
+    this.dispatchEvent(new CustomEvent("reset-to-preset", { bubbles: true, composed: true }));
   };
 
   /**
@@ -343,9 +318,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
     const overId = this._rowIdAtPoint(event.clientX, event.clientY);
     if (!overId || overId === this._draggingId) return;
 
-    const fromIndex = this._previewSteps.findIndex(
-      (step) => step.id === this._draggingId,
-    );
+    const fromIndex = this._previewSteps.findIndex((step) => step.id === this._draggingId);
     const toIndex = this._previewSteps.findIndex((step) => step.id === overId);
     if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return;
 
@@ -355,9 +328,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   /** Ends a drag (drop or cancel): report the reorder like any other edit if the order actually changed, then clear drag state. */
   private _endDrag = (): void => {
     if (this._draggingId && this._previewSteps) {
-      const originalOrder = (this.config?.steps ?? [])
-        .map((step) => step.id)
-        .join("|");
+      const originalOrder = (this.config?.steps ?? []).map((step) => step.id).join("|");
       const previewOrder = this._previewSteps.map((step) => step.id).join("|");
       if (originalOrder !== previewOrder) this._emitChange(this._previewSteps);
     }
@@ -390,27 +361,18 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   private static readonly LONG_NOTE_VALUE_THRESHOLD = 24;
 
   private _isLongNoteValue(value: string): boolean {
-    return (
-      value.length > BrewStepsCard.LONG_NOTE_VALUE_THRESHOLD ||
-      value.includes(" ")
-    );
+    return value.length > BrewStepsCard.LONG_NOTE_VALUE_THRESHOLD || value.includes(" ");
   }
 
   private _labelOptions(currentLabel: string): string[] {
     const known = knownStepLabelsSignal.value;
-    return currentLabel && !known.includes(currentLabel)
-      ? [currentLabel, ...known]
-      : known;
+    return currentLabel && !known.includes(currentLabel) ? [currentLabel, ...known] : known;
   }
 
-  private _renderTimeline(
-    steps: IBrewStep[],
-  ): HTMLTemplateResult | typeof nothing {
+  private _renderTimeline(steps: IBrewStep[]): HTMLTemplateResult | typeof nothing {
     const timed = steps.filter(
       (step): step is IBrewStep & { seconds: number } =>
-        step.kind === "timed" &&
-        typeof step.seconds === "number" &&
-        step.seconds > 0,
+        step.kind === "timed" && typeof step.seconds === "number" && step.seconds > 0,
     );
     if (timed.length === 0) return nothing;
 
@@ -431,12 +393,11 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
             ></span>
           `,
         )}
-        ${progressPercent !== null
-          ? html`<span
-              class="timeline-progress"
-              style="left:${progressPercent}%"
-            ></span>`
-          : nothing}
+        ${
+          progressPercent !== null
+            ? html`<span class="timeline-progress" style="left:${progressPercent}%"></span>`
+            : nothing
+        }
       </div>
     `;
   }
@@ -447,18 +408,12 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   ): HTMLTemplateResult {
     const status = progressRow?.status ?? null;
     const remainingSeconds =
-      status === "active" &&
-      this.elapsedSeconds !== null &&
-      typeof step.seconds === "number"
+      status === "active" && this.elapsedSeconds !== null && typeof step.seconds === "number"
         ? // `elapsedSeconds` is total time since the timer started, not time
           // within this step - subtract the step's own cumulative start
           // offset first, or every step but the first would show a
           // remaining time that's short by however long the prior steps took.
-          Math.max(
-            0,
-            step.seconds -
-              (this.elapsedSeconds - (progressRow?.startSeconds ?? 0)),
-          )
+          Math.max(0, step.seconds - (this.elapsedSeconds - (progressRow?.startSeconds ?? 0)))
         : null;
     const pillText =
       step.kind === "timed"
@@ -470,30 +425,25 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
         : (step.value ?? "");
     // Only note rows can carry long free-text prose (timed rows only ever
     // render a formatted duration, remaining time, or "Now").
-    const isLongNoteValue =
-      step.kind === "note" && this._isLongNoteValue(pillText);
+    const isLongNoteValue = step.kind === "note" && this._isLongNoteValue(pillText);
 
     return html`
       <div class="step-row ${status ? `step-${status}` : ""}">
-        ${status === "done"
-          ? html`<brew-icon
-              class="step-check"
-              name="check_circle"
-              size="18"
-            ></brew-icon>`
-          : nothing}
+        ${
+          status === "done"
+            ? html`<brew-icon class="step-check" name="check_circle" size="18"></brew-icon>`
+            : nothing
+        }
         <div class="step-text">
           <span class="step-label">${step.label}</span>
-          ${step.note
-            ? html`<span class="step-note">${step.note}</span>`
-            : nothing}
-          ${isLongNoteValue
-            ? html`<span class="step-note-value">${pillText}</span>`
-            : nothing}
+          ${step.note ? html`<span class="step-note">${step.note}</span>` : nothing}
+          ${isLongNoteValue ? html`<span class="step-note-value">${pillText}</span>` : nothing}
         </div>
-        ${pillText && !isLongNoteValue
-          ? html`<span class="pill pill-${step.kind}">${pillText}</span>`
-          : nothing}
+        ${
+          pillText && !isLongNoteValue
+            ? html`<span class="pill pill-${step.kind}">${pillText}</span>`
+            : nothing
+        }
       </div>
     `;
   }
@@ -509,8 +459,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
           icon="drag_indicator"
           size="18"
           aria-label="Reorder ${step.label || "step"} - use arrow keys or drag"
-          @pointerdown="${(e: PointerEvent) =>
-            this._onDragHandlePointerDown(step, e)}"
+          @pointerdown="${(e: PointerEvent) => this._onDragHandlePointerDown(step, e)}"
           @pointermove="${this._onDragHandlePointerMove}"
           @pointerup="${this._endDrag}"
           @pointercancel="${this._endDrag}"
@@ -538,102 +487,87 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
             .value="${step.label}"
             @change="${(e: Event) => this._onLabelSelect(step, e)}"
           >
-            <option value="" disabled ?selected="${!step.label}">
-              Choose a label…
-            </option>
+            <option value="" disabled ?selected="${!step.label}">Choose a label…</option>
             ${this._labelOptions(step.label).map(
               (label) =>
-                html`<option
-                  value="${label}"
-                  ?selected="${label === step.label}"
-                >
+                html`<option value="${label}" ?selected="${label === step.label}">
                   ${label}
                 </option>`,
             )}
             <option value="${ADD_CUSTOM_LABEL_OPTION}">Add custom…</option>
           </select>
 
-          ${this._openLabelMenuStepId === step.id
-            ? html`
-                <div
-                  class="label-menu-overlay"
-                  @click="${this._closeLabelMenu}"
-                ></div>
-                <div
-                  class="label-menu-dropdown ${this._openLabelMenuUpward
-                    ? "upward"
-                    : ""}"
-                  role="listbox"
-                >
-                  ${this._labelOptions(step.label).map(
-                    (label) => html`
-                      <button
-                        class="label-menu-item ${label === step.label
-                          ? "selected"
-                          : ""}"
-                        type="button"
-                        role="option"
-                        aria-selected="${label === step.label}"
-                        @click="${() => this._selectLabelOption(step, label)}"
-                      >
-                        <span class="item-text">${label}</span>
-                        ${label === step.label
-                          ? html`<brew-icon name="check" size="18"></brew-icon>`
-                          : nothing}
-                      </button>
-                    `,
-                  )}
-                  <button
-                    class="label-menu-item add-custom-item"
-                    type="button"
-                    @click="${() =>
-                      this._selectLabelOption(step, ADD_CUSTOM_LABEL_OPTION)}"
+          ${
+            this._openLabelMenuStepId === step.id
+              ? html`
+                  <div class="label-menu-overlay" @click="${this._closeLabelMenu}"></div>
+                  <div
+                    class="label-menu-dropdown ${this._openLabelMenuUpward ? "upward" : ""}"
+                    role="listbox"
                   >
-                    <brew-icon name="add" size="18"></brew-icon>
-                    <span class="item-text">Add custom…</span>
-                  </button>
-                </div>
-              `
-            : nothing}
+                    ${this._labelOptions(step.label).map(
+                      (label) => html`
+                        <button
+                          class="label-menu-item ${label === step.label ? "selected" : ""}"
+                          type="button"
+                          role="option"
+                          aria-selected="${label === step.label}"
+                          @click="${() => this._selectLabelOption(step, label)}"
+                        >
+                          <span class="item-text">${label}</span>
+                          ${
+                            label === step.label
+                              ? html`<brew-icon name="check" size="18"></brew-icon>`
+                              : nothing
+                          }
+                        </button>
+                      `,
+                    )}
+                    <button
+                      class="label-menu-item add-custom-item"
+                      type="button"
+                      @click="${() => this._selectLabelOption(step, ADD_CUSTOM_LABEL_OPTION)}"
+                    >
+                      <brew-icon name="add" size="18"></brew-icon>
+                      <span class="item-text">Add custom…</span>
+                    </button>
+                  </div>
+                `
+              : nothing
+          }
         </div>
 
-        ${step.kind === "timed"
-          ? html`
-              <input
-                class="value-input"
-                type="number"
-                min="0"
-                placeholder="Seconds"
-                aria-label="Duration in seconds"
-                .value="${step.seconds?.toString() ?? ""}"
-                @input="${(e: Event) =>
-                  this._onValueInput(
-                    step,
-                    (e.target as HTMLInputElement).value,
-                  )}"
-              />
-            `
-          : html`
-              <input
-                class="value-input"
-                type="text"
-                placeholder="Value"
-                aria-label="Step value"
-                .value="${step.value ?? ""}"
-                @input="${(e: Event) =>
-                  this._onValueInput(
-                    step,
-                    (e.target as HTMLInputElement).value,
-                  )}"
-              />
-            `}
+        ${
+          step.kind === "timed"
+            ? html`
+                <input
+                  class="value-input"
+                  type="number"
+                  min="0"
+                  placeholder="Seconds"
+                  aria-label="Duration in seconds"
+                  .value="${step.seconds?.toString() ?? ""}"
+                  @input="${(e: Event) =>
+                    this._onValueInput(step, (e.target as HTMLInputElement).value)}"
+                />
+              `
+            : html`
+                <input
+                  class="value-input"
+                  type="text"
+                  placeholder="Value"
+                  aria-label="Step value"
+                  .value="${step.value ?? ""}"
+                  @input="${(e: Event) =>
+                    this._onValueInput(step, (e.target as HTMLInputElement).value)}"
+                />
+              `
+        }
 
         <button
           class="kind-toggle"
           type="button"
-          aria-label="Switch to ${step.kind === "timed"
-            ? "note"
-            : "timed"} step"
+          aria-label="Switch to ${step.kind === "timed" ? "note" : "timed"} step"
           @click="${() => this._toggleKind(step)}"
         >
           ${step.kind === "timed" ? "Timed" : "Note"}
@@ -647,32 +581,32 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
         ></brew-icon-button>
       </div>
 
-      ${this._addingCustomLabelForRowId === step.id
-        ? html`
-            <div class="custom-label-row">
-              <brew-text-field
-                label="New step label"
-                .value="${this._customLabelDraft}"
-                @value-change="${(e: CustomEvent<string>) => {
-                  this._customLabelDraft = e.detail;
-                }}"
-              ></brew-text-field>
-              <div class="custom-label-actions">
-                <brew-button
-                  variant="text"
-                  @button-click="${this._cancelCustomLabel}"
-                  >Cancel</brew-button
-                >
-                <brew-button
-                  variant="filled"
-                  ?disabled="${!this._customLabelDraft.trim()}"
-                  @button-click="${() => this._confirmCustomLabel(step)}"
-                  >Add</brew-button
-                >
+      ${
+        this._addingCustomLabelForRowId === step.id
+          ? html`
+              <div class="custom-label-row">
+                <brew-text-field
+                  label="New step label"
+                  .value="${this._customLabelDraft}"
+                  @value-change="${(e: CustomEvent<string>) => {
+                    this._customLabelDraft = e.detail;
+                  }}"
+                ></brew-text-field>
+                <div class="custom-label-actions">
+                  <brew-button variant="text" @button-click="${this._cancelCustomLabel}"
+                    >Cancel</brew-button
+                  >
+                  <brew-button
+                    variant="filled"
+                    ?disabled="${!this._customLabelDraft.trim()}"
+                    @button-click="${() => this._confirmCustomLabel(step)}"
+                    >Add</brew-button
+                  >
+                </div>
               </div>
-            </div>
-          `
-        : nothing}
+            `
+          : nothing
+      }
     `;
   }
 
@@ -701,8 +635,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
         ) {
           remainingSeconds = Math.max(
             0,
-            currentStep.seconds -
-              (this.elapsedSeconds - activeRow.startSeconds),
+            currentStep.seconds - (this.elapsedSeconds - activeRow.startSeconds),
           );
         }
         if (activeIndex + 1 < steps.length) {
@@ -717,11 +650,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
           )
           .reduce((sum, s) => sum + s.seconds, 0);
 
-        if (
-          hasTimed &&
-          this.elapsedSeconds !== null &&
-          this.elapsedSeconds >= totalTimedSeconds
-        ) {
+        if (hasTimed && this.elapsedSeconds !== null && this.elapsedSeconds >= totalTimedSeconds) {
           isAllComplete = true;
         } else {
           currentStep = steps[0];
@@ -761,13 +690,14 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
           : "Now"
         : (currentStep.value ?? "");
 
-    const nextPillText = showNextStep && nextStep
-      ? nextStep.kind === "timed"
-        ? typeof nextStep.seconds === "number"
-          ? formatSeconds(nextStep.seconds)
-          : "Now"
-        : (nextStep.value ?? "")
-      : "";
+    const nextPillText =
+      showNextStep && nextStep
+        ? nextStep.kind === "timed"
+          ? typeof nextStep.seconds === "number"
+            ? formatSeconds(nextStep.seconds)
+            : "Now"
+          : (nextStep.value ?? "")
+        : "";
 
     this._lastRenderedCue = {
       current: {
@@ -776,95 +706,98 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
         pillText: currentPillText,
         kind: currentStep.kind,
       },
-      next: showNextStep && nextStep
-        ? {
-            label: nextStep.label,
-            pillText: nextPillText,
-            kind: nextStep.kind,
-          }
-        : null,
+      next:
+        showNextStep && nextStep
+          ? {
+              label: nextStep.label,
+              pillText: nextPillText,
+              kind: nextStep.kind,
+            }
+          : null,
     };
 
     return html`
       <div class="condensed-cue-viewport">
-        ${this._leavingCue
-          ? html`
-              <div class="condensed-cue condensed-cue-group slide-up-exit">
-                <div class="cue-row">
-                  <div class="cue-text">
-                    <span class="cue-label"
-                      >${this._leavingCue.current?.label}</span
-                    >
-                    ${this._leavingCue.current?.note
-                      ? html`<span class="cue-note"
-                          >${this._leavingCue.current.note}</span
-                        >`
-                      : nothing}
+        ${
+          this._leavingCue
+            ? html`
+                <div class="condensed-cue condensed-cue-group slide-up-exit">
+                  <div class="cue-row">
+                    <div class="cue-text">
+                      <span class="cue-label">${this._leavingCue.current?.label}</span>
+                      ${
+                        this._leavingCue.current?.note
+                          ? html`<span class="cue-note">${this._leavingCue.current.note}</span>`
+                          : nothing
+                      }
+                    </div>
+                    ${
+                      this._leavingCue.current?.pillText
+                        ? html`<span class="pill pill-${this._leavingCue.current.kind}"
+                            >${this._leavingCue.current.pillText}</span
+                          >`
+                        : nothing
+                    }
                   </div>
-                  ${this._leavingCue.current?.pillText
-                    ? html`<span
-                        class="pill pill-${this._leavingCue.current.kind}"
-                        >${this._leavingCue.current.pillText}</span
-                      >`
-                    : nothing}
+                  ${
+                    showNextStep && this._leavingCue.next
+                      ? html`
+                          <div class="up-next-row">
+                            <span class="up-next-tag">Up next</span>
+                            <span class="up-next-label">${this._leavingCue.next.label}</span>
+                            ${
+                              this._leavingCue.next.pillText
+                                ? html`<span class="pill pill-sm pill-${this._leavingCue.next.kind}"
+                                    >${this._leavingCue.next.pillText}</span
+                                  >`
+                                : nothing
+                            }
+                          </div>
+                        `
+                      : nothing
+                  }
                 </div>
-                ${showNextStep && this._leavingCue.next
-                  ? html`
-                      <div class="up-next-row">
-                        <span class="up-next-tag">Up next</span>
-                        <span class="up-next-label"
-                          >${this._leavingCue.next.label}</span
-                        >
-                        ${this._leavingCue.next.pillText
-                          ? html`<span
-                              class="pill pill-sm pill-${this._leavingCue.next
-                                .kind}"
-                              >${this._leavingCue.next.pillText}</span
-                            >`
-                          : nothing}
-                      </div>
-                    `
-                  : nothing}
-              </div>
-            `
-          : nothing}
+              `
+            : nothing
+        }
 
-        <div
-          class="condensed-cue condensed-cue-group ${this._leavingCue
-            ? "slide-up-enter"
-            : ""}"
-        >
+        <div class="condensed-cue condensed-cue-group ${this._leavingCue ? "slide-up-enter" : ""}">
           <div class="cue-row ${currentStatus ? `step-${currentStatus}` : ""}">
             <div class="cue-text">
               <span class="cue-label">${currentStep.label}</span>
-              ${currentStep.note
-                ? html`<span class="cue-note">${currentStep.note}</span>`
-                : nothing}
+              ${
+                currentStep.note ? html`<span class="cue-note">${currentStep.note}</span>` : nothing
+              }
             </div>
-            ${currentPillText
-              ? html`<span
-                  class="pill pill-${currentStep.kind} ${currentStatus ===
-                  "active"
-                    ? "active-pill"
-                    : ""}"
-                  >${currentPillText}</span
-                >`
-              : nothing}
+            ${
+              currentPillText
+                ? html`<span
+                    class="pill pill-${currentStep.kind} ${
+                      currentStatus === "active" ? "active-pill" : ""
+                    }"
+                    >${currentPillText}</span
+                  >`
+                : nothing
+            }
           </div>
 
-          ${showNextStep && nextStep
-            ? html`
-                <div class="up-next-row">
-                  <span class="up-next-tag">Up next</span>
-                  <span class="up-next-label">${nextStep.label}</span>
-                  ${nextPillText
-                    ? html`<span class="pill pill-sm pill-${nextStep.kind}"
-                        >${nextPillText}</span
-                      >`
-                    : nothing}
-                </div>
-              `
-            : nothing}
+          ${
+            showNextStep && nextStep
+              ? html`
+                  <div class="up-next-row">
+                    <span class="up-next-tag">Up next</span>
+                    <span class="up-next-label">${nextStep.label}</span>
+                    ${
+                      nextPillText
+                        ? html`<span class="pill pill-sm pill-${nextStep.kind}"
+                            >${nextPillText}</span
+                          >`
+                        : nothing
+                    }
+                  </div>
+                `
+              : nothing
+          }
         </div>
       </div>
     `;
@@ -893,56 +826,53 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
             aria-label="${this._expanded ? "Collapse" : "Expand"} Brew Steps"
             @click="${this._toggleExpanded}"
           >
-            <brew-icon
-              name="${this._expanded ? "expand_less" : "expand_more"}"
-            ></brew-icon>
+            <brew-icon name="${this._expanded ? "expand_less" : "expand_more"}"></brew-icon>
           </button>
         </div>
 
-        ${!this.editing
-          ? html`
-              <div class="condensed-body">
-                ${this._renderTimeline(steps)}
-                ${!this._expanded
-                  ? this._renderCondensedCue(steps, progress)
-                  : nothing}
-              </div>
-            `
-          : nothing}
-        ${this._expanded
-          ? html`
-              <div class="body">
-                ${this.editing ? this._renderTimeline(steps) : nothing}
-                <div class="steps">
-                  ${displaySteps.map((step) =>
-                    this.editing
-                      ? this._renderEditRow(step)
-                      : this._renderReadRow(
-                          step,
-                          progress?.find((row) => row.step.id === step.id) ??
-                            null,
-                        ),
-                  )}
+        ${
+          !this.editing
+            ? html`
+                <div class="condensed-body">
+                  ${this._renderTimeline(steps)}
+                  ${!this._expanded ? this._renderCondensedCue(steps, progress) : nothing}
                 </div>
-                ${this.editing
-                  ? html`
-                      <div class="edit-footer">
-                        <brew-button
-                          variant="text"
-                          @button-click="${this._addRow}"
-                          ><brew-icon name="add" size="18"></brew-icon> Add step</brew-button
-                        >
-                        <brew-button
-                          variant="text"
-                          @button-click="${this._resetToPreset}"
-                          >Reset to preset</brew-button
-                        >
-                      </div>
-                    `
-                  : nothing}
-              </div>
-            `
-          : nothing}
+              `
+            : nothing
+        }
+        ${
+          this._expanded
+            ? html`
+                <div class="body">
+                  ${this.editing ? this._renderTimeline(steps) : nothing}
+                  <div class="steps">
+                    ${displaySteps.map((step) =>
+                      this.editing
+                        ? this._renderEditRow(step)
+                        : this._renderReadRow(
+                            step,
+                            progress?.find((row) => row.step.id === step.id) ?? null,
+                          ),
+                    )}
+                  </div>
+                  ${
+                    this.editing
+                      ? html`
+                          <div class="edit-footer">
+                            <brew-button variant="text" @button-click="${this._addRow}"
+                              ><brew-icon name="add" size="18"></brew-icon> Add step</brew-button
+                            >
+                            <brew-button variant="text" @button-click="${this._resetToPreset}"
+                              >Reset to preset</brew-button
+                            >
+                          </div>
+                        `
+                      : nothing
+                  }
+                </div>
+              `
+            : nothing
+        }
       </div>
     `;
   }

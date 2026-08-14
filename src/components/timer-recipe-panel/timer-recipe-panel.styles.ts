@@ -66,7 +66,9 @@ export const TimerRecipePanelStyles = css`
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
   }
 
   .target-chip:hover {

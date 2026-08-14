@@ -30,8 +30,12 @@ test.describe("the post-save confirmation sheet", () => {
 
     await page.locator("brew-post-save-sheet").getByRole("button", { name: "Close" }).click();
 
-    await expect(page.locator("brew-post-save-sheet brew-bottom-sheet")).toHaveCount(0);
-    await expect(page.getByLabel("Water (g)", { exact: true })).toHaveValue("");
+    await expect(page.locator("brew-post-save-sheet brew-bottom-sheet[open]")).toHaveCount(0);
+    const waterInput = page.getByLabel("Water (g)", { exact: true });
+    if (!(await waterInput.isVisible())) {
+      await page.locator('brew-type-picker brew-chip[label="V60"]').click();
+    }
+    await expect(waterInput).toHaveValue("");
   });
 
   test("Go to brew detail navigates to the saved brew's detail screen", async ({ page }) => {

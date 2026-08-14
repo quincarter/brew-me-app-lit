@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openQuickCalculator } from "./helpers";
 
 test.describe("saving and sharing a brew from the Calculator", () => {
   test.beforeEach(async ({ context }) => {
@@ -10,7 +11,8 @@ test.describe("saving and sharing a brew from the Calculator", () => {
   }) => {
     const brewName = "Sunday Pour";
 
-    await page.goto("/calculate");
+    await openQuickCalculator(page);
+
     await page.getByLabel("Water (g)", { exact: true }).fill("300");
     await page.getByRole("button", { name: "Share", exact: true }).click();
 

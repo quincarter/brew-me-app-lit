@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
+import { openQuickCalculator } from "./helpers";
 
 test.describe("starting a guided timer from the Calculator", () => {
   test("routes through the save sheet with guided-timer copy, then navigates to /timer with the named recipe", async ({
     page,
   }) => {
-    await page.goto("/calculate");
+    await openQuickCalculator(page);
+
     await page.getByLabel("Water (g)", { exact: true }).fill("480");
     await page.getByRole("button", { name: "Start guided timer" }).click();
 
@@ -29,7 +31,7 @@ test.describe("starting a guided timer from the Calculator", () => {
   });
 
   test("does not reset the Calculator's entered numbers, unlike a plain save", async ({ page }) => {
-    await page.goto("/calculate");
+    await openQuickCalculator(page);
     await page.getByLabel("Water (g)", { exact: true }).fill("480");
     await page.getByRole("button", { name: "Start guided timer" }).click();
 

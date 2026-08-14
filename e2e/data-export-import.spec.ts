@@ -8,7 +8,11 @@ const REAL_EXPORT_FIXTURE = path.resolve(process.cwd(), "e2e/brew-me-export-2026
 
 test.describe("exporting saved data", () => {
   test("downloads a JSON file whose contents match what's saved", async ({ page }) => {
-    await saveBrewFromCalculator(page, { name: "Export Me", type: "V60", water: "300" });
+    await saveBrewFromCalculator(page, {
+      name: "Export Me",
+      type: "V60",
+      water: "300",
+    });
 
     await page.goto("/more/settings");
     const [download] = await Promise.all([
@@ -22,7 +26,9 @@ test.describe("exporting saved data", () => {
     if (!filePath) throw new Error("Download did not save to disk.");
     const payload: {
       app: string;
-      data: { "saved-brews": { brewType: string; name?: string; water: number }[] };
+      data: {
+        "saved-brews": { brewType: string; name?: string; water: number }[];
+      };
     } = JSON.parse(fs.readFileSync(filePath, "utf-8"));
 
     expect(payload.app).toBe("brew-me");
@@ -52,7 +58,7 @@ test.describe("importing saved data", () => {
     ]);
 
     await page.locator("brew-bottom-nav").getByRole("link", { name: "Saved" }).click();
-    await expect(page.locator("brew-list-row")).toHaveCount(8);
+    await expect(page.locator("brew-list-row")).toHaveCount(9);
     await expect(page.locator("brew-list-row").filter({ hasText: "Quin's Chemex" })).toBeVisible();
 
     await page.goto("/saved/1786128256329");

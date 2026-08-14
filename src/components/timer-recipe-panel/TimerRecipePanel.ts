@@ -114,9 +114,7 @@ export class TimerRecipePanel extends LitElement {
                     .value="${String(Math.round(((recipe.targetSeconds ?? 0) / 60) * 100) / 100)}"
                     @value-change="${(e: CustomEvent<string>) => this._emitTargetChange(e.detail)}"
                   ></brew-text-field>
-                  <brew-button
-                    variant="text"
-                    @button-click="${() => (this._editingTarget = false)}"
+                  <brew-button variant="text" @button-click="${() => (this._editingTarget = false)}"
                     >Done</brew-button
                   >
                 </div>
