@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { V60_RECIPES } from "../../../shared/data/v60-recipes.data";
 import type { IBrewStep, IV60Recipe } from "../../../shared/interfaces/brew.interface";
+import { getPouroverRecipeSteps } from "../../../shared/utilities/pourover-recipe.utility";
 import "../brew-pourover-recipe-card";
 import type { PourOverRecipeCard } from "../PourOverRecipeCard";
 
@@ -115,6 +116,28 @@ describe("brew-pourover-recipe-card", () => {
       expect(element.shadowRoot?.querySelector(".diff-badge")).toBeNull();
       // Raw prose steps render 1:1 - not the curated timedSteps.
       expect(methodRows()).toHaveLength(diffRecipe.steps.length);
+    });
+
+    it("with diffAgainst set but identical to the recipe's own canonical steps, falls back to the exact same raw-prose Method list as no diff at all", async () => {
+      // An unmodified brew still sets diffAgainst (it's just equal to the
+      // recipe's own canonical steps - setup rows AND timed steps, not just
+      // the timed-step portion) - there's nothing to actually show a diff
+      // *of*, so this must render identically to diffAgainst being unset
+      // entirely, not the curated timedSteps list. Otherwise an unmodified
+      // recipe would look like a different, shorter recipe in Diff mode
+      // purely because of the raw-prose-vs-curated format split, which
+      // reads as data loss even though nothing changed.
+      element.diffAgainst = getPouroverRecipeSteps(diffRecipe).map((step) => ({ ...step }));
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".setup-row-changed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".setup-row-removed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-changed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-added")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-removed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".diff-badge")).toBeNull();
+      expect(methodRows()).toHaveLength(diffRecipe.steps.length);
+      expect(methodRows().map((row) => row.textContent?.trim())).toEqual(diffRecipe.steps);
     });
 
     it("a changed setup value renders old -> new with a Changed badge; other setup rows are unaffected", async () => {

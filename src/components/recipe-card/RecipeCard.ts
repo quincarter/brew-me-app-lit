@@ -210,9 +210,20 @@ export class RecipeCard extends LitElement {
     const { year, place, competitor, country, setup, steps, note } = this.recipe;
     const placeLabel = PLACE_LABEL[place] ?? `${place}th`;
 
-    const diff = this.diffAgainst
+    const rawDiff = this.diffAgainst
       ? computeBrewStepsDiff(getAeropressRecipeSteps(this.recipe), this.diffAgainst)
       : null;
+    // An unmodified brew (diffAgainst set, but identical to the recipe's own
+    // canonical steps) has nothing to actually show a diff *of* - falling
+    // through to the raw-prose Method list here, same as Original mode,
+    // avoids presenting the curated phase-based list (a real but different
+    // representation of the same unmodified recipe) as if something had
+    // changed or been lost.
+    const diff =
+      rawDiff &&
+      (rawDiff.changed?.length || rawDiff.added?.length || rawDiff.removed?.length || rawDiff.order)
+        ? rawDiff
+        : null;
 
     return html`
       <div class="card ${this._expanded ? "expanded" : ""}">
