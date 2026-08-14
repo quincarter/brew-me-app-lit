@@ -1,22 +1,33 @@
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import { type HTMLTemplateResult, html, LitElement, SVGTemplateResult } from "lit";
 import { property } from "lit/decorators.js";
 import "../icon/brew-icon";
 import { BottomNavStyles } from "./bottom-nav.styles";
+import {
+  CALCULATE_ICON_SVG,
+  HOME_ICON_SVG,
+  MORE_ICON_SVG,
+  SAVED_ICON_SVG,
+} from "../../shared/icons/icons";
 
 export type BottomNavTab = "home" | "calculate" | "saved" | "more" | "";
 
 interface NavTabConfig {
   id: BottomNavTab;
   href: string;
-  icon: string;
+  icon: SVGTemplateResult;
   label: string;
 }
 
 const TABS: NavTabConfig[] = [
-  { id: "home", href: "/", icon: "home", label: "Home" },
-  { id: "calculate", href: "/calculate", icon: "calculate", label: "Calculate" },
-  { id: "saved", href: "/saved", icon: "bookmark", label: "Saved" },
-  { id: "more", href: "/more", icon: "more_horiz", label: "More" },
+  { id: "home", href: "/", icon: HOME_ICON_SVG, label: "Home" },
+  {
+    id: "calculate",
+    href: "/calculate",
+    icon: CALCULATE_ICON_SVG,
+    label: "Calculate",
+  },
+  { id: "saved", href: "/saved", icon: SAVED_ICON_SVG, label: "Saved" },
+  { id: "more", href: "/more", icon: MORE_ICON_SVG, label: "More" },
 ];
 
 /**
@@ -44,7 +55,7 @@ export class BottomNav extends LitElement {
           return html`
             <a class="tab" href="${tab.href}">
               <span class="icon-wrap ${isActive ? "active" : ""}">
-                <brew-icon name="${tab.icon}"></brew-icon>
+                <brew-icon .svg="${tab.icon}"></brew-icon>
               </span>
               <span class="label ${isActive ? "active" : ""}">${tab.label}</span>
             </a>

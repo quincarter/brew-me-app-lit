@@ -1,4 +1,10 @@
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import {
+  type HTMLTemplateResult,
+  html,
+  LitElement,
+  nothing,
+  SVGTemplateResult,
+} from "lit";
 import { property } from "lit/decorators.js";
 import "../icon/brew-icon";
 import { StatTileStyles } from "./stat-tile.styles";
@@ -15,11 +21,17 @@ export class StatTile extends LitElement {
   @property({ type: String }) icon = "";
   @property({ type: String }) value = "";
   @property({ type: String }) label = "";
+  @property({ type: String }) svg: SVGTemplateResult | null = null;
 
   render(): HTMLTemplateResult {
     return html`
       <div class="tile">
-        <brew-icon name="${this.icon}" size="20"></brew-icon>
+        ${this.icon
+          ? html` <brew-icon name="${this.icon}" size="20"></brew-icon>`
+          : nothing}
+        ${this.svg && !this.icon
+          ? html` <brew-icon .svg="${this.svg}" size="20"></brew-icon>`
+          : nothing}
         <div class="value">${this.value}</div>
         <div class="label">${this.label}</div>
       </div>

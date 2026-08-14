@@ -5,6 +5,7 @@ import "../avatar/brew-avatar";
 import "../icon-button/brew-icon-button";
 import "../star-rating/brew-star-rating";
 import { SavedCardStyles } from "./saved-card.styles";
+import { REPLAY_ICON } from "../../shared/icons/replay.svg";
 
 /**
  * # Saved Card
@@ -81,7 +82,7 @@ export class SavedCard extends LitElement {
             this.replayable
               ? html`
                   <brew-icon-button
-                    icon="replay"
+                    .svgIcon="${REPLAY_ICON}"
                     aria-label="Brew again"
                     style="--icon-button-size: 32px; --icon-button-color: var(--brew-color-primary);
                       --icon-button-bg: var(--brew-color-surface-container-high)"

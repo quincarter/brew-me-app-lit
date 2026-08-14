@@ -6,11 +6,18 @@ import "../../components/list-row/brew-list-row";
 import "../../components/stat-tile/brew-stat-tile";
 import "../../components/top-bar/brew-top-bar";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
-import { streakDaysSignal, totalBrewsSignal } from "../../shared/stores/brew.store";
+import {
+  streakDaysSignal,
+  totalBrewsSignal,
+} from "../../shared/stores/brew.store";
 import { startTour } from "../../shared/stores/tour.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { MorePageStyles } from "./more-page.styles";
+import {
+  BOOKMARK_ADDED_ICON_SVG,
+  LOCAL_FIRE_DEPARTMENT_SVG,
+} from "../../shared/icons/icons";
 
 @customElement("more-page")
 export class MorePage extends SignalWatcher(LitElement) {
@@ -29,12 +36,12 @@ export class MorePage extends SignalWatcher(LitElement) {
         <div class="content">
           <div class="stats">
             <brew-stat-tile
-              icon="bookmark_added"
+              .svg="${BOOKMARK_ADDED_ICON_SVG}"
               value="${String(totalBrewsSignal.value)}"
               label="saved brews"
             ></brew-stat-tile>
             <brew-stat-tile
-              icon="local_fire_department"
+              .svg="${LOCAL_FIRE_DEPARTMENT_SVG}"
               value="${streakDaysSignal.value}"
               label="day streak"
             ></brew-stat-tile>
@@ -75,7 +82,9 @@ export class MorePage extends SignalWatcher(LitElement) {
           ></brew-list-row>
 
           <div class="divider"></div>
-          <div class="section-title" data-tour="more-guides-section">Brew method guide</div>
+          <div class="section-title" data-tour="more-guides-section">
+            Brew method guide
+          </div>
           ${[...BREW_GUIDE]
             .sort((a, b) => a.name.localeCompare(b.name))
             .map(

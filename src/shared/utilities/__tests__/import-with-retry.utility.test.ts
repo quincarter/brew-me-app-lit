@@ -41,8 +41,12 @@ describe("import-with-retry.utility", () => {
   it("retries after transient chunk-load failures and resolves once the importer eventually succeeds", async () => {
     const importer = vi
       .fn()
-      .mockRejectedValueOnce(new Error("Failed to fetch dynamically imported module: /views/home-page/home-page.ts"))
-      .mockRejectedValueOnce(new Error("Failed to fetch dynamically imported module: /views/home-page/home-page.ts"))
+      .mockRejectedValueOnce(
+        new Error("Failed to fetch dynamically imported module: /views/home-page/home-page.ts"),
+      )
+      .mockRejectedValueOnce(
+        new Error("Failed to fetch dynamically imported module: /views/home-page/home-page.ts"),
+      )
       .mockResolvedValueOnce("module");
 
     const promise = importWithRetry(importer);
@@ -66,7 +70,9 @@ describe("import-with-retry.utility", () => {
   it("reloads the page after exhausting all attempts, and never settles, when no reload has been attempted this session", async () => {
     const importer = vi
       .fn()
-      .mockRejectedValue(new Error("Failed to fetch dynamically imported module: /views/home-page/home-page.ts"));
+      .mockRejectedValue(
+        new Error("Failed to fetch dynamically imported module: /views/home-page/home-page.ts"),
+      );
 
     const promise = importWithRetry(importer);
     await vi.runAllTimersAsync();
@@ -85,11 +91,17 @@ describe("import-with-retry.utility", () => {
 
   it("rejects with the last error, without reloading again, when a reload was already attempted this session", async () => {
     window.sessionStorage.setItem(RELOAD_FLAG_KEY, "true");
-    const finalError = new Error("Failed to fetch dynamically imported module: /views/home-page/home-page.ts");
+    const finalError = new Error(
+      "Failed to fetch dynamically imported module: /views/home-page/home-page.ts",
+    );
     const importer = vi
       .fn()
-      .mockRejectedValueOnce(new Error("Failed to fetch dynamically imported module: /views/home-page/home-page.ts"))
-      .mockRejectedValueOnce(new Error("Failed to fetch dynamically imported module: /views/home-page/home-page.ts"))
+      .mockRejectedValueOnce(
+        new Error("Failed to fetch dynamically imported module: /views/home-page/home-page.ts"),
+      )
+      .mockRejectedValueOnce(
+        new Error("Failed to fetch dynamically imported module: /views/home-page/home-page.ts"),
+      )
       .mockRejectedValueOnce(finalError);
 
     const promise = importWithRetry(importer);

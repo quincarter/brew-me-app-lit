@@ -17,12 +17,23 @@ import {
   totalBrewsSignal,
 } from "../../shared/stores/brew.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
-import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
+import {
+  getAvatarColors,
+  getInitial,
+} from "../../shared/utilities/avatar-palette.utility";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
 import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
 import { formatRatio } from "../../shared/utilities/format-ratio.utility";
 import { formatRelativeDay } from "../../shared/utilities/relative-date.utility";
 import { HomePageStyles } from "./home-page.styles";
+import { REPLAY_ICON } from "../../shared/icons/replay.svg";
+import {
+  BOOKMARK_ADDED_ICON_SVG,
+  CALCULATE_ICON_SVG,
+  LOCAL_FIRE_DEPARTMENT_SVG,
+  SAVED_ICON_SVG,
+  TIMER_ICON_SVG,
+} from "../../shared/icons/icons";
 
 /** A real time-of-day greeting instead of a hardcoded one. */
 const getGreeting = (): string => {
@@ -42,7 +53,11 @@ export class HomePage extends SignalWatcher(LitElement) {
     const relativeLower = relative.charAt(0).toLowerCase() + relative.slice(1);
 
     return html`
-      <a class="brew-again-card" data-tour="brew-again-card" href="/saved/${brew.id}">
+      <a
+        class="brew-again-card"
+        data-tour="brew-again-card"
+        href="/saved/${brew.id}"
+      >
         <brew-avatar
           initial="${getInitial(getBrewDisplayName(brew))}"
           background="var(--brew-color-surface)"
@@ -58,7 +73,7 @@ export class HomePage extends SignalWatcher(LitElement) {
           <span class="brew-again-meta">Last brewed ${relativeLower}</span>
         </span>
         <brew-icon-button
-          icon="replay"
+          .svgIcon="${REPLAY_ICON}"
           variant="filled"
           aria-label="Brew again"
           style="--icon-button-size: 44px"
@@ -88,19 +103,19 @@ export class HomePage extends SignalWatcher(LitElement) {
 
           <div class="actions" data-tour="home-actions">
             <brew-action-tile
-              icon="calculate"
+              .svg="${CALCULATE_ICON_SVG}"
               label="Calculate"
               tone="primary"
               href="/calculate"
             ></brew-action-tile>
             <brew-action-tile
-              icon="bookmark"
+              .svg="${SAVED_ICON_SVG}"
               label="Saved Brews"
               tone="secondary"
               href="/saved"
             ></brew-action-tile>
             <brew-action-tile
-              icon="timer"
+              .svg="${TIMER_ICON_SVG}"
               label="Timer"
               tone="tertiary"
               href="/timer"
@@ -109,12 +124,12 @@ export class HomePage extends SignalWatcher(LitElement) {
 
           <div class="stats">
             <brew-stat-tile
-              icon="bookmark_added"
+              .svg="${BOOKMARK_ADDED_ICON_SVG}"
               value="${totalBrewsSignal.value}"
               label="saved brews"
             ></brew-stat-tile>
             <brew-stat-tile
-              icon="local_fire_department"
+              .svg="${LOCAL_FIRE_DEPARTMENT_SVG}"
               value="${streakDaysSignal.value}"
               label="day streak"
             ></brew-stat-tile>
@@ -125,34 +140,35 @@ export class HomePage extends SignalWatcher(LitElement) {
             <a class="see-all" href="/saved">See all</a>
           </div>
 
-          ${
-            recent.length === 0
-              ? html`<brew-empty-state class="recent-empty"></brew-empty-state>`
-              : html`
-                  <div class="recent-row">
-                    ${recent.map((brew) => {
-                      const colors = getAvatarColors(brew.id);
-                      return html`
-                        <brew-saved-card
-                          href="/saved/${brew.id}"
-                          brew-type="${getBrewDisplayName(brew)}"
-                          ratio="${brew.ratio}"
-                          coffee="${brew.coffee}"
-                          water="${brew.water}"
-                          oz="${brew.oz}"
-                          avatar-initial="${getInitial(getBrewDisplayName(brew))}"
-                          avatar-bg="${colors.background}"
-                          avatar-fg="${colors.foreground}"
-                          .avatarIcon="${getBrewTypeIcon(brew.brewType, brew.icon)}"
-                          rating="${brew.rating ?? 0}"
-                          ?replayable="${true}"
-                          @replay-click="${() => brewAgain(brew)}"
-                        ></brew-saved-card>
-                      `;
-                    })}
-                  </div>
-                `
-          }
+          ${recent.length === 0
+            ? html`<brew-empty-state class="recent-empty"></brew-empty-state>`
+            : html`
+                <div class="recent-row">
+                  ${recent.map((brew) => {
+                    const colors = getAvatarColors(brew.id);
+                    return html`
+                      <brew-saved-card
+                        href="/saved/${brew.id}"
+                        brew-type="${getBrewDisplayName(brew)}"
+                        ratio="${brew.ratio}"
+                        coffee="${brew.coffee}"
+                        water="${brew.water}"
+                        oz="${brew.oz}"
+                        avatar-initial="${getInitial(getBrewDisplayName(brew))}"
+                        avatar-bg="${colors.background}"
+                        avatar-fg="${colors.foreground}"
+                        .avatarIcon="${getBrewTypeIcon(
+                          brew.brewType,
+                          brew.icon,
+                        )}"
+                        rating="${brew.rating ?? 0}"
+                        ?replayable="${true}"
+                        @replay-click="${() => brewAgain(brew)}"
+                      ></brew-saved-card>
+                    `;
+                  })}
+                </div>
+              `}
         </div>
 
         <brew-bottom-nav active="home"></brew-bottom-nav>

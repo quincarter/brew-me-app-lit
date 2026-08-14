@@ -6,6 +6,11 @@ import { IconStyles } from "./icon.styles";
  * # Icon
  * Renders a Material Symbols (outlined) glyph by name.
  * ## Usage
+ * Requires importing from "shared/icons"
+ * ```html
+ * <brew-icon .svg="${CALCULATE_ICON_SVG}"></brew-icon>
+ * ```
+ * OR
  * ```html
  * <brew-icon name="calculate"></brew-icon>
  * ```
