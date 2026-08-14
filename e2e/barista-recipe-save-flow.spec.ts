@@ -17,18 +17,13 @@ test.describe("Barista recipe save flow", () => {
       await page.goto("/calculate");
 
       // 2. Tap {brewType} chip in <brew-type-picker>
-      await page
-        .locator(`brew-type-picker brew-chip[label="${brewType}"]`)
-        .click();
+      await page.locator(`brew-type-picker brew-chip[label="${brewType}"]`).click();
 
       // 3. Tap the "Load ..." recipe button
       await page.locator("brew-button", { hasText: "Load" }).click();
 
       // 4. Tap the 3rd recipe item in <brew-recipe-picker-sheet>
-      await page
-        .locator("brew-recipe-picker-sheet brew-list-row")
-        .nth(2)
-        .click();
+      await page.locator("brew-recipe-picker-sheet brew-list-row").nth(2).click();
 
       // 5. Tap 'Save' on the Calculator screen
       await page.getByRole("button", { name: "Save", exact: true }).click();
@@ -39,9 +34,7 @@ test.describe("Barista recipe save flow", () => {
 
       // 7. Assert that the {brewType} chip in <brew-save-sheet> is already selected
       await expect(
-        page.locator(
-          `brew-save-sheet brew-chip[label="${brewType}"][selected]`,
-        ),
+        page.locator(`brew-save-sheet brew-chip[label="${brewType}"][selected]`),
       ).toBeVisible();
 
       // 8. Tap 'Save' in <brew-save-sheet>
@@ -58,12 +51,10 @@ test.describe("Barista recipe save flow", () => {
 
       // 10. Assert URL matches /saved/ and verify brew display name and ratio on the detail page
       await expect(page).toHaveURL(/\/saved\/\d+$/);
-      await expect(page.locator("brew-top-bar .title")).toHaveText(
-        testBrewName,
+      await expect(page.locator("brew-top-bar .title")).toHaveText(testBrewName);
+      await expect(page.locator("saved-detail-page brew-ratio-summary .ratio-value")).toHaveText(
+        /1:\d+/,
       );
-      await expect(
-        page.locator("saved-detail-page brew-ratio-summary .ratio-value"),
-      ).toHaveText(/1:\d+/);
     });
   }
 });

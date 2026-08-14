@@ -206,12 +206,7 @@ export default defineConfig({
     // and fail to even load under the wrong test runner.
     exclude: [...configDefaults.exclude, "e2e/**"],
     coverage: {
-      exclude: [
-        "**/node_modules",
-        "**/vite.config.*",
-        "**/vite-env.d.ts",
-        "**/shared/data/**",
-      ],
+      exclude: ["**/node_modules", "**/vite.config.*", "**/vite-env.d.ts", "**/shared/data/**"],
       enabled: true,
     },
   },

@@ -29,9 +29,7 @@ test.describe("Brew Method Guide to Timer flow", () => {
       await page.locator('guide-detail-page brew-link-card[href*="-recipes"]').click();
 
       // 4. On the recipe page, tap the last/bottom recipe item card to expand it
-      const lastRecipeCard = page
-        .locator("brew-recipe-card, brew-pourover-recipe-card")
-        .last();
+      const lastRecipeCard = page.locator("brew-recipe-card, brew-pourover-recipe-card").last();
       await lastRecipeCard.scrollIntoViewIfNeeded();
       await lastRecipeCard.getByRole("button").first().click();
 
