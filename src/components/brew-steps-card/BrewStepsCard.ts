@@ -304,6 +304,57 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
     this.dispatchEvent(new CustomEvent("reset-to-preset", { bubbles: true, composed: true }));
   };
 
+  /** Steps as currently displayed - the live drag preview while reordering, otherwise `config.steps` as-is. Shared by `render()` and `updated()` so both agree on row order/content. */
+  private _displaySteps(): IBrewStep[] {
+    const steps = this.config?.steps ?? [];
+    return this.editing ? (this._previewSteps ?? steps) : steps;
+  }
+
+  /**
+   * Each edit row's value `<input>` is synced here rather than via a
+   * template `.value=` binding, mirroring the fix in `TextField.ts` (#25):
+   * Lit's `.value=` binding unconditionally reassigns `input.value` on
+   * every re-render, and on `type="number"` inputs Chrome resets the caret
+   * to position 0 on every reassignment, even to an identical string - so
+   * typing in a duration field would otherwise jump the cursor to the
+   * start on every keystroke's round trip back down through `config`
+   * (gh-26). Only reassigning when the value actually differs, and
+   * restoring the selection afterward, keeps the cursor in place.
+   * `selectionStart`/`selectionEnd` are guarded by `!== null` since
+   * `type="number"` inputs don't support the selection APIs at all.
+   */
+  private _syncValueInputs(): void {
+    const steps = this._displaySteps();
+    const rows = this.shadowRoot?.querySelectorAll<HTMLElement>(".edit-row") ?? [];
+    rows.forEach((row) => {
+      const step = steps.find((s) => s.id === row.dataset.stepId);
+      const input = row.querySelector<HTMLInputElement>(".value-input");
+      if (!step || !input) return;
+
+      const target = step.kind === "timed" ? (step.seconds?.toString() ?? "") : (step.value ?? "");
+      if (input.value !== target) {
+        const { selectionStart, selectionEnd } = input;
+        input.value = target;
+        if (selectionStart !== null && selectionEnd !== null) {
+          input.setSelectionRange(selectionStart, selectionEnd);
+        }
+      }
+    });
+  }
+
+  protected updated(changed: PropertyValues<this>): void {
+    super.updated(changed);
+    // Only resync on updates that can actually change a row's *target*
+    // value - reacting to every update (label-menu toggles, custom label
+    // drafts, expand/collapse, ...) would re-walk every edit row's DOM on
+    // unrelated state changes. `_previewSteps` is private, so it can't be
+    // named in `keyof this` for `changed.has()`; checking `_draggingId`
+    // covers it instead, since that's the only time it's reassigned.
+    if (changed.has("config") || changed.has("editing") || this._draggingId !== null) {
+      this._syncValueInputs();
+    }
+  }
+
   /**
    * Which `.edit-row`'s `data-step-id` sits under a viewport point, or
    * `null` if none does. Goes through `deepElementFromPoint`/
@@ -624,7 +675,6 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
                   min="0"
                   placeholder="Seconds"
                   aria-label="Duration in seconds"
-                  .value="${step.seconds?.toString() ?? ""}"
                   @input="${(e: Event) =>
                     this._onValueInput(step, (e.target as HTMLInputElement).value)}"
                 />
@@ -635,7 +685,6 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
                   type="text"
                   placeholder="Value"
                   aria-label="Step value"
-                  .value="${step.value ?? ""}"
                   @input="${(e: Event) =>
                     this._onValueInput(step, (e.target as HTMLInputElement).value)}"
                 />
@@ -884,8 +933,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   render(): HTMLTemplateResult {
     if (!this.config) return html``;
     const steps = this.config.steps;
-    // Dragging only happens in edit mode; outside it, this is just `steps`.
-    const displaySteps = this.editing ? (this._previewSteps ?? steps) : steps;
+    const displaySteps = this._displaySteps();
     // Live done/active/upcoming status only applies to the static read view - editing shows the plain preset-agnostic form instead.
     const progress =
       !this.editing && this.elapsedSeconds !== null
