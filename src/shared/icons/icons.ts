@@ -12,6 +12,7 @@ import { FRENCH_PRESS_ICON } from "./french-press.svg";
 import { HARIO_SWITCH_ICON } from "./hario-switch.svg";
 import { HOME_ICON_SVG } from "./home.svg";
 import { KALITA_WAVE_ICON } from "./kalita-wave.svg";
+import { LOCAL_CAFE_ICON_SVG } from "./local-cafe.svg";
 import { LOCAL_FIRE_DEPARTMENT_SVG } from "./localFireDepartment.svg";
 import { MOKA_POT_ICON } from "./moka-pot.svg";
 import { MORE_ICON_SVG } from "./more.svg";
@@ -44,6 +45,7 @@ export {
   HARIO_SWITCH_ICON,
   HOME_ICON_SVG,
   KALITA_WAVE_ICON,
+  LOCAL_CAFE_ICON_SVG,
   LOCAL_FIRE_DEPARTMENT_SVG,
   MOKA_POT_ICON,
   MORE_ICON_SVG,

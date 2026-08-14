@@ -2,6 +2,7 @@ import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
 import "../icon-button/brew-icon-button";
 import { TopBarStyles } from "./top-bar.styles";
+import { LOCAL_CAFE_ICON_SVG } from "../../shared/icons/icons";
 
 /**
  * # Top Bar
@@ -20,13 +21,14 @@ export class TopBar extends LitElement {
   @property({ type: String }) title = "";
   @property({ type: String }) icon = "local_cafe";
   @property({ type: String }) href = "/";
-  @property({ type: String, attribute: "aria-label-text" }) ariaLabelText = "Home";
+  @property({ type: String, attribute: "aria-label-text" }) ariaLabelText =
+    "Home";
 
   render(): HTMLTemplateResult {
     return html`
       <div class="bar">
         <brew-icon-button
-          icon="${this.icon}"
+          .svgIcon="${LOCAL_CAFE_ICON_SVG}"
           href="${this.href}"
           aria-label="${this.ariaLabelText}"
         ></brew-icon-button>
