@@ -42,10 +42,7 @@ test.describe("starting a guided timer from the Calculator", () => {
   test("does not reset the Calculator's entered numbers, unlike a plain save", async ({
     page,
   }) => {
-    await page.goto("/calculate");
-    await page
-      .getByRole("button", { name: "Quick calculator", exact: true })
-      .click();
+    await openQuickCalculator(page);
     await page.getByLabel("Water (g)", { exact: true }).fill("480");
     await page.getByRole("button", { name: "Start guided timer" }).click();
 
