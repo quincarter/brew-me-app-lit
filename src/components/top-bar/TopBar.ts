@@ -21,8 +21,7 @@ export class TopBar extends LitElement {
   @property({ type: String }) title = "";
   @property({ type: String }) icon = "local_cafe";
   @property({ type: String }) href = "/";
-  @property({ type: String, attribute: "aria-label-text" }) ariaLabelText =
-    "Home";
+  @property({ type: String, attribute: "aria-label-text" }) ariaLabelText = "Home";
 
   render(): HTMLTemplateResult {
     return html`

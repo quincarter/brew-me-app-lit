@@ -17,10 +17,7 @@ import {
   totalBrewsSignal,
 } from "../../shared/stores/brew.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
-import {
-  getAvatarColors,
-  getInitial,
-} from "../../shared/utilities/avatar-palette.utility";
+import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
 import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
 import { formatRatio } from "../../shared/utilities/format-ratio.utility";
@@ -53,11 +50,7 @@ export class HomePage extends SignalWatcher(LitElement) {
     const relativeLower = relative.charAt(0).toLowerCase() + relative.slice(1);
 
     return html`
-      <a
-        class="brew-again-card"
-        data-tour="brew-again-card"
-        href="/saved/${brew.id}"
-      >
+      <a class="brew-again-card" data-tour="brew-again-card" href="/saved/${brew.id}">
         <brew-avatar
           initial="${getInitial(getBrewDisplayName(brew))}"
           background="var(--brew-color-surface)"
@@ -140,35 +133,34 @@ export class HomePage extends SignalWatcher(LitElement) {
             <a class="see-all" href="/saved">See all</a>
           </div>
 
-          ${recent.length === 0
-            ? html`<brew-empty-state class="recent-empty"></brew-empty-state>`
-            : html`
-                <div class="recent-row">
-                  ${recent.map((brew) => {
-                    const colors = getAvatarColors(brew.id);
-                    return html`
-                      <brew-saved-card
-                        href="/saved/${brew.id}"
-                        brew-type="${getBrewDisplayName(brew)}"
-                        ratio="${brew.ratio}"
-                        coffee="${brew.coffee}"
-                        water="${brew.water}"
-                        oz="${brew.oz}"
-                        avatar-initial="${getInitial(getBrewDisplayName(brew))}"
-                        avatar-bg="${colors.background}"
-                        avatar-fg="${colors.foreground}"
-                        .avatarIcon="${getBrewTypeIcon(
-                          brew.brewType,
-                          brew.icon,
-                        )}"
-                        rating="${brew.rating ?? 0}"
-                        ?replayable="${true}"
-                        @replay-click="${() => brewAgain(brew)}"
-                      ></brew-saved-card>
-                    `;
-                  })}
-                </div>
-              `}
+          ${
+            recent.length === 0
+              ? html`<brew-empty-state class="recent-empty"></brew-empty-state>`
+              : html`
+                  <div class="recent-row">
+                    ${recent.map((brew) => {
+                      const colors = getAvatarColors(brew.id);
+                      return html`
+                        <brew-saved-card
+                          href="/saved/${brew.id}"
+                          brew-type="${getBrewDisplayName(brew)}"
+                          ratio="${brew.ratio}"
+                          coffee="${brew.coffee}"
+                          water="${brew.water}"
+                          oz="${brew.oz}"
+                          avatar-initial="${getInitial(getBrewDisplayName(brew))}"
+                          avatar-bg="${colors.background}"
+                          avatar-fg="${colors.foreground}"
+                          .avatarIcon="${getBrewTypeIcon(brew.brewType, brew.icon)}"
+                          rating="${brew.rating ?? 0}"
+                          ?replayable="${true}"
+                          @replay-click="${() => brewAgain(brew)}"
+                        ></brew-saved-card>
+                      `;
+                    })}
+                  </div>
+                `
+          }
         </div>
 
         <brew-bottom-nav active="home"></brew-bottom-nav>

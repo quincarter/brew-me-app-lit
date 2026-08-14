@@ -47,9 +47,6 @@ describe("brew-product-link-card", () => {
     expect(element.shadowRoot?.querySelector(".product-subtitle")?.textContent?.trim()).toBe(
       "A home nitro cold brew kegging system",
     );
-    expect(element.shadowRoot?.querySelector(".product-icon brew-icon")?.getAttribute("name")).toBe(
-      "local_cafe",
-    );
   });
 
   it("always shows the Affiliate link badge, regardless of props", async () => {

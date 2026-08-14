@@ -1,10 +1,4 @@
-import {
-  type HTMLTemplateResult,
-  html,
-  LitElement,
-  nothing,
-  SVGTemplateResult,
-} from "lit";
+import { type HTMLTemplateResult, html, LitElement, nothing, SVGTemplateResult } from "lit";
 import { property } from "lit/decorators.js";
 import "../icon/brew-icon";
 import { ActionTileStyles } from "./action-tile.styles";
@@ -29,12 +23,8 @@ export class ActionTile extends LitElement {
   render(): HTMLTemplateResult {
     return html`
       <a class="tile ${this.tone}" href="${this.href}">
-        ${this.icon
-          ? html`<brew-icon name="${this.icon}"></brew-icon>`
-          : nothing}
-        ${this.svg && !this.icon
-          ? html`<brew-icon .svg="${this.svg}"></brew-icon>`
-          : nothing}
+        ${this.icon ? html`<brew-icon name="${this.icon}"></brew-icon>` : nothing}
+        ${this.svg && !this.icon ? html`<brew-icon .svg="${this.svg}"></brew-icon>` : nothing}
         <span class="label">${this.label}</span>
       </a>
     `;
