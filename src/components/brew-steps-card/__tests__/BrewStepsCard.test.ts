@@ -1,5 +1,5 @@
 import "fake-indexeddb/auto";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { IBrewStep, IBrewStepsConfig } from "../../../shared/interfaces/brew.interface";
 import {
   customStepLabelsSignal,
@@ -545,6 +545,72 @@ describe("brew-steps-card", () => {
   describe("editing interactions", () => {
     beforeEach(async () => {
       await mount({ editing: true });
+    });
+
+    describe("cursor-preserving value sync (gh-26)", () => {
+      it("does not reassign a timed row's duration input when a re-render echoes back what's already there", async () => {
+        const input = element.shadowRoot?.querySelectorAll<HTMLInputElement>(".value-input")[0];
+        if (!input) throw new Error("expected the Bloom row's duration input");
+
+        // Mirrors what actually happens while typing: the browser applies
+        // the edit and fires `input` before any of our code runs, then the
+        // parent (via `_onValueInput` -> `config-change` -> the consumer's
+        // store -> back down through `config`) hands the same value right
+        // back - which is what's spied on below.
+        input.value = "3";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        await element.updateComplete;
+
+        const setValueSpy = vi.spyOn(input, "value", "set");
+        element.config = {
+          steps: baseSteps.map((s) => (s.id === "s1" ? { ...s, seconds: 3 } : s)),
+        };
+        await element.updateComplete;
+
+        expect(setValueSpy).not.toHaveBeenCalled();
+        expect(input.value).toBe("3");
+      });
+
+      it("reassigns a timed row's duration input when its seconds change to a genuinely different value externally", async () => {
+        element.config = {
+          steps: baseSteps.map((s) => (s.id === "s1" ? { ...s, seconds: 99 } : s)),
+        };
+        await element.updateComplete;
+
+        const input = element.shadowRoot?.querySelectorAll<HTMLInputElement>(".value-input")[0];
+        expect(input?.value).toBe("99");
+      });
+
+      it("never calls setSelectionRange on a timed row's number input, since selection isn't supported there", async () => {
+        const input = element.shadowRoot?.querySelectorAll<HTMLInputElement>(".value-input")[0];
+        if (!input) throw new Error("expected the Bloom row's duration input");
+        const setSelectionRangeSpy = vi.spyOn(input, "setSelectionRange");
+
+        element.config = {
+          steps: baseSteps.map((s) => (s.id === "s1" ? { ...s, seconds: 12 } : s)),
+        };
+        await element.updateComplete;
+
+        expect(setSelectionRangeSpy).not.toHaveBeenCalled();
+        expect(input.value).toBe("12");
+      });
+
+      it("does not reassign a note row's text input when a re-render echoes back what's already there", async () => {
+        const input = element.shadowRoot?.querySelectorAll<HTMLInputElement>(".value-input")[2];
+        if (!input) throw new Error("expected the Filter row's text input");
+
+        input.value = "Cloth";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        await element.updateComplete;
+
+        const setValueSpy = vi.spyOn(input, "value", "set");
+        element.config = {
+          steps: baseSteps.map((s) => (s.id === "s3" ? { ...s, value: "Cloth" } : s)),
+        };
+        await element.updateComplete;
+
+        expect(setValueSpy).not.toHaveBeenCalled();
+      });
     });
 
     it("fires config-change with the row's value updated when a timed row's duration input changes", async () => {
