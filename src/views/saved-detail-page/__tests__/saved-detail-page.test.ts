@@ -142,6 +142,195 @@ describe("saved-detail-page", () => {
     });
   });
 
+  describe("brew steps view toggle (recipeSource present)", () => {
+    const brewSteps: IBrewStepsConfig = {
+      steps: [{ id: "x", label: "Bloom", kind: "timed", seconds: 45 }],
+    };
+    const recipeSource: ILoadedRecipeSource = {
+      recipeId: "2025-1",
+      label: "Némo Pop · 2025, 1st place",
+      ratio: 9.44,
+      water: 170,
+      coffee: 18,
+      steps: [{ id: "x", label: "Bloom", kind: "timed", seconds: 30 }],
+    };
+
+    const stepsCard = ():
+      | (Element & { config: IBrewStepsConfig | null; diffAgainst: unknown })
+      | null =>
+      element.shadowRoot?.querySelector("brew-steps-card") as
+        | (Element & { config: IBrewStepsConfig | null; diffAgainst: unknown })
+        | null;
+
+    const toggleButton = (label: string): HTMLButtonElement | undefined =>
+      Array.from(
+        element.shadowRoot?.querySelectorAll<HTMLButtonElement>(".brew-steps-view-toggle-btn") ??
+          [],
+      ).find((button) => button.textContent?.trim() === label);
+
+    it("renders the toggle and defaults to the 'Modified' view (the brew's own current steps, no diff)", async () => {
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 9.44,
+        water: 170,
+        coffee: 18,
+        oz: 6,
+        brewSteps,
+        recipeSource,
+      });
+      await mount(brew);
+
+      expect(element.shadowRoot?.querySelector(".brew-steps-view-toggle")).not.toBeNull();
+      const card = stepsCard();
+      expect(card?.config).toEqual(brewSteps);
+      expect(card?.diffAgainst).toBeNull();
+    });
+
+    it("switches the card to the 'Original' recipe steps, with no diffAgainst, when the Original control is clicked", async () => {
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 9.44,
+        water: 170,
+        coffee: 18,
+        oz: 6,
+        brewSteps,
+        recipeSource,
+      });
+      await mount(brew);
+
+      toggleButton("Original")?.click();
+      await element.updateComplete;
+
+      const card = stepsCard();
+      expect(card?.config).toEqual({ steps: recipeSource.steps });
+      expect(card?.diffAgainst).toBeNull();
+    });
+
+    it("switches the card to a diff view - current steps as config, recipe steps as diffAgainst - when the Diff control is clicked", async () => {
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 9.44,
+        water: 170,
+        coffee: 18,
+        oz: 6,
+        brewSteps,
+        recipeSource,
+      });
+      await mount(brew);
+
+      toggleButton("Diff")?.click();
+      await element.updateComplete;
+
+      const card = stepsCard();
+      expect(card?.config).toEqual(brewSteps);
+      expect(card?.diffAgainst).toEqual(recipeSource.steps);
+    });
+
+    it("renders no toggle when the brew has brewSteps but no recipeSource", async () => {
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 16,
+        water: 480,
+        coffee: 30,
+        oz: 16.2,
+        brewSteps,
+      });
+      await mount(brew);
+
+      expect(element.shadowRoot?.querySelector(".brew-steps-view-toggle")).toBeNull();
+    });
+
+    it("renders no toggle while in edit mode, even with recipeSource present", async () => {
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 9.44,
+        water: 170,
+        coffee: 18,
+        oz: 6,
+        brewSteps,
+        recipeSource,
+      });
+      await mount(brew);
+
+      clickButton(editButton());
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".brew-steps-view-toggle")).toBeNull();
+    });
+
+    it("renders no toggle when recipeSource is present but the brew is unmodified - nothing to diff means the toggle would just be a confusing no-op", async () => {
+      const unmodifiedSteps: IBrewStepsConfig = { steps: recipeSource.steps };
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: recipeSource.ratio,
+        water: recipeSource.water,
+        coffee: recipeSource.coffee,
+        oz: 6,
+        brewSteps: unmodifiedSteps,
+        recipeSource,
+      });
+      await mount(brew);
+
+      expect(element.shadowRoot?.querySelector(".brew-steps-view-toggle")).toBeNull();
+      const card = stepsCard();
+      expect(card?.config).toEqual(unmodifiedSteps);
+      expect(card?.diffAgainst).toBeNull();
+    });
+  });
+
+  describe("original recipe sheet (recipeSource present)", () => {
+    const brewSteps: IBrewStepsConfig = {
+      steps: [{ id: "x", label: "Bloom", kind: "timed", seconds: 45 }],
+    };
+    const recipeSource: ILoadedRecipeSource = {
+      recipeId: "2025-1",
+      label: "Némo Pop · 2025, 1st place",
+      ratio: 9.44,
+      water: 170,
+      coffee: 18,
+      steps: [{ id: "x", label: "Bloom", kind: "timed", seconds: 30 }],
+    };
+
+    const openSheet = async (): Promise<void> => {
+      element.shadowRoot?.querySelector<HTMLButtonElement>(".recipe-banner")?.click();
+      await element.updateComplete;
+    };
+
+    it("shows the Original/Diff toggle for a modified brew", async () => {
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 9.44,
+        water: 170,
+        coffee: 18,
+        oz: 6,
+        brewSteps,
+        recipeSource,
+      });
+      await mount(brew);
+      await openSheet();
+
+      expect(element.shadowRoot?.querySelector(".brew-steps-view-toggle")).not.toBeNull();
+    });
+
+    it("renders no toggle in the sheet for an unmodified brew - it always shows the plain recipe card", async () => {
+      const unmodifiedSteps: IBrewStepsConfig = { steps: recipeSource.steps };
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: recipeSource.ratio,
+        water: recipeSource.water,
+        coffee: recipeSource.coffee,
+        oz: 6,
+        brewSteps: unmodifiedSteps,
+        recipeSource,
+      });
+      await mount(brew);
+      await openSheet();
+
+      expect(element.shadowRoot?.querySelector("brew-bottom-sheet")).not.toBeNull();
+      expect(element.shadowRoot?.querySelector(".brew-steps-view-toggle")).toBeNull();
+    });
+  });
+
   describe("edit mode", () => {
     it("seeds the edit brew-steps-card from the brew's own brewSteps when present", async () => {
       const brewSteps: IBrewStepsConfig = {

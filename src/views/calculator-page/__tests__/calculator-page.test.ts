@@ -151,4 +151,28 @@ describe("calculator-page", () => {
       expect(element.shadowRoot?.querySelector(".recipe-banner")).toBeNull();
     });
   });
+
+  describe("brew steps view toggle (recipeSource present)", () => {
+    const recipe = AEROPRESS_RECIPES.find((item) => item.id === "2025-1");
+    if (!recipe) throw new Error("expected the 2025-1 WAC recipe to exist in test data");
+
+    it("renders no toggle right after loading a recipe, unedited - nothing to diff means the toggle would just be a confusing no-op", async () => {
+      selectBrewType("Aeropress");
+      loadAeropressRecipeIntoCalculator(recipe);
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".brew-steps-view-toggle")).toBeNull();
+    });
+
+    it("renders the toggle once a number is hand-edited away from the loaded recipe", async () => {
+      selectBrewType("Aeropress");
+      loadAeropressRecipeIntoCalculator(recipe);
+      await element.updateComplete;
+
+      setRatio("16");
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".brew-steps-view-toggle")).not.toBeNull();
+    });
+  });
 });

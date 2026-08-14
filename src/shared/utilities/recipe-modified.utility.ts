@@ -8,7 +8,8 @@ export interface IRecipeModifiedCurrent {
   steps: IBrewStep[];
 }
 
-const stepsEqual = (a: IBrewStep[], b: IBrewStep[]): boolean => {
+/** Row-by-row step comparison, exported for `share.utility.ts` to decide whether a brew's steps diverge from its `recipeSource` snapshot enough to need sending over a `/share` link. */
+export const stepsEqual = (a: IBrewStep[], b: IBrewStep[]): boolean => {
   if (a.length !== b.length) return false;
   return a.every((step, index) => {
     const other = b[index];

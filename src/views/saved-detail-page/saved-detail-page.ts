@@ -2,21 +2,17 @@ import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
-import "../../components/bottom-sheet/brew-bottom-sheet";
 import "../../components/brew-steps-card/brew-steps-card";
 import "../../components/button/brew-button";
 import "../../components/icon/brew-icon";
 import "../../components/link-card/brew-link-card";
-import "../../components/pourover-recipe-card/brew-pourover-recipe-card";
 import "../../components/ratio-form/brew-ratio-form";
 import "../../components/ratio-summary/brew-ratio-summary";
-import "../../components/recipe-card/brew-recipe-card";
 import "../../components/star-rating/brew-star-rating";
 import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
 import "../../components/type-picker/brew-type-picker";
 import "../../components/video-search/brew-video-search";
-import { renderRecipeCard } from "../../shared/utilities/recipe-registry.utility";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
 import { BREW_STEPS_PRESETS } from "../../shared/data/brew-steps-presets.data";
 import type { IBrewStepsConfig, ISavedBrew } from "../../shared/interfaces/brew.interface";
@@ -29,18 +25,32 @@ import {
 } from "../../shared/stores/brew.store";
 import { editBeforeBrewingIdSignal } from "../../shared/stores/post-save-sheet.store";
 import { DELETE_ICON, EDIT_ICON, REPLAY_ICON, SHARE_ICON } from "../../shared/icons/icons";
+import { BrewStepsViewToggleStyles } from "../../shared/styles/brew-steps-view-toggle.styles";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
 import { BREW_ICON_MAP, normalizeBrewIconKey } from "../../shared/utilities/brew-icon.utility";
+import {
+  type BrewStepsViewMode,
+  type RecipeSheetViewMode,
+  renderBrewStepsViewToggle,
+  resolveBrewStepsForMode,
+} from "../../shared/utilities/brew-steps-view.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
-import { isRecipeModified } from "../../shared/utilities/recipe-modified.utility";
+import {
+  isRecipeModified,
+  type IRecipeModifiedCurrent,
+} from "../../shared/utilities/recipe-modified.utility";
+import {
+  renderOriginalRecipeSheet,
+  renderRecipeProvenanceBanner,
+} from "../../shared/utilities/recipe-provenance.utility";
 import { coffeeForWater, gramsToOunces, ouncesToGrams } from "../../shared/utilities/ratio.utility";
 import { SHARE_OUTCOME_MESSAGES, shareBrew } from "../../shared/utilities/share.utility";
 import { SavedDetailPageStyles } from "./saved-detail-page.styles";
 
 @customElement("saved-detail-page")
 export class SavedDetailPage extends SignalWatcher(LitElement) {
-  static styles = [SavedDetailPageStyles, responsiveScreenStyles];
+  static styles = [SavedDetailPageStyles, BrewStepsViewToggleStyles, responsiveScreenStyles];
 
   @property({ type: Object }) routeParams: Record<string, string | undefined> = {};
 
@@ -56,6 +66,10 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
   @state() private _editBrewSteps: IBrewStepsConfig | null = null;
   @state() private _shareStatusText = "";
   @state() private _originalRecipeOpen = false;
+  /** Which version of `brew.brewSteps` the inline card shows - only relevant while `brew.recipeSource` is present. Defaults to today's plain behavior. */
+  @state() private _stepsViewMode: BrewStepsViewMode = "modified";
+  /** Which version the "see the original" sheet shows - defaults to today's plain behavior (the curated recipe card). */
+  @state() private _originalRecipeViewMode: RecipeSheetViewMode = "original";
 
   private _statusTimeout: ReturnType<typeof setTimeout> | undefined;
 
@@ -199,6 +213,20 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     );
     /** No match means a custom brew type - there's no curated guide to link to. */
     const matchingGuide = BREW_GUIDE.find((item) => item.name === brew.brewType);
+    const recipeCurrent: IRecipeModifiedCurrent = {
+      ratio: String(brew.ratio),
+      water: String(brew.water),
+      coffee: brew.coffee,
+      steps: brew.brewSteps?.steps ?? [],
+    };
+    /** The toggle+diff-aware card only applies to an actually-modified recipe - an unmodified one has nothing to diff, so showing Modified/Original/Diff for it would just be a confusing no-op. */
+    const isRecipeActuallyModified = brew.recipeSource
+      ? isRecipeModified(recipeCurrent, brew.recipeSource)
+      : false;
+    const resolvedSteps =
+      brew.recipeSource && isRecipeActuallyModified
+        ? resolveBrewStepsForMode(brew.brewSteps, brew.recipeSource, this._stepsViewMode)
+        : null;
 
     return html`
       <div class="screen">
@@ -352,10 +380,22 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
               : html`
                   ${
                     brew.brewSteps
-                      ? html`<brew-steps-card .config="${brew.brewSteps}"></brew-steps-card>`
+                      ? resolvedSteps
+                        ? html`
+                            ${renderBrewStepsViewToggle(this._stepsViewMode, (mode) => {
+                              this._stepsViewMode = mode;
+                            })}
+                            <brew-steps-card
+                              .config="${resolvedSteps.config}"
+                              .diffAgainst="${resolvedSteps.diffAgainst}"
+                            ></brew-steps-card>
+                          `
+                        : html`<brew-steps-card .config="${brew.brewSteps}"></brew-steps-card>`
                       : nothing
                   }
-                  ${brew.recipeSource ? this._renderRecipeBanner(brew) : nothing}
+                  ${renderRecipeProvenanceBanner(brew.recipeSource, recipeCurrent, () => {
+                    this._originalRecipeOpen = true;
+                  })}
 
                   <div class="section-title">Brew guide</div>
                   ${
@@ -379,60 +419,20 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
         </div>
 
         <brew-bottom-nav active="saved"></brew-bottom-nav>
-        ${this._renderOriginalRecipeSheet(brew)}
+        ${renderOriginalRecipeSheet(
+          brew.recipeSource,
+          this._originalRecipeOpen,
+          () => {
+            this._originalRecipeOpen = false;
+          },
+          recipeCurrent,
+          this._originalRecipeViewMode,
+          (mode) => {
+            this._originalRecipeViewMode = mode;
+          },
+          { hideBrewButton: true },
+        )}
       </div>
-    `;
-  }
-
-  private _renderRecipeBanner(brew: ISavedBrew): HTMLTemplateResult | typeof nothing {
-    const source = brew.recipeSource;
-    if (!source) return nothing;
-
-    const modified = isRecipeModified(
-      {
-        ratio: String(brew.ratio),
-        water: String(brew.water),
-        coffee: brew.coffee,
-        steps: brew.brewSteps?.steps ?? [],
-      },
-      source,
-    );
-
-    return html`
-      <button
-        class="primed-banner recipe-banner"
-        type="button"
-        @click="${() => {
-          this._originalRecipeOpen = true;
-        }}"
-      >
-        <brew-icon name="menu_book" size="18"></brew-icon>
-        <span class="primed-banner-text"
-          >${
-            modified
-              ? html`Modified from ${source.label} — tap to see the original`
-              : html`Pulled from ${source.label}`
-          }</span
-        >
-      </button>
-    `;
-  }
-
-  private _renderOriginalRecipeSheet(brew: ISavedBrew): HTMLTemplateResult | typeof nothing {
-    const source = brew.recipeSource;
-    if (!this._originalRecipeOpen || !source) return nothing;
-
-    return html`
-      <brew-bottom-sheet
-        open
-        label="Original recipe"
-        @sheet-scrim-click="${() => {
-          this._originalRecipeOpen = false;
-        }}"
-      >
-        <div class="title">Original recipe</div>
-        ${renderRecipeCard(source.recipeId, { hideBrewButton: true })}
-      </brew-bottom-sheet>
     `;
   }
 }

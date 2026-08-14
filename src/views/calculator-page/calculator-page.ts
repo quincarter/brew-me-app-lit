@@ -2,20 +2,16 @@ import { SignalWatcher } from "@lit-labs/preact-signals";
 import { html, LitElement, nothing, type HTMLTemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
-import "../../components/bottom-sheet/brew-bottom-sheet";
 import "../../components/brew-steps-card/brew-steps-card";
 import "../../components/button/brew-button";
 import "../../components/icon-button/brew-icon-button";
 import "../../components/icon/brew-icon";
-import "../../components/pourover-recipe-card/brew-pourover-recipe-card";
 import "../../components/ratio-form/brew-ratio-form";
-import "../../components/recipe-card/brew-recipe-card";
 import "../../components/recipe-picker-sheet/brew-recipe-picker-sheet";
 import "../../components/save-sheet/brew-save-sheet";
 import "../../components/saved-card/brew-saved-card";
 import "../../components/top-bar/brew-top-bar";
 import "../../components/type-picker/brew-type-picker";
-import { renderRecipeCard } from "../../shared/utilities/recipe-registry.utility";
 import { REFRESH_ICON, SHARE_ICON } from "../../shared/icons/icons";
 import type {
   IAeropressRecipe,
@@ -62,23 +58,41 @@ import {
 import { openPostSaveSheet } from "../../shared/stores/post-save-sheet.store";
 import { openSaveDialog } from "../../shared/stores/save-dialog.store";
 import { primeTimerForSavedBrew } from "../../shared/stores/timer.store";
+import { BrewStepsViewToggleStyles } from "../../shared/styles/brew-steps-view-toggle.styles";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
 import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
+import {
+  type BrewStepsViewMode,
+  type RecipeSheetViewMode,
+  renderBrewStepsViewToggle,
+  resolveBrewStepsForMode,
+} from "../../shared/utilities/brew-steps-view.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
-import { isRecipeModified } from "../../shared/utilities/recipe-modified.utility";
+import {
+  isRecipeModified,
+  type IRecipeModifiedCurrent,
+} from "../../shared/utilities/recipe-modified.utility";
+import {
+  renderOriginalRecipeSheet,
+  renderRecipeProvenanceBanner,
+} from "../../shared/utilities/recipe-provenance.utility";
 import { SHARE_OUTCOME_MESSAGES, type ShareOutcome } from "../../shared/utilities/share.utility";
 import { CalculatorPageStyles } from "./calculator-page.styles";
 
 @customElement("calculator-page")
 export class CalculatorPage extends SignalWatcher(LitElement) {
-  static styles = [CalculatorPageStyles, responsiveScreenStyles];
+  static styles = [CalculatorPageStyles, BrewStepsViewToggleStyles, responsiveScreenStyles];
 
   @state() private _shareStatusText = "";
   @state() private _stepsEditing = false;
   @state() private _recipePickerOpen = false;
   @state() private _originalRecipeOpen = false;
+  /** Which version of `brewStepsSignal` the inline card shows - only relevant while not `_stepsEditing` and `loadedRecipeSourceSignal` is present. Defaults to today's plain behavior. */
+  @state() private _stepsViewMode: BrewStepsViewMode = "modified";
+  /** Which version the "see the original" sheet shows - defaults to today's plain behavior (the curated recipe card). */
+  @state() private _originalRecipeViewMode: RecipeSheetViewMode = "original";
 
   private _statusTimeout: ReturnType<typeof setTimeout> | undefined;
 
@@ -166,58 +180,6 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
     `;
   }
 
-  private _renderRecipeBanner(): HTMLTemplateResult | typeof nothing {
-    const source = loadedRecipeSourceSignal.value;
-    if (!source) return nothing;
-
-    const modified = isRecipeModified(
-      {
-        ratio: ratioSignal.value,
-        water: waterSignal.value,
-        coffee: coffeeSignal.value,
-        steps: brewStepsSignal.value?.steps ?? [],
-      },
-      source,
-    );
-
-    return html`
-      <button
-        class="primed-banner recipe-banner"
-        type="button"
-        @click="${() => {
-          this._originalRecipeOpen = true;
-        }}"
-      >
-        <brew-icon name="menu_book" size="18"></brew-icon>
-        <span class="primed-banner-text"
-          >${
-            modified
-              ? html`Modified from ${source.label} — tap to see the original`
-              : html`Pulled from ${source.label}`
-          }</span
-        >
-      </button>
-    `;
-  }
-
-  private _renderOriginalRecipeSheet(): HTMLTemplateResult | typeof nothing {
-    const source = loadedRecipeSourceSignal.value;
-    if (!this._originalRecipeOpen || !source) return nothing;
-
-    return html`
-      <brew-bottom-sheet
-        open
-        label="Original recipe"
-        @sheet-scrim-click="${() => {
-          this._originalRecipeOpen = false;
-        }}"
-      >
-        <div class="title">Original recipe</div>
-        ${renderRecipeCard(source.recipeId)}
-      </brew-bottom-sheet>
-    `;
-  }
-
   render(): HTMLTemplateResult {
     const selectedType = selectedBrewTypeSignal.value;
     const regexVowels = /^[aeiou]/i;
@@ -243,6 +205,21 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
     ];
 
     const hasCuratedRecipes = curatedRecipes.includes(selectedType);
+    const recipeSource = isQuickCalculator ? null : loadedRecipeSourceSignal.value;
+    const recipeCurrent: IRecipeModifiedCurrent = {
+      ratio: ratioSignal.value,
+      water: waterSignal.value,
+      coffee: coffeeSignal.value,
+      steps: brewStepsSignal.value?.steps ?? [],
+    };
+    /** The toggle+diff-aware card only applies to the static display of an actually-modified recipe - while `_stepsEditing`, or when nothing's actually changed (nothing to diff), behavior is unchanged (plain card, no toggle). */
+    const isRecipeActuallyModified = recipeSource
+      ? isRecipeModified(recipeCurrent, recipeSource)
+      : false;
+    const resolvedSteps =
+      recipeSource && !this._stepsEditing && isRecipeActuallyModified
+        ? resolveBrewStepsForMode(brewSteps, recipeSource, this._stepsViewMode)
+        : null;
 
     return html`
       <div class="screen">
@@ -279,7 +256,13 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
                   </div>
                 `
           }
-          ${isQuickCalculator ? nothing : this._renderRecipeBanner()}
+          ${
+            isQuickCalculator
+              ? nothing
+              : renderRecipeProvenanceBanner(loadedRecipeSourceSignal.value, recipeCurrent, () => {
+                  this._originalRecipeOpen = true;
+                })
+          }
 
           <brew-ratio-form
             ratio="${ratioSignal.value}"
@@ -294,8 +277,16 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
           ${
             brewSteps
               ? html`
+                  ${
+                    resolvedSteps
+                      ? renderBrewStepsViewToggle(this._stepsViewMode, (mode) => {
+                          this._stepsViewMode = mode;
+                        })
+                      : nothing
+                  }
                   <brew-steps-card
-                    .config="${brewSteps}"
+                    .config="${resolvedSteps ? resolvedSteps.config : brewSteps}"
+                    .diffAgainst="${resolvedSteps ? resolvedSteps.diffAgainst : null}"
                     ?editing="${this._stepsEditing}"
                     @config-change="${(e: CustomEvent<IBrewStepsConfig>) =>
                       updateBrewStepsConfig(e.detail)}"
@@ -440,7 +431,18 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
                     this._recipePickerOpen = false;
                   }}"
                 ></brew-recipe-picker-sheet>
-                ${this._renderOriginalRecipeSheet()}
+                ${renderOriginalRecipeSheet(
+                  loadedRecipeSourceSignal.value,
+                  this._originalRecipeOpen,
+                  () => {
+                    this._originalRecipeOpen = false;
+                  },
+                  recipeCurrent,
+                  this._originalRecipeViewMode,
+                  (mode) => {
+                    this._originalRecipeViewMode = mode;
+                  },
+                )}
               `
         }
       </div>

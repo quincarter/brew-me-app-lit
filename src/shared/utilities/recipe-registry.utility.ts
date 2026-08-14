@@ -8,8 +8,24 @@ import { HARIO_SWITCH_RECIPES } from "../data/hario-switch-recipes.data";
 import { KALITA_WAVE_RECIPES } from "../data/kalita-wave-recipes.data";
 import { ORIGAMI_RECIPES } from "../data/origami-recipes.data";
 import { V60_RECIPES } from "../data/v60-recipes.data";
-import type { IAeropressRecipe } from "../interfaces/brew.interface";
-import type { IPouroverRecipe } from "./pourover-recipe.utility";
+import type {
+  IAeropressRecipe,
+  IBrewStep,
+  ILoadedRecipeSource,
+} from "../interfaces/brew.interface";
+import {
+  getAeropressRecipeLabel,
+  getAeropressRecipeRatio,
+  getAeropressRecipeSteps,
+} from "./aeropress-recipe.utility";
+import {
+  getPouroverRecipeLabel,
+  getPouroverRecipeRatio,
+  getPouroverRecipeSteps,
+  type IPouroverRecipe,
+  parseDoseGrams,
+  parseWaterGrams,
+} from "./pourover-recipe.utility";
 
 export type IAnyRecipe = IAeropressRecipe | IPouroverRecipe;
 
@@ -49,9 +65,47 @@ export const findRecipeById = (recipeId: string): IResolvedRecipe | null => {
   return RECIPE_REGISTRY.get(recipeId) ?? null;
 };
 
+/**
+ * Rebuilds the `ILoadedRecipeSource` snapshot for a recipe purely from its
+ * ID - the same deterministic derivation `brew-steps.store.ts`'s
+ * `load*RecipeIntoCalculator` functions use when a recipe is first loaded
+ * (ratio/steps are always computed from the recipe's own curated fields, no
+ * randomness). Lets a `/share` link carry just a `recipeId` instead of the
+ * full label/ratio/water/coffee/steps snapshot - both ends of the link have
+ * the same bundled recipe data, so there's nothing to actually transmit.
+ */
+export const buildRecipeSource = (recipeId: string): ILoadedRecipeSource | null => {
+  const resolved = findRecipeById(recipeId);
+  if (!resolved) return null;
+
+  if (resolved.kind === "aeropress") {
+    const recipe = resolved.recipe as IAeropressRecipe;
+    return {
+      recipeId: recipe.id,
+      label: getAeropressRecipeLabel(recipe),
+      ratio: getAeropressRecipeRatio(recipe),
+      water: recipe.totalWaterGrams,
+      coffee: recipe.doseGrams,
+      steps: getAeropressRecipeSteps(recipe),
+    };
+  }
+
+  const recipe = resolved.recipe as IPouroverRecipe;
+  return {
+    recipeId: recipe.id,
+    label: getPouroverRecipeLabel(recipe),
+    ratio: getPouroverRecipeRatio(recipe),
+    water: parseWaterGrams(recipe),
+    coffee: parseDoseGrams(recipe),
+    steps: getPouroverRecipeSteps(recipe),
+  };
+};
+
 export interface IRenderRecipeCardOptions {
   startOpen?: boolean;
   hideBrewButton?: boolean;
+  /** Passed straight through to the rendered card's own `.diffAgainst` - see `RecipeCard`/`PourOverRecipeCard`'s doc comments for the merged diff treatment this drives. */
+  diffAgainst?: IBrewStep[] | null;
 }
 
 /**
@@ -67,7 +121,7 @@ export const renderRecipeCard = (
     return html`<p>This recipe is no longer available.</p>`;
   }
 
-  const { startOpen = true, hideBrewButton = false } = options;
+  const { startOpen = true, hideBrewButton = false, diffAgainst = null } = options;
 
   if (resolved.kind === "aeropress") {
     return html`
@@ -75,6 +129,7 @@ export const renderRecipeCard = (
         .recipe="${resolved.recipe as IAeropressRecipe}"
         ?start-open="${startOpen}"
         ?hide-brew-button="${hideBrewButton}"
+        .diffAgainst="${diffAgainst}"
       ></brew-recipe-card>
     `;
   }
@@ -84,6 +139,7 @@ export const renderRecipeCard = (
       .recipe="${resolved.recipe as IPouroverRecipe}"
       ?start-open="${startOpen}"
       ?hide-brew-button="${hideBrewButton}"
+      .diffAgainst="${diffAgainst}"
     ></brew-pourover-recipe-card>
   `;
 };

@@ -146,6 +146,185 @@ describe("brew-steps-card", () => {
     });
   });
 
+  describe("diffAgainst diff view", () => {
+    beforeEach(async () => {
+      await mount();
+    });
+
+    it("with diffAgainst unset (the default), renders exactly the prior plain read-only rows with no diff classes/badges (regression guard)", () => {
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows).toHaveLength(3);
+      expect(element.shadowRoot?.querySelector(".step-changed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-added")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-removed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-diff-badge")).toBeNull();
+    });
+
+    it("flags only the row whose fields differ as 'changed', leaving unchanged rows untouched", async () => {
+      const diffAgainst: IBrewStep[] = baseSteps.map((step) => ({ ...step }));
+      const changedSteps: IBrewStep[] = baseSteps.map((step) =>
+        step.id === "s1" ? { ...step, seconds: 45 } : step,
+      );
+      element.config = { steps: changedSteps };
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows).toHaveLength(3);
+      expect(rows?.[0]?.classList.contains("step-changed")).toBe(true);
+      expect(rows?.[0]?.querySelector(".step-diff-badge")?.textContent?.trim()).toBe("Changed");
+      // Current (changed) seconds value is shown, not the original diffAgainst value.
+      expect(rows?.[0]?.querySelector(".pill")?.textContent?.trim()).toBe("00:45");
+      expect(rows?.[1]?.classList.contains("step-changed")).toBe(false);
+      expect(rows?.[2]?.classList.contains("step-changed")).toBe(false);
+    });
+
+    it("still renders a row present in diffAgainst but absent from config.steps, with removed/struck-through treatment", async () => {
+      const diffAgainst: IBrewStep[] = baseSteps.map((step) => ({ ...step }));
+      // Drop "s2" (Plunge) entirely from the live config.
+      const currentSteps = baseSteps.filter((step) => step.id !== "s2");
+      element.config = { steps: currentSteps };
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows).toHaveLength(3);
+      const removedRow = Array.from(rows ?? []).find((row) =>
+        row.querySelector(".step-label")?.textContent?.includes("Plunge"),
+      );
+      expect(removedRow).not.toBeUndefined();
+      expect(removedRow?.classList.contains("step-removed")).toBe(true);
+      expect(removedRow?.querySelector(".step-diff-badge")?.textContent?.trim()).toBe("Removed");
+    });
+
+    it("appends a row present in config.steps but absent from diffAgainst at the end, with added treatment", async () => {
+      const diffAgainst: IBrewStep[] = baseSteps.map((step) => ({ ...step }));
+      const addedRow: IBrewStep = { id: "s4", label: "Rest", kind: "note", value: "Optional" };
+      element.config = { steps: [...baseSteps, addedRow] };
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows).toHaveLength(4);
+      const lastRow = rows?.[3];
+      expect(lastRow?.querySelector(".step-label")?.textContent).toBe("Rest");
+      expect(lastRow?.classList.contains("step-added")).toBe(true);
+      expect(lastRow?.querySelector(".step-diff-badge")?.textContent?.trim()).toBe("Added");
+    });
+
+    it("flags only the relocated row as moved when only the order changed (no content edits, no add/remove)", async () => {
+      const diffAgainst: IBrewStep[] = baseSteps.map((step) => ({ ...step }));
+      // Swap "s1"/"s2" - findMovedStepIds's LCS flags only "s2" for this
+      // particular adjacent swap, leaving "s1" and "s3" unflagged.
+      const reorderedSteps: IBrewStep[] = [baseSteps[1], baseSteps[0], baseSteps[2]];
+      element.config = { steps: reorderedSteps };
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows).toHaveLength(3);
+      const bloomRow = Array.from(rows ?? []).find((row) =>
+        row.querySelector(".step-label")?.textContent?.includes("Bloom"),
+      );
+      const plungeRow = Array.from(rows ?? []).find((row) =>
+        row.querySelector(".step-label")?.textContent?.includes("Plunge"),
+      );
+      const filterRow = Array.from(rows ?? []).find((row) =>
+        row.querySelector(".step-label")?.textContent?.includes("Filter"),
+      );
+
+      expect(plungeRow?.classList.contains("step-moved")).toBe(true);
+      expect(plungeRow?.querySelector(".step-diff-badge-moved")?.textContent?.trim()).toBe("Moved");
+      expect(bloomRow?.classList.contains("step-moved")).toBe(false);
+      expect(filterRow?.classList.contains("step-moved")).toBe(false);
+      expect(element.shadowRoot?.querySelector(".step-diff-badge-moved")).not.toBeNull();
+      expect(element.shadowRoot?.querySelectorAll(".step-diff-badge-moved")).toHaveLength(1);
+      // No content changed anywhere in this scenario.
+      expect(element.shadowRoot?.querySelector(".step-changed")).toBeNull();
+    });
+
+    it("renders both Changed and Moved badges/classes when a row is both edited and reordered", async () => {
+      const diffAgainst: IBrewStep[] = baseSteps.map((step) => ({ ...step }));
+      // "s1" moves from front to back AND has its content changed - the two
+      // signals are independent and should both show up on the same row.
+      const modifiedSteps: IBrewStep[] = [
+        baseSteps[1],
+        baseSteps[2],
+        { ...baseSteps[0], seconds: 45 },
+      ];
+      element.config = { steps: modifiedSteps };
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      const bloomRow = Array.from(rows ?? []).find((row) =>
+        row.querySelector(".step-label")?.textContent?.includes("Bloom"),
+      );
+      expect(bloomRow?.classList.contains("step-changed")).toBe(true);
+      expect(bloomRow?.classList.contains("step-moved")).toBe(true);
+      const badgeTexts = Array.from(bloomRow?.querySelectorAll(".step-diff-badge") ?? []).map(
+        (badge) => badge.textContent?.trim(),
+      );
+      expect(badgeTexts).toEqual(["Changed", "Moved"]);
+    });
+
+    it("does not flag a removed or added row as moved even though a reorder happened in the same diff", async () => {
+      const diffAgainst: IBrewStep[] = baseSteps.map((step) => ({ ...step }));
+      const addedRow: IBrewStep = { id: "s4", label: "Rest", kind: "note", value: "Optional" };
+      // Drop "s2" (removed), add "s4" (added), and reorder the remaining
+      // kept rows ("s1"/"s3") relative to each other.
+      const modifiedSteps: IBrewStep[] = [baseSteps[2], addedRow, baseSteps[0]];
+      element.config = { steps: modifiedSteps };
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      const filterRow = Array.from(rows ?? []).find((row) =>
+        row.querySelector(".step-label")?.textContent?.includes("Filter"),
+      );
+      const plungeRow = Array.from(rows ?? []).find((row) =>
+        row.querySelector(".step-label")?.textContent?.includes("Plunge"),
+      );
+      const restRow = Array.from(rows ?? []).find((row) =>
+        row.querySelector(".step-label")?.textContent?.includes("Rest"),
+      );
+
+      expect(filterRow?.classList.contains("step-moved")).toBe(true);
+      expect(plungeRow?.classList.contains("step-removed")).toBe(true);
+      expect(plungeRow?.classList.contains("step-moved")).toBe(false);
+      expect(restRow?.classList.contains("step-added")).toBe(true);
+      expect(restRow?.classList.contains("step-moved")).toBe(false);
+    });
+
+    it("regression guard: no row shows a Moved badge when the diff has no reordering (only content changes)", async () => {
+      const diffAgainst: IBrewStep[] = baseSteps.map((step) => ({ ...step }));
+      const changedSteps: IBrewStep[] = baseSteps.map((step) =>
+        step.id === "s1" ? { ...step, seconds: 45 } : step,
+      );
+      element.config = { steps: changedSteps };
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".step-moved")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-diff-badge-moved")).toBeNull();
+    });
+
+    it("ignores diffAgainst entirely while editing, rendering the normal editable rows instead", async () => {
+      const diffAgainst: IBrewStep[] = baseSteps.map((step) =>
+        step.id === "s1" ? { ...step, seconds: 999 } : step,
+      );
+      element.diffAgainst = diffAgainst;
+      element.editing = true;
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelectorAll(".edit-row")).toHaveLength(3);
+      expect(element.shadowRoot?.querySelector(".step-row")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-changed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-added")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-removed")).toBeNull();
+    });
+  });
+
   describe("condensed collapsed view", () => {
     it("omits up-next row when collapsed on static non-timer views (elapsedSeconds = null)", async () => {
       const card = document.createElement("brew-steps-card") as BrewStepsCard;
