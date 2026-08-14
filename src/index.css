@@ -77,6 +77,27 @@ body {
   overflow: hidden;
 }
 
+/*
+ * iOS WebKit Standalone / Home Screen Bookmark Fix:
+ * When launched from the iOS Home Screen (as a WebClip PWA), WebKit's `100dvh`
+ * unit incorrectly subtracts Safari's address bar height even though no address
+ * bar is rendered. Bypassing `100dvh` in standalone mode restores full-bleed
+ * 100% device screen height.
+ */
+@media (display-mode: standalone) {
+  html,
+  body {
+    height: 100% !important;
+    height: 100vh !important;
+  }
+}
+
+html[data-standalone="true"],
+html[data-standalone="true"] body {
+  height: 100% !important;
+  height: 100vh !important;
+}
+
 body {
   font-family: Roboto, system-ui, sans-serif;
   background: var(--brew-page-background);

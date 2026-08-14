@@ -19,6 +19,18 @@ export const AppShellStyles = css`
     overflow: hidden;
   }
 
+  @media (display-mode: standalone) {
+    :host {
+      height: 100% !important;
+      height: 100vh !important;
+    }
+  }
+
+  :host-context(html[data-standalone="true"]) {
+    height: 100% !important;
+    height: 100vh !important;
+  }
+
   main {
     flex: 1;
     min-height: 0;
