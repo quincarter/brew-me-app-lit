@@ -162,7 +162,8 @@ export const PourOverRecipeCardStyles = css`
 
   .steps li.step-changed,
   .steps li.step-added,
-  .steps li.step-removed {
+  .steps li.step-removed,
+  .steps li.step-moved {
     border-left: 3px solid transparent;
     padding-left: 8px;
     border-radius: 4px;
@@ -200,6 +201,23 @@ export const PourOverRecipeCardStyles = css`
   .steps li.step-removed .step-line-label,
   .steps li.step-removed .step-line-value {
     text-decoration: line-through;
+  }
+
+  /* "Moved" is an independent signal from changed/added/removed (a row can
+   * be both changed and moved at once), so it's its own class rather than
+   * another diffState-derived variant. An inset right-edge accent (rather
+   * than another left border) so it never fights the left border already
+   * used for changed/added/removed when both classes land on the same
+   * row. Uses secondary rather than primary/tertiary/error so all four
+   * diff signals stay visually distinct - same token as brew-steps-card's
+   * own "moved" treatment. */
+  .steps li.step-moved {
+    border-radius: 4px;
+    box-shadow: inset -3px 0 0 var(--brew-color-secondary);
+  }
+
+  .diff-badge-moved {
+    color: var(--brew-color-secondary);
   }
 
   .step-line-label {

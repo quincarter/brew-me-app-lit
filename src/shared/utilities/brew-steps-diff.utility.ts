@@ -120,3 +120,59 @@ const applyFieldChange = (step: IBrewStep, change: IBrewStepFieldChange): IBrewS
   if (change.note !== undefined) result.note = change.note === null ? undefined : change.note;
   return result;
 };
+
+/** Longest common subsequence of two id arrays, as the set of ids appearing in it - a minimal "what's still in relative order" baseline for `findMovedStepIds` to diff against. */
+const longestCommonSubsequenceIds = (a: string[], b: string[]): Set<string> => {
+  const lengths: number[][] = Array.from({ length: a.length + 1 }, () =>
+    Array.from<number>({ length: b.length + 1 }).fill(0),
+  );
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      lengths[i][j] =
+        a[i - 1] === b[j - 1]
+          ? lengths[i - 1][j - 1] + 1
+          : Math.max(lengths[i - 1][j], lengths[i][j - 1]);
+    }
+  }
+
+  const result = new Set<string>();
+  let i = a.length;
+  let j = b.length;
+  while (i > 0 && j > 0) {
+    if (a[i - 1] === b[j - 1]) {
+      result.add(a[i - 1]);
+      i--;
+      j--;
+    } else if (lengths[i - 1][j] >= lengths[i][j - 1]) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+  return result;
+};
+
+/**
+ * Ids of rows (present in both arrays, matched by `id`) whose relative
+ * order changed between `original` and `modified` - a row-level "reorder
+ * happened" signal for the diff view, computed via longest common
+ * subsequence rather than a naive index comparison. LCS finds the largest
+ * set of shared rows that are *already* in the same relative order on both
+ * sides; only rows outside that set actually moved. A naive "did this row's
+ * absolute index change" check would flag every row *after* a single moved
+ * row too (since their indices all shift by one), which is technically true
+ * but not what a person means by "this step moved" - LCS gives the minimal,
+ * intuitive set instead (the same technique behind most line-based diff
+ * tools' "moved" hints).
+ */
+export const findMovedStepIds = (original: IBrewStep[], modified: IBrewStep[]): Set<string> => {
+  const originalIds = original.map((step) => step.id);
+  const modifiedIdSet = new Set(modified.map((step) => step.id));
+  const originalIdSet = new Set(originalIds);
+
+  const keptOriginalIds = originalIds.filter((id) => modifiedIdSet.has(id));
+  const keptModifiedIds = modified.map((step) => step.id).filter((id) => originalIdSet.has(id));
+
+  const lcsIds = longestCommonSubsequenceIds(keptOriginalIds, keptModifiedIds);
+  return new Set(keptOriginalIds.filter((id) => !lcsIds.has(id)));
+};

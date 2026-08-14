@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { IBrewStep } from "../../interfaces/brew.interface";
-import { applyBrewStepsDiff, computeBrewStepsDiff } from "../brew-steps-diff.utility";
+import {
+  applyBrewStepsDiff,
+  computeBrewStepsDiff,
+  findMovedStepIds,
+} from "../brew-steps-diff.utility";
 import { stepsEqual } from "../recipe-modified.utility";
 import { buildRecipeSource } from "../recipe-registry.utility";
 
@@ -247,6 +251,80 @@ describe("brew-steps-diff.utility", () => {
 
       expect(stepsEqual(applied, modified)).toBe(true);
       expect(applied.map((step) => step.id)).toEqual(modified.map((step) => step.id));
+    });
+  });
+
+  describe("findMovedStepIds", () => {
+    it("returns an empty set when the array is compared against itself", () => {
+      expect(findMovedStepIds(original, original)).toEqual(new Set());
+    });
+
+    it("returns an empty set for a same-order copy with no position changes", () => {
+      const modified = original.map((step) => ({ ...step }));
+
+      expect(findMovedStepIds(original, modified)).toEqual(new Set());
+    });
+
+    it("returns an empty set for empty arrays, without erroring", () => {
+      expect(findMovedStepIds([], [])).toEqual(new Set());
+    });
+
+    it("flags exactly 2 of 3 ids for a full reversal, per the LCS's deterministic tie-breaking", () => {
+      // LCS of ["a","b","c"] vs ["c","b","a"] has length 1, and the
+      // implementation's backtrack (favoring `i--` on a length tie) anchors
+      // on "a" as the single kept id, leaving "b" and "c" flagged - a
+      // different, equally-valid LCS choice (e.g. anchoring on "b" or "c")
+      // would flag a different pair, so this asserts the actual
+      // deterministic output rather than an arbitrary "expected" one.
+      const modified = [original[2], original[1], original[0]];
+
+      expect(findMovedStepIds(original, modified)).toEqual(new Set(["b", "c"]));
+    });
+
+    it("flags only the single relocated id when one item moves from the front to the back of a 4-item array", () => {
+      const d: IBrewStep = { id: "d", label: "Rest", kind: "note", value: "Optional" };
+      const fourItems = [...original, d];
+      // [a,b,c,d] -> [b,c,d,a]: b/c/d's absolute index shifts too, but only
+      // "a" actually left its relative position among the others - the
+      // "minimal set" property `findMovedStepIds` exists for.
+      const modified = [fourItems[1], fourItems[2], fourItems[3], fourItems[0]];
+
+      expect(findMovedStepIds(fourItems, modified)).toEqual(new Set(["a"]));
+    });
+
+    it("flags exactly 1 of the 2 ids in an adjacent two-item swap", () => {
+      const modified = [original[1], original[0], original[2]];
+
+      expect(findMovedStepIds(original, modified)).toEqual(new Set(["b"]));
+    });
+
+    it("excludes added/removed ids and flags only the relocated kept row(s) in a combined reorder + add + remove diff", () => {
+      const d: IBrewStep = { id: "d", label: "Rest", kind: "note", value: "Optional" };
+      const e: IBrewStep = { id: "e", label: "Extra", kind: "note", value: "New" };
+      const fourItems = [...original, d];
+      // Drop "b", keep "a"/"c"/"d" but swap "a" and "c", and add "e" - "e"
+      // (added) and "b" (removed) must never appear in the result.
+      const modified = [fourItems[2], fourItems[0], e, fourItems[3]];
+
+      expect(findMovedStepIds(fourItems, modified)).toEqual(new Set(["c"]));
+    });
+
+    it("matches rows purely by id, so a content-only change with no position change is not flagged as moved", () => {
+      const modified = original.map((step) => (step.id === "b" ? { ...step, seconds: 999 } : step));
+
+      expect(findMovedStepIds(original, modified)).toEqual(new Set());
+    });
+
+    it("flags a row as moved by id position alone, independently of whether its content also changed", () => {
+      // "a" is both content-changed (per computeBrewStepsDiff) and
+      // reordered - the two signals are independent, and this function
+      // only cares about the latter.
+      const changedA: IBrewStep = { ...original[0], seconds: 999 };
+      const modified = [original[1], changedA, original[2]];
+
+      const diff = computeBrewStepsDiff(original, modified);
+      expect(diff.changed).toEqual([{ id: "a", seconds: 999 }]);
+      expect(findMovedStepIds(original, modified)).toEqual(new Set(["b"]));
     });
   });
 });

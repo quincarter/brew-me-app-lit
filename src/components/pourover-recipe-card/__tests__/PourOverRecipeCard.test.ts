@@ -223,5 +223,114 @@ describe("brew-pourover-recipe-card", () => {
         expect(methodLabels).not.toContain(key);
       }
     });
+
+    describe("moved rows", () => {
+      const setupRowsUnchanged = (): IBrewStep[] =>
+        Object.entries(diffRecipe.setup).map(([key, value]) => ({
+          id: `${diffRecipe.id}-setup-${key}`,
+          label: key,
+          kind: "note",
+          value,
+        }));
+
+      it("flags only the relocated Method row as moved when only the order changed (no content edits, no add/remove)", async () => {
+        const reorderOnlyDiffAgainst: IBrewStep[] = [
+          ...setupRowsUnchanged(),
+          originalTimedSteps[0], // rao-bloom
+          originalTimedSteps[2], // rao-swirl, moved ahead of rao-pour
+          originalTimedSteps[1], // rao-pour
+          originalTimedSteps[3], // rao-serve
+        ];
+        element.diffAgainst = reorderOnlyDiffAgainst;
+        await element.updateComplete;
+
+        const rows = methodRows();
+        const swirlRow = rows.find(
+          (row) =>
+            row.querySelector(".step-line-label")?.textContent?.trim() === "Swirl & drawdown",
+        );
+        const pourRow = rows.find(
+          (row) => row.querySelector(".step-line-label")?.textContent?.trim() === "Main pour",
+        );
+        const bloomRow = rows.find(
+          (row) => row.querySelector(".step-line-label")?.textContent?.trim() === "Bloom & stir",
+        );
+
+        expect(swirlRow?.classList.contains("step-moved")).toBe(true);
+        expect(swirlRow?.querySelector(".diff-badge-moved")?.textContent?.trim()).toBe("Moved");
+        expect(pourRow?.classList.contains("step-moved")).toBe(false);
+        expect(bloomRow?.classList.contains("step-moved")).toBe(false);
+        // No content changed anywhere in this scenario.
+        expect(element.shadowRoot?.querySelector(".step-changed")).toBeNull();
+        expect(element.shadowRoot?.querySelector(".setup-row-changed")).toBeNull();
+      });
+
+      it("renders both Changed and Moved badges when a Method row is both edited and relocated", async () => {
+        const changedAndMovedDiffAgainst: IBrewStep[] = [
+          ...setupRowsUnchanged(),
+          { ...originalTimedSteps[2], seconds: 90 }, // rao-swirl, changed and moved to front
+          originalTimedSteps[0], // rao-bloom
+          originalTimedSteps[1], // rao-pour
+          originalTimedSteps[3], // rao-serve
+        ];
+        element.diffAgainst = changedAndMovedDiffAgainst;
+        await element.updateComplete;
+
+        const swirlRow = methodRows().find(
+          (row) =>
+            row.querySelector(".step-line-label")?.textContent?.trim() === "Swirl & drawdown",
+        );
+        expect(swirlRow?.classList.contains("step-changed")).toBe(true);
+        expect(swirlRow?.classList.contains("step-moved")).toBe(true);
+        const badgeTexts = Array.from(swirlRow?.querySelectorAll(".diff-badge") ?? []).map(
+          (badge) => badge.textContent?.trim(),
+        );
+        expect(badgeTexts).toEqual(["Changed", "Moved"]);
+      });
+
+      it("does not flag a removed or added Method row as moved even though kept rows were reordered in the same diff", async () => {
+        const coolRow: IBrewStep = {
+          id: "rao-cool",
+          label: "Cool & serve",
+          kind: "timed",
+          seconds: 20,
+        };
+        const removedAddedReorderDiffAgainst: IBrewStep[] = [
+          ...setupRowsUnchanged(),
+          originalTimedSteps[3], // rao-serve, moved to front among the kept rows
+          originalTimedSteps[0], // rao-bloom
+          // "rao-pour" intentionally omitted (removed)
+          originalTimedSteps[2], // rao-swirl
+          coolRow, // added
+        ];
+        element.diffAgainst = removedAddedReorderDiffAgainst;
+        await element.updateComplete;
+
+        const rows = methodRows();
+        const serveRow = rows.find(
+          (row) => row.querySelector(".step-line-label")?.textContent?.trim() === "Serve",
+        );
+        const pourRow = rows.find(
+          (row) => row.querySelector(".step-line-label")?.textContent?.trim() === "Main pour",
+        );
+        const coolRowEl = rows.find(
+          (row) => row.querySelector(".step-line-label")?.textContent?.trim() === "Cool & serve",
+        );
+
+        expect(serveRow?.classList.contains("step-moved")).toBe(true);
+        expect(pourRow?.classList.contains("step-removed")).toBe(true);
+        expect(pourRow?.classList.contains("step-moved")).toBe(false);
+        expect(coolRowEl?.classList.contains("step-added")).toBe(true);
+        expect(coolRowEl?.classList.contains("step-moved")).toBe(false);
+      });
+
+      it("regression guard: no Method row shows a Moved badge when the diff has no reordering (only content changes/add/remove)", async () => {
+        element.diffAgainst = diffAgainst;
+        await element.updateComplete;
+
+        expect(element.shadowRoot?.querySelector(".step-moved")).toBeNull();
+        expect(element.shadowRoot?.querySelector(".diff-badge-moved")).toBeNull();
+      });
+    });
   });
 });

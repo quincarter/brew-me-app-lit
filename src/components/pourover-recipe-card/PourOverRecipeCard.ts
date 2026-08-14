@@ -3,6 +3,7 @@ import { property, state } from "lit/decorators.js";
 import type { IBrewStep, IOrigamiRecipe, IV60Recipe } from "../../shared/interfaces/brew.interface";
 import {
   computeBrewStepsDiff,
+  findMovedStepIds,
   type IBrewStepsDiff,
 } from "../../shared/utilities/brew-steps-diff.utility";
 import { formatSeconds } from "../../shared/utilities/format-time.utility";
@@ -119,7 +120,11 @@ export class PourOverRecipeCard extends LitElement {
     `;
   }
 
-  private _renderMethodStepRow(step: IBrewStep, diffState: DiffState): HTMLTemplateResult {
+  private _renderMethodStepRow(
+    step: IBrewStep,
+    diffState: DiffState,
+    moved: boolean = false,
+  ): HTMLTemplateResult {
     const valueText =
       step.kind === "timed"
         ? typeof step.seconds === "number"
@@ -130,10 +135,11 @@ export class PourOverRecipeCard extends LitElement {
       diffState === "changed" ? "Changed" : diffState === "added" ? "Added" : "Removed";
 
     return html`
-      <li class="${diffState ? `step-${diffState}` : ""}">
+      <li class="${diffState ? `step-${diffState}` : ""} ${moved ? "step-moved" : ""}">
         <span class="step-line-label">${step.label}</span>
         ${valueText ? html`<span class="step-line-value">${valueText}</span>` : nothing}
         ${diffState ? html`<span class="diff-badge">${diffLabel}</span>` : nothing}
+        ${moved ? html`<span class="diff-badge diff-badge-moved">Moved</span>` : nothing}
       </li>
     `;
   }
@@ -145,8 +151,11 @@ export class PourOverRecipeCard extends LitElement {
    * their CURRENT `diffAgainst` values, flagged "Changed" when their id is
    * in `diff.changed`; removed rows render with their original canonical
    * values struck through), then appends any `diff.added` rows at the end.
-   * Mirrors `BrewStepsCard`'s own `_renderDiffRows` approach, adapted to
-   * this card's own template/row shape.
+   * Kept rows whose relative order shifted between the canonical steps and
+   * `diffAgainst` (per `findMovedStepIds`) additionally get an independent
+   * "Moved" marker, alongside "Changed" when both apply. Mirrors
+   * `BrewStepsCard`'s own `_renderDiffRows` approach, adapted to this
+   * card's own template/row shape.
    */
   private _renderDiffMethodRows(diff: IBrewStepsDiff): HTMLTemplateResult[] {
     if (!this.diffAgainst) return [];
@@ -160,9 +169,16 @@ export class PourOverRecipeCard extends LitElement {
     const canonicalSteps = getPouroverRecipeSteps(this.recipe).filter(
       (step) => !step.id.startsWith(setupPrefix),
     );
+    // `diffAgainst` needs the same setup-row exclusion as `canonicalSteps`
+    // before comparing relative order, or a mismatched "one side still has
+    // setup rows" array would produce bogus moved-row results.
+    const diffAgainstMethodSteps = this.diffAgainst.filter(
+      (step) => !step.id.startsWith(setupPrefix),
+    );
     const currentById = new Map(this.diffAgainst.map((step) => [step.id, step]));
     const changedIds = new Set((diff.changed ?? []).map((change) => change.id));
     const removedIds = new Set(diff.removed ?? []);
+    const movedIds = findMovedStepIds(canonicalSteps, diffAgainstMethodSteps);
 
     const rows: HTMLTemplateResult[] = [];
 
@@ -174,7 +190,11 @@ export class PourOverRecipeCard extends LitElement {
       const current = currentById.get(canonical.id);
       if (!current) continue;
       rows.push(
-        this._renderMethodStepRow(current, changedIds.has(canonical.id) ? "changed" : null),
+        this._renderMethodStepRow(
+          current,
+          changedIds.has(canonical.id) ? "changed" : null,
+          movedIds.has(canonical.id),
+        ),
       );
     }
 

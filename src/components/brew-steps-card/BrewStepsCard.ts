@@ -10,6 +10,7 @@ import {
 import { getBrewStepProgress } from "../../shared/utilities/brew-step-progress.utility";
 import {
   computeBrewStepsDiff,
+  findMovedStepIds,
   type IBrewStepsDiff,
 } from "../../shared/utilities/brew-steps-diff.utility";
 import { formatSeconds } from "../../shared/utilities/format-time.utility";
@@ -89,9 +90,10 @@ const composedClosest = (start: Element | null, selector: string): HTMLElement |
  * Passing `diffAgainst` (only meaningful while `!editing`) switches the
  * read-only view into a merged diff display against that original step
  * array: rows only in `diffAgainst` render struck-through as "Removed",
- * rows whose fields differ from `diffAgainst` get a "Changed" marker, and
- * rows only in `config.steps` are appended at the end marked "Added".
- * Row-order changes aren't specially flagged - only content changes are.
+ * rows whose fields differ from `diffAgainst` get a "Changed" marker, rows
+ * only in `config.steps` are appended at the end marked "Added", and any
+ * kept row whose relative order shifted gets an independent "Moved" marker
+ * (co-occurring with "Changed" when a row was both edited and reordered).
  * ## Usage
  * ```html
  * <brew-steps-card
@@ -419,6 +421,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
     step: IBrewStep,
     progressRow: IBrewStepProgress | null,
     diffState: "changed" | "added" | "removed" | null = null,
+    moved: boolean = false,
   ): HTMLTemplateResult {
     const status = progressRow?.status ?? null;
     const remainingSeconds =
@@ -446,7 +449,9 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
 
     return html`
       <div
-        class="step-row ${status ? `step-${status}` : ""} ${diffState ? `step-${diffState}` : ""}"
+        class="step-row ${status ? `step-${status}` : ""} ${diffState ? `step-${diffState}` : ""} ${
+          moved ? "step-moved" : ""
+        }"
       >
         ${
           status === "done"
@@ -456,6 +461,9 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
         <div class="step-text">
           <span class="step-label">${step.label}</span>
           ${diffState ? html`<span class="step-diff-badge">${diffLabel}</span>` : nothing}
+          ${
+            moved ? html`<span class="step-diff-badge step-diff-badge-moved">Moved</span>` : nothing
+          }
           ${step.note ? html`<span class="step-note">${step.note}</span>` : nothing}
           ${isLongNoteValue ? html`<span class="step-note-value">${pillText}</span>` : nothing}
         </div>
@@ -474,8 +482,11 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
    * order (removed rows render with the original row's own values; kept
    * rows render with the current `config.steps` values, flagged "Changed"
    * when they appear in `diff.changed`), then appends any `diff.added`
-   * rows at the end. Row-order changes (`diff.order`) are deliberately
-   * ignored here - only content changes are flagged.
+   * rows at the end. Kept rows whose relative order shifted between
+   * `diffAgainst` and `config.steps` (per `findMovedStepIds`) additionally
+   * get an independent "Moved" marker, alongside "Changed" when both apply
+   * - added/removed rows never get a "moved" marker, since neither array
+   * has a matching counterpart to compare position against.
    */
   private _renderDiffRows(
     diff: IBrewStepsDiff,
@@ -486,6 +497,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
     const currentById = new Map(this.config.steps.map((step) => [step.id, step]));
     const changedIds = new Set((diff.changed ?? []).map((change) => change.id));
     const removedIds = new Set(diff.removed ?? []);
+    const movedIds = findMovedStepIds(this.diffAgainst, this.config.steps);
 
     const rows: HTMLTemplateResult[] = [];
 
@@ -498,7 +510,12 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
       if (!current) continue;
       const progressRow = progress?.find((row) => row.step.id === current.id) ?? null;
       rows.push(
-        this._renderReadRow(current, progressRow, changedIds.has(current.id) ? "changed" : null),
+        this._renderReadRow(
+          current,
+          progressRow,
+          changedIds.has(current.id) ? "changed" : null,
+          movedIds.has(current.id),
+        ),
       );
     }
 
