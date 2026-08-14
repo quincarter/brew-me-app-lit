@@ -22,7 +22,8 @@ export const saveBrewFromCalculator = async (
   const type = options.type ?? "V60";
   const water = options.water ?? "300";
 
-  await page.goto("/calculate");
+  await openQuickCalculator(page);
+
   await page.getByLabel("Water (g)", { exact: true }).fill(water);
   await page.getByRole("button", { name: "Save", exact: true }).click();
 
@@ -30,9 +31,22 @@ export const saveBrewFromCalculator = async (
     await page.getByLabel("Brew name", { exact: true }).fill(options.name);
   }
   await page.getByRole("button", { name: type, exact: true }).click();
-  await page.locator("brew-save-sheet").getByRole("button", { name: "Save", exact: true }).click();
+  await page
+    .locator("brew-save-sheet")
+    .getByRole("button", { name: "Save", exact: true })
+    .click();
 
   if (!options.keepPostSaveSheetOpen) {
-    await page.locator("brew-post-save-sheet").getByRole("button", { name: "Close" }).click();
+    await page
+      .locator("brew-post-save-sheet")
+      .getByRole("button", { name: "Close" })
+      .click();
   }
+};
+
+export const openQuickCalculator = async (page: Page) => {
+  await page.goto("/calculate");
+  await page
+    .getByRole("button", { name: "Quick calculator", exact: true })
+    .click();
 };
