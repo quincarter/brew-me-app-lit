@@ -13,6 +13,7 @@ import { withBase } from "./shared/configuration/base-path";
 import { routes } from "./shared/configuration/routes";
 import { initInstallPromptListener } from "./shared/stores/install-prompt.store";
 import { maybeAutoStartTour } from "./shared/stores/tour.store";
+import { importWithRetry } from "./shared/utilities/import-with-retry.utility";
 import { registerServiceWorker } from "./shared/utilities/register-service-worker.utility";
 
 /**
@@ -61,7 +62,7 @@ export class AppShell extends LitElement {
     routes.map((route) => ({
       path: withBase(route.path),
       enter: async () => {
-        await import(`./views/${route.directory}/${route.fileName}.ts`);
+        await importWithRetry(() => import(`./views/${route.directory}/${route.fileName}.ts`));
         return true;
       },
       render: (params: { [key: string]: string | undefined }) => {

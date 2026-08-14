@@ -24,6 +24,16 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/assets/],
+        // `registerType: "prompt"` above is what actually protects an
+        // already-open tab's in-memory references to old-hash lazy chunks:
+        // a new service worker installs but stays waiting until
+        // `applyUpdate()` (see register-service-worker.utility.ts) calls
+        // `skipWaiting`, and Workbox's precache-manifest diff/cleanup only
+        // runs on that worker's `activate` event - so the *old* worker's
+        // precache (and its old-hash chunk entries) stays intact and
+        // servable until the user actually applies the update, not the
+        // moment a new version is deployed.
+
         runtimeCaching: [
           {
             // Google Fonts stylesheet - revalidate opportunistically,
