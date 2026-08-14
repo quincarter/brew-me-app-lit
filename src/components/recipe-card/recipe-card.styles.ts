@@ -251,6 +251,19 @@ export const RecipeCardStyles = css`
     color: var(--brew-color-secondary);
   }
 
+  /* The "Changes" list sits below the full, untouched Method prose (see
+   * RecipeCard's render()) rather than replacing it, so it gets its own
+   * heading and an unnumbered list style - it's a short summary of what's
+   * different, not another walkthrough of the whole brew. */
+  .changes-title {
+    margin-top: 4px;
+  }
+
+  .steps-changes {
+    list-style: none;
+    padding-left: 0;
+  }
+
   .step-line-label {
     font-weight: 500;
   }

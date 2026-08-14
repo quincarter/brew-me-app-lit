@@ -119,24 +119,45 @@ export class RecipeCard extends LitElement {
     `;
   }
 
-  private _renderMethodStepRow(
+  private _methodValueText(step: IBrewStep): string {
+    return step.kind === "timed"
+      ? typeof step.seconds === "number"
+        ? formatSeconds(step.seconds)
+        : "Now"
+      : (step.value ?? "");
+  }
+
+  /**
+   * One row in the "Changes" list below the full Method prose - unlike the
+   * plain read row, a changed row shows old → new (mirroring
+   * `_renderSetupRow`) rather than just its current value, since this row
+   * only appears here *because* something about it differs and the reader
+   * has no other way to see what the old value was.
+   */
+  private _renderMethodChangeRow(
     step: IBrewStep,
     diffState: DiffState,
-    moved: boolean = false,
+    moved: boolean,
+    original: IBrewStep | null,
   ): HTMLTemplateResult {
-    const valueText =
-      step.kind === "timed"
-        ? typeof step.seconds === "number"
-          ? formatSeconds(step.seconds)
-          : "Now"
-        : (step.value ?? "");
+    const currentText = this._methodValueText(step);
     const diffLabel =
       diffState === "changed" ? "Changed" : diffState === "added" ? "Added" : "Removed";
 
     return html`
       <li class="${diffState ? `step-${diffState}` : ""} ${moved ? "step-moved" : ""}">
         <span class="step-line-label">${step.label}</span>
-        ${valueText ? html`<span class="step-line-value">${valueText}</span>` : nothing}
+        ${
+          diffState === "changed" && original
+            ? html`
+                <span class="diff-old">${this._methodValueText(original)}</span>
+                <span class="diff-arrow">→</span>
+                <span class="diff-new">${currentText}</span>
+              `
+            : currentText
+              ? html`<span class="step-line-value">${currentText}</span>`
+              : nothing
+        }
         ${diffState ? html`<span class="diff-badge">${diffLabel}</span>` : nothing}
         ${moved ? html`<span class="diff-badge diff-badge-moved">Moved</span>` : nothing}
       </li>
@@ -144,26 +165,30 @@ export class RecipeCard extends LitElement {
   }
 
   /**
-   * Merged, order-preserving diff render for the Method section, used in
-   * place of the raw-prose `steps` list when `diffAgainst` is set - walks
-   * this recipe's canonical curated steps in order (kept rows render with
-   * their CURRENT `diffAgainst` values, flagged "Changed" when their id is
-   * in `diff.changed`; removed rows render with their original canonical
-   * values struck through), then appends any `diff.added` rows at the end.
-   * Kept rows whose relative order shifted between the canonical steps and
-   * `diffAgainst` (per `findMovedStepIds`) additionally get an independent
-   * "Moved" marker, alongside "Changed" when both apply. Mirrors
-   * `BrewStepsCard`'s own `_renderDiffRows` approach, adapted to this
-   * card's own template/row shape.
+   * The "Changes" list shown below the full raw-prose Method - unlike the
+   * Setup table (where the diff annotates rows in place, so it can safely
+   * replace the plain view), the Method section's diffable representation
+   * (this recipe's curated `timedSteps`) is a coarser, differently-worded
+   * summary of the same brew than the raw prose `steps` list, with no
+   * per-line correspondence between the two. Swapping the whole Method
+   * section to that coarser list for *any* diff - even a single changed
+   * duration - made an actually-modified recipe look like a shorter,
+   * different recipe purely from the format switch, with nothing to
+   * explain why the sentence count dropped. So the raw prose always stays
+   * (identical to Original mode, in `render()`), and this returns only the
+   * rows that actually differ - a change, addition, removal, or reorder -
+   * as a short, separate, clearly-labeled summary underneath. Unmoved,
+   * unchanged rows are skipped entirely, only ever surfacing what's
+   * genuinely different.
    */
-  private _renderDiffMethodRows(diff: IBrewStepsDiff): HTMLTemplateResult[] {
+  private _renderMethodChanges(diff: IBrewStepsDiff): HTMLTemplateResult[] {
     if (!this.diffAgainst) return [];
 
     // `getAeropressRecipeSteps` returns setup rows *and* brew steps as one
     // flat array (that's what makes a single `computeBrewStepsDiff` call
     // cover both sections) - the Setup `<dl>` above already renders the
-    // `${recipe.id}-setup-*` rows, so exclude them here or they'd be
-    // duplicated into the Method list too.
+    // `${recipe.id}-setup-*` rows, so exclude them here or they'd leak
+    // into the Method changes list too.
     const setupPrefix = `${this.recipe.id}-setup-`;
     const canonicalSteps = getAeropressRecipeSteps(this.recipe).filter(
       (step) => !step.id.startsWith(setupPrefix),
@@ -183,22 +208,19 @@ export class RecipeCard extends LitElement {
 
     for (const canonical of canonicalSteps) {
       if (removedIds.has(canonical.id)) {
-        rows.push(this._renderMethodStepRow(canonical, "removed"));
+        rows.push(this._renderMethodChangeRow(canonical, "removed", false, null));
         continue;
       }
       const current = currentById.get(canonical.id);
       if (!current) continue;
-      rows.push(
-        this._renderMethodStepRow(
-          current,
-          changedIds.has(canonical.id) ? "changed" : null,
-          movedIds.has(canonical.id),
-        ),
-      );
+      const changed = changedIds.has(canonical.id);
+      const moved = movedIds.has(canonical.id);
+      if (!changed && !moved) continue;
+      rows.push(this._renderMethodChangeRow(current, changed ? "changed" : null, moved, canonical));
     }
 
     for (const added of diff.added ?? []) {
-      rows.push(this._renderMethodStepRow(added, "added"));
+      rows.push(this._renderMethodChangeRow(added, "added", false, null));
     }
 
     return rows;
@@ -224,6 +246,7 @@ export class RecipeCard extends LitElement {
       (rawDiff.changed?.length || rawDiff.added?.length || rawDiff.removed?.length || rawDiff.order)
         ? rawDiff
         : null;
+    const methodChanges = diff ? this._renderMethodChanges(diff) : [];
 
     return html`
       <div class="card ${this._expanded ? "expanded" : ""}">
@@ -253,13 +276,19 @@ export class RecipeCard extends LitElement {
 
                   <div class="method-title">Method</div>
                   <ol class="steps">
-                    ${
-                      diff
-                        ? this._renderDiffMethodRows(diff)
-                        : steps.map((step) => html`<li>${step}</li>`)
-                    }
+                    ${steps.map((step) => html`<li>${step}</li>`)}
                   </ol>
 
+                  ${
+                    methodChanges.length > 0
+                      ? html`
+                          <div class="method-title changes-title">Changes</div>
+                          <ul class="steps steps-changes">
+                            ${methodChanges}
+                          </ul>
+                        `
+                      : nothing
+                  }
                   ${note ? html`<p class="note">${note}</p>` : nothing}
                   ${
                     !this.hideBrewButton

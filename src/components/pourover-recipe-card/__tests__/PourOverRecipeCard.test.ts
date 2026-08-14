@@ -95,8 +95,13 @@ describe("brew-pourover-recipe-card", () => {
         (row) => row.querySelector("dt")?.textContent?.trim() === key,
       );
 
+    /** The full, always-present raw-prose Method list - identical whether or not diffAgainst is set. */
     const methodRows = (): HTMLLIElement[] =>
-      Array.from(element.shadowRoot?.querySelectorAll(".steps > li") ?? []);
+      Array.from(element.shadowRoot?.querySelectorAll(".steps:not(.steps-changes) > li") ?? []);
+
+    /** The "Changes" list - only the Method rows that actually differ, rendered separately below the untouched prose. */
+    const methodChangeRows = (): HTMLLIElement[] =>
+      Array.from(element.shadowRoot?.querySelectorAll(".steps-changes > li") ?? []);
 
     beforeEach(async () => {
       element.remove();
@@ -114,8 +119,10 @@ describe("brew-pourover-recipe-card", () => {
       expect(element.shadowRoot?.querySelector(".step-added")).toBeNull();
       expect(element.shadowRoot?.querySelector(".step-removed")).toBeNull();
       expect(element.shadowRoot?.querySelector(".diff-badge")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".changes-title")).toBeNull();
       // Raw prose steps render 1:1 - not the curated timedSteps.
       expect(methodRows()).toHaveLength(diffRecipe.steps.length);
+      expect(methodChangeRows()).toHaveLength(0);
     });
 
     it("with diffAgainst set but identical to the recipe's own canonical steps, falls back to the exact same raw-prose Method list as no diff at all", async () => {
@@ -136,8 +143,10 @@ describe("brew-pourover-recipe-card", () => {
       expect(element.shadowRoot?.querySelector(".step-added")).toBeNull();
       expect(element.shadowRoot?.querySelector(".step-removed")).toBeNull();
       expect(element.shadowRoot?.querySelector(".diff-badge")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".changes-title")).toBeNull();
       expect(methodRows()).toHaveLength(diffRecipe.steps.length);
       expect(methodRows().map((row) => row.textContent?.trim())).toEqual(diffRecipe.steps);
+      expect(methodChangeRows()).toHaveLength(0);
     });
 
     it("a changed setup value renders old -> new with a Changed badge; other setup rows are unaffected", async () => {
@@ -168,49 +177,55 @@ describe("brew-pourover-recipe-card", () => {
       expect(brewTimeRow?.querySelector(".diff-badge")?.textContent?.trim()).toBe("Removed");
     });
 
-    it("a changed method step shows its current diffAgainst duration (via formatSeconds) with a Changed badge", async () => {
+    it("the full raw-prose Method list is unaffected by diffAgainst - still every original sentence, unannotated", async () => {
       element.diffAgainst = diffAgainst;
       await element.updateComplete;
 
-      const swirlRow = methodRows().find(
+      expect(methodRows()).toHaveLength(diffRecipe.steps.length);
+      expect(methodRows().map((row) => row.textContent?.trim())).toEqual(diffRecipe.steps);
+      expect(element.shadowRoot?.querySelector(".changes-title")?.textContent?.trim()).toBe(
+        "Changes",
+      );
+    });
+
+    it("a changed method step appears in the Changes list showing old -> new (via formatSeconds) with a Changed badge - unchanged rows (Bloom & stir, Serve) are skipped entirely", async () => {
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const changeLabels = methodChangeRows().map((row) =>
+        row.querySelector(".step-line-label")?.textContent?.trim(),
+      );
+      expect(changeLabels).not.toContain("Bloom & stir");
+      expect(changeLabels).not.toContain("Serve");
+
+      const swirlRow = methodChangeRows().find(
         (row) => row.querySelector(".step-line-label")?.textContent?.trim() === "Swirl & drawdown",
       );
       expect(swirlRow).not.toBeUndefined();
       expect(swirlRow?.classList.contains("step-changed")).toBe(true);
-      expect(swirlRow?.querySelector(".step-line-value")?.textContent?.trim()).toBe("01:30");
+      expect(swirlRow?.querySelector(".diff-old")?.textContent?.trim()).toBe("01:15");
+      expect(swirlRow?.querySelector(".diff-new")?.textContent?.trim()).toBe("01:30");
       expect(swirlRow?.querySelector(".diff-badge")?.textContent?.trim()).toBe("Changed");
     });
 
-    it("a removed method step shows struck-through original canonical values, in its original position among the other rows", async () => {
+    it("a removed method step appears in the Changes list struck-through with its original canonical values", async () => {
       element.diffAgainst = diffAgainst;
       await element.updateComplete;
 
-      const rows = methodRows();
-      const labels = rows.map((row) => row.querySelector(".step-line-label")?.textContent?.trim());
-      // Canonical order is bloom, pour, swirl, serve, then any added rows
-      // appended - "pour" (removed) stays in its own slot rather than being
-      // dropped or moved to the end.
-      expect(labels).toEqual([
-        "Bloom & stir",
-        "Main pour",
-        "Swirl & drawdown",
-        "Serve",
-        "Cool & serve",
-      ]);
-
-      const pourRow = rows.find(
+      const pourRow = methodChangeRows().find(
         (row) => row.querySelector(".step-line-label")?.textContent?.trim() === "Main pour",
       );
+      expect(pourRow).not.toBeUndefined();
       expect(pourRow?.classList.contains("step-removed")).toBe(true);
       expect(pourRow?.querySelector(".step-line-value")?.textContent?.trim()).toBe("01:00");
       expect(pourRow?.querySelector(".diff-badge")?.textContent?.trim()).toBe("Removed");
     });
 
-    it("an added method step (present in diffAgainst, absent from the canonical list) is appended at the end with an Added badge", async () => {
+    it("an added method step (present in diffAgainst, absent from the canonical list) is appended to the Changes list with an Added badge", async () => {
       element.diffAgainst = diffAgainst;
       await element.updateComplete;
 
-      const rows = methodRows();
+      const rows = methodChangeRows();
       const lastRow = rows[rows.length - 1];
       expect(lastRow.querySelector(".step-line-label")?.textContent?.trim()).toBe("Cool & serve");
       expect(lastRow.classList.contains("step-added")).toBe(true);
@@ -218,25 +233,34 @@ describe("brew-pourover-recipe-card", () => {
       expect(lastRow.querySelector(".diff-badge")?.textContent?.trim()).toBe("Added");
     });
 
-    it("an untimed ('now') kept step renders 'Now' rather than a duration", async () => {
-      element.diffAgainst = diffAgainst;
+    it("an untimed ('now') row renders 'Now' rather than a duration in the Changes list", async () => {
+      const nowRow: IBrewStep = {
+        id: "rao-check",
+        label: "Final check",
+        kind: "timed",
+        seconds: null,
+      };
+      element.diffAgainst = [...diffAgainst.filter((step) => step.id !== "rao-cool"), nowRow];
       await element.updateComplete;
 
-      const serveRow = methodRows().find(
-        (row) => row.querySelector(".step-line-label")?.textContent?.trim() === "Serve",
+      const row = methodChangeRows().find(
+        (candidate) =>
+          candidate.querySelector(".step-line-label")?.textContent?.trim() === "Final check",
       );
-      expect(serveRow?.classList.contains("step-changed")).toBe(false);
-      expect(serveRow?.querySelector(".step-line-value")?.textContent?.trim()).toBe("Now");
+      expect(row).not.toBeUndefined();
+      expect(row?.classList.contains("step-added")).toBe(true);
+      expect(row?.querySelector(".step-line-value")?.textContent?.trim()).toBe("Now");
     });
 
-    it("bug-fix regression guard: the Method section never contains a row for a setup key", async () => {
+    it("bug-fix regression guard: the Changes list never contains a row for a setup key, and only ever shows what actually differs", async () => {
       element.diffAgainst = diffAgainst;
       await element.updateComplete;
 
-      const rows = methodRows();
-      // 4 canonical brew-only steps (bloom, pour, swirl, serve) + 1 added
-      // ("cool") = 5 - never 4 (brew) + 4 (setup) = 8.
-      expect(rows).toHaveLength(5);
+      const rows = methodChangeRows();
+      // Only the rows that actually differ: Main pour (removed), Swirl &
+      // drawdown (changed), Cool & serve (added) - Bloom & stir/Serve are
+      // unchanged and unmoved, so they're skipped entirely, not re-listed.
+      expect(rows).toHaveLength(3);
 
       const setupKeys = Object.keys(diffRecipe.setup);
       const methodLabels = rows.map((row) =>
@@ -256,7 +280,7 @@ describe("brew-pourover-recipe-card", () => {
           value,
         }));
 
-      it("flags only the relocated Method row as moved when only the order changed (no content edits, no add/remove)", async () => {
+      it("flags only the relocated Method row as moved when only the order changed (no content edits, no add/remove) - unmoved rows don't appear in the Changes list at all", async () => {
         const reorderOnlyDiffAgainst: IBrewStep[] = [
           ...setupRowsUnchanged(),
           originalTimedSteps[0], // rao-bloom
@@ -267,7 +291,7 @@ describe("brew-pourover-recipe-card", () => {
         element.diffAgainst = reorderOnlyDiffAgainst;
         await element.updateComplete;
 
-        const rows = methodRows();
+        const rows = methodChangeRows();
         const swirlRow = rows.find(
           (row) =>
             row.querySelector(".step-line-label")?.textContent?.trim() === "Swirl & drawdown",
@@ -279,10 +303,11 @@ describe("brew-pourover-recipe-card", () => {
           (row) => row.querySelector(".step-line-label")?.textContent?.trim() === "Bloom & stir",
         );
 
+        expect(rows).toHaveLength(1);
         expect(swirlRow?.classList.contains("step-moved")).toBe(true);
         expect(swirlRow?.querySelector(".diff-badge-moved")?.textContent?.trim()).toBe("Moved");
-        expect(pourRow?.classList.contains("step-moved")).toBe(false);
-        expect(bloomRow?.classList.contains("step-moved")).toBe(false);
+        expect(pourRow).toBeUndefined();
+        expect(bloomRow).toBeUndefined();
         // No content changed anywhere in this scenario.
         expect(element.shadowRoot?.querySelector(".step-changed")).toBeNull();
         expect(element.shadowRoot?.querySelector(".setup-row-changed")).toBeNull();
@@ -299,7 +324,7 @@ describe("brew-pourover-recipe-card", () => {
         element.diffAgainst = changedAndMovedDiffAgainst;
         await element.updateComplete;
 
-        const swirlRow = methodRows().find(
+        const swirlRow = methodChangeRows().find(
           (row) =>
             row.querySelector(".step-line-label")?.textContent?.trim() === "Swirl & drawdown",
         );
@@ -329,7 +354,7 @@ describe("brew-pourover-recipe-card", () => {
         element.diffAgainst = removedAddedReorderDiffAgainst;
         await element.updateComplete;
 
-        const rows = methodRows();
+        const rows = methodChangeRows();
         const serveRow = rows.find(
           (row) => row.querySelector(".step-line-label")?.textContent?.trim() === "Serve",
         );
