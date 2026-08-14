@@ -8,6 +8,10 @@ import {
   knownStepLabelsSignal,
 } from "../../shared/stores/custom-step-labels.store";
 import { getBrewStepProgress } from "../../shared/utilities/brew-step-progress.utility";
+import {
+  computeBrewStepsDiff,
+  type IBrewStepsDiff,
+} from "../../shared/utilities/brew-steps-diff.utility";
 import { formatSeconds } from "../../shared/utilities/format-time.utility";
 import { moveItem } from "../../shared/utilities/reorder.utility";
 import "../button/brew-button";
@@ -81,6 +85,13 @@ const composedClosest = (start: Element | null, selector: string): HTMLElement |
  * done/active/upcoming, the active row's pill counts down instead of
  * showing its total duration, and the timeline gets an elapsed-position
  * marker. Ignored while `editing`.
+ *
+ * Passing `diffAgainst` (only meaningful while `!editing`) switches the
+ * read-only view into a merged diff display against that original step
+ * array: rows only in `diffAgainst` render struck-through as "Removed",
+ * rows whose fields differ from `diffAgainst` get a "Changed" marker, and
+ * rows only in `config.steps` are appended at the end marked "Added".
+ * Row-order changes aren't specially flagged - only content changes are.
  * ## Usage
  * ```html
  * <brew-steps-card
@@ -107,6 +118,8 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   @property({ type: Boolean, attribute: "start-open" }) startOpen = false;
   /** When set (and not `editing`), each timed row is shown as done/active/upcoming against this many elapsed seconds, and the timeline gets a progress marker - the Timer screen's live "honor the brew steps" view. Null renders the plain static card used on the Calculator/Saved Detail. */
   @property({ type: Number, attribute: "elapsed-seconds" }) elapsedSeconds: number | null = null;
+  /** When set (and not `editing`), renders a merged diff of `config.steps` against this original array instead of the plain read rows - see the class doc comment above for the exact treatment. Null (the default) leaves read-mode rendering unchanged. */
+  @property({ type: Array }) diffAgainst: IBrewStep[] | null = null;
 
   @state() private _expanded = false;
   @state() private _addingCustomLabelForRowId: string | null = null;
@@ -405,6 +418,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
   private _renderReadRow(
     step: IBrewStep,
     progressRow: IBrewStepProgress | null,
+    diffState: "changed" | "added" | "removed" | null = null,
   ): HTMLTemplateResult {
     const status = progressRow?.status ?? null;
     const remainingSeconds =
@@ -427,8 +441,13 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
     // render a formatted duration, remaining time, or "Now").
     const isLongNoteValue = step.kind === "note" && this._isLongNoteValue(pillText);
 
+    const diffLabel =
+      diffState === "changed" ? "Changed" : diffState === "added" ? "Added" : "Removed";
+
     return html`
-      <div class="step-row ${status ? `step-${status}` : ""}">
+      <div
+        class="step-row ${status ? `step-${status}` : ""} ${diffState ? `step-${diffState}` : ""}"
+      >
         ${
           status === "done"
             ? html`<brew-icon class="step-check" name="check_circle" size="18"></brew-icon>`
@@ -436,6 +455,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
         }
         <div class="step-text">
           <span class="step-label">${step.label}</span>
+          ${diffState ? html`<span class="step-diff-badge">${diffLabel}</span>` : nothing}
           ${step.note ? html`<span class="step-note">${step.note}</span>` : nothing}
           ${isLongNoteValue ? html`<span class="step-note-value">${pillText}</span>` : nothing}
         </div>
@@ -446,6 +466,47 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
         }
       </div>
     `;
+  }
+
+  /**
+   * Merged, order-preserving diff render used in place of the plain read
+   * rows when `diffAgainst` is set: walks `diffAgainst` in its original
+   * order (removed rows render with the original row's own values; kept
+   * rows render with the current `config.steps` values, flagged "Changed"
+   * when they appear in `diff.changed`), then appends any `diff.added`
+   * rows at the end. Row-order changes (`diff.order`) are deliberately
+   * ignored here - only content changes are flagged.
+   */
+  private _renderDiffRows(
+    diff: IBrewStepsDiff,
+    progress: IBrewStepProgress[] | null,
+  ): HTMLTemplateResult[] {
+    if (!this.config || !this.diffAgainst) return [];
+
+    const currentById = new Map(this.config.steps.map((step) => [step.id, step]));
+    const changedIds = new Set((diff.changed ?? []).map((change) => change.id));
+    const removedIds = new Set(diff.removed ?? []);
+
+    const rows: HTMLTemplateResult[] = [];
+
+    for (const original of this.diffAgainst) {
+      if (removedIds.has(original.id)) {
+        rows.push(this._renderReadRow(original, null, "removed"));
+        continue;
+      }
+      const current = currentById.get(original.id);
+      if (!current) continue;
+      const progressRow = progress?.find((row) => row.step.id === current.id) ?? null;
+      rows.push(
+        this._renderReadRow(current, progressRow, changedIds.has(current.id) ? "changed" : null),
+      );
+    }
+
+    for (const added of diff.added ?? []) {
+      rows.push(this._renderReadRow(added, null, "added"));
+    }
+
+    return rows;
   }
 
   private _renderEditRow(step: IBrewStep): HTMLTemplateResult {
@@ -813,6 +874,9 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
       !this.editing && this.elapsedSeconds !== null
         ? getBrewStepProgress(steps, this.elapsedSeconds)
         : null;
+    // `diffAgainst` is only meaningful for the static read view - ignored while editing.
+    const diff =
+      !this.editing && this.diffAgainst ? computeBrewStepsDiff(this.diffAgainst, steps) : null;
 
     return html`
       <div class="card ${this._expanded ? "expanded" : ""}">
@@ -846,14 +910,18 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
                 <div class="body">
                   ${this.editing ? this._renderTimeline(steps) : nothing}
                   <div class="steps">
-                    ${displaySteps.map((step) =>
-                      this.editing
-                        ? this._renderEditRow(step)
-                        : this._renderReadRow(
-                            step,
-                            progress?.find((row) => row.step.id === step.id) ?? null,
-                          ),
-                    )}
+                    ${
+                      diff
+                        ? this._renderDiffRows(diff, progress)
+                        : displaySteps.map((step) =>
+                            this.editing
+                              ? this._renderEditRow(step)
+                              : this._renderReadRow(
+                                  step,
+                                  progress?.find((row) => row.step.id === step.id) ?? null,
+                                ),
+                          )
+                    }
                   </div>
                   ${
                     this.editing

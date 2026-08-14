@@ -146,6 +146,88 @@ describe("brew-steps-card", () => {
     });
   });
 
+  describe("diffAgainst diff view", () => {
+    beforeEach(async () => {
+      await mount();
+    });
+
+    it("with diffAgainst unset (the default), renders exactly the prior plain read-only rows with no diff classes/badges (regression guard)", () => {
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows).toHaveLength(3);
+      expect(element.shadowRoot?.querySelector(".step-changed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-added")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-removed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-diff-badge")).toBeNull();
+    });
+
+    it("flags only the row whose fields differ as 'changed', leaving unchanged rows untouched", async () => {
+      const diffAgainst: IBrewStep[] = baseSteps.map((step) => ({ ...step }));
+      const changedSteps: IBrewStep[] = baseSteps.map((step) =>
+        step.id === "s1" ? { ...step, seconds: 45 } : step,
+      );
+      element.config = { steps: changedSteps };
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows).toHaveLength(3);
+      expect(rows?.[0]?.classList.contains("step-changed")).toBe(true);
+      expect(rows?.[0]?.querySelector(".step-diff-badge")?.textContent?.trim()).toBe("Changed");
+      // Current (changed) seconds value is shown, not the original diffAgainst value.
+      expect(rows?.[0]?.querySelector(".pill")?.textContent?.trim()).toBe("00:45");
+      expect(rows?.[1]?.classList.contains("step-changed")).toBe(false);
+      expect(rows?.[2]?.classList.contains("step-changed")).toBe(false);
+    });
+
+    it("still renders a row present in diffAgainst but absent from config.steps, with removed/struck-through treatment", async () => {
+      const diffAgainst: IBrewStep[] = baseSteps.map((step) => ({ ...step }));
+      // Drop "s2" (Plunge) entirely from the live config.
+      const currentSteps = baseSteps.filter((step) => step.id !== "s2");
+      element.config = { steps: currentSteps };
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows).toHaveLength(3);
+      const removedRow = Array.from(rows ?? []).find((row) =>
+        row.querySelector(".step-label")?.textContent?.includes("Plunge"),
+      );
+      expect(removedRow).not.toBeUndefined();
+      expect(removedRow?.classList.contains("step-removed")).toBe(true);
+      expect(removedRow?.querySelector(".step-diff-badge")?.textContent?.trim()).toBe("Removed");
+    });
+
+    it("appends a row present in config.steps but absent from diffAgainst at the end, with added treatment", async () => {
+      const diffAgainst: IBrewStep[] = baseSteps.map((step) => ({ ...step }));
+      const addedRow: IBrewStep = { id: "s4", label: "Rest", kind: "note", value: "Optional" };
+      element.config = { steps: [...baseSteps, addedRow] };
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const rows = element.shadowRoot?.querySelectorAll(".step-row");
+      expect(rows).toHaveLength(4);
+      const lastRow = rows?.[3];
+      expect(lastRow?.querySelector(".step-label")?.textContent).toBe("Rest");
+      expect(lastRow?.classList.contains("step-added")).toBe(true);
+      expect(lastRow?.querySelector(".step-diff-badge")?.textContent?.trim()).toBe("Added");
+    });
+
+    it("ignores diffAgainst entirely while editing, rendering the normal editable rows instead", async () => {
+      const diffAgainst: IBrewStep[] = baseSteps.map((step) =>
+        step.id === "s1" ? { ...step, seconds: 999 } : step,
+      );
+      element.diffAgainst = diffAgainst;
+      element.editing = true;
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelectorAll(".edit-row")).toHaveLength(3);
+      expect(element.shadowRoot?.querySelector(".step-row")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-changed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-added")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-removed")).toBeNull();
+    });
+  });
+
   describe("condensed collapsed view", () => {
     it("omits up-next row when collapsed on static non-timer views (elapsedSeconds = null)", async () => {
       const card = document.createElement("brew-steps-card") as BrewStepsCard;

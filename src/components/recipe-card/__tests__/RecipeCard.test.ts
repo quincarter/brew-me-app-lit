@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { IAeropressRecipe } from "../../../shared/interfaces/brew.interface";
+import { AEROPRESS_RECIPES } from "../../../shared/data/aeropress-recipes.data";
+import type { IAeropressRecipe, IBrewStep } from "../../../shared/interfaces/brew.interface";
 import "../brew-recipe-card";
 import type { RecipeCard } from "../RecipeCard";
 
@@ -113,5 +114,175 @@ describe("brew-recipe-card", () => {
 
     const brewButton = element.shadowRoot?.querySelector("brew-button");
     expect(brewButton).toBeNull();
+  });
+
+  describe("diffAgainst", () => {
+    // A real curated recipe (World AeroPress Championship 2022, 1st place)
+    // with both a realistic Setup table (6 keys) and hand-curated
+    // `timedSteps` (5 method phases), so the Setup/Method split - and the
+    // Method section's filtering-out of setup-prefixed rows - is exercised
+    // against real data rather than a hand-rolled minimal fixture.
+    const diffRecipe = AEROPRESS_RECIPES.find(
+      (candidate) => candidate.id === "2022-1",
+    ) as IAeropressRecipe;
+
+    if (!diffRecipe) throw new Error("expected AEROPRESS_RECIPES to contain '2022-1'");
+
+    const originalTimedSteps = diffRecipe.timedSteps as IBrewStep[];
+
+    // A single diffAgainst fixture exercising every diff state at once:
+    // - Setup: "Dose" changed (18g -> 20g), "Total time" removed, everything
+    //   else unchanged.
+    // - Method: "flip" removed, "press" changed (30s -> 45s duration), a new
+    //   "rest" step added, "pour-stir"/"cap"/"bypass" unchanged.
+    const diffAgainst: IBrewStep[] = [
+      { id: "2022-1-setup-Position", label: "Position", kind: "note", value: "Inverted" },
+      { id: "2022-1-setup-Dose", label: "Dose", kind: "note", value: "20g" },
+      {
+        id: "2022-1-setup-Filter",
+        label: "Filter",
+        kind: "note",
+        value: "1 AeroPress Classic, rinsed",
+      },
+      {
+        id: "2022-1-setup-Grind",
+        label: "Grind",
+        kind: "note",
+        value: diffRecipe.setup.Grind,
+      },
+      { id: "2022-1-setup-Water", label: "Water", kind: "note", value: diffRecipe.setup.Water },
+      // "2022-1-setup-Total time" intentionally omitted (removed).
+      originalTimedSteps[0], // pour-stir, unchanged
+      originalTimedSteps[1], // cap, unchanged
+      // "2022-1-flip" intentionally omitted (removed).
+      { ...originalTimedSteps[3], seconds: 45 }, // press, changed
+      originalTimedSteps[4], // bypass, unchanged
+      { id: "2022-1-rest", label: "Rest", kind: "timed", seconds: 10 }, // added
+    ];
+
+    const setupRow = (key: string): Element | undefined =>
+      Array.from(element.shadowRoot?.querySelectorAll(".setup-row") ?? []).find(
+        (row) => row.querySelector("dt")?.textContent?.trim() === key,
+      );
+
+    const methodRows = (): HTMLLIElement[] =>
+      Array.from(element.shadowRoot?.querySelectorAll(".steps > li") ?? []);
+
+    beforeEach(async () => {
+      element.remove();
+      element = document.createElement("brew-recipe-card") as RecipeCard;
+      element.startOpen = true;
+      element.recipe = diffRecipe;
+      document.body.appendChild(element);
+      await element.updateComplete;
+    });
+
+    it("with diffAgainst unset, renders no diff classes/badges anywhere (regression guard)", () => {
+      expect(element.shadowRoot?.querySelector(".setup-row-changed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".setup-row-removed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-changed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-added")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".step-removed")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".diff-badge")).toBeNull();
+      // Raw prose steps render 1:1 - not the curated timedSteps.
+      expect(methodRows()).toHaveLength(diffRecipe.steps.length);
+    });
+
+    it("a changed setup value renders old -> new with a Changed badge; other setup rows are unaffected", async () => {
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const doseRow = setupRow("Dose");
+      expect(doseRow).not.toBeUndefined();
+      expect(doseRow?.classList.contains("setup-row-changed")).toBe(true);
+      expect(doseRow?.querySelector(".diff-old")?.textContent?.trim()).toBe("18g");
+      expect(doseRow?.querySelector(".diff-new")?.textContent?.trim()).toBe("20g");
+      expect(doseRow?.querySelector(".diff-badge")?.textContent?.trim()).toBe("Changed");
+
+      const positionRow = setupRow("Position");
+      expect(positionRow?.classList.contains("setup-row-changed")).toBe(false);
+      expect(positionRow?.classList.contains("setup-row-removed")).toBe(false);
+      expect(positionRow?.querySelector(".diff-badge")).toBeNull();
+    });
+
+    it("a removed setup id renders struck-through with a Removed badge, showing the original value", async () => {
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const totalTimeRow = setupRow("Total time");
+      expect(totalTimeRow).not.toBeUndefined();
+      expect(totalTimeRow?.classList.contains("setup-row-removed")).toBe(true);
+      expect(totalTimeRow?.querySelector(".diff-old")?.textContent?.trim()).toBe("2:10");
+      expect(totalTimeRow?.querySelector(".diff-badge")?.textContent?.trim()).toBe("Removed");
+    });
+
+    it("a changed method step shows its current diffAgainst duration (via formatSeconds) with a Changed badge", async () => {
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const pressRow = methodRows().find(
+        (row) => row.querySelector(".step-line-label")?.textContent?.trim() === "Press",
+      );
+      expect(pressRow).not.toBeUndefined();
+      expect(pressRow?.classList.contains("step-changed")).toBe(true);
+      expect(pressRow?.querySelector(".step-line-value")?.textContent?.trim()).toBe("00:45");
+      expect(pressRow?.querySelector(".diff-badge")?.textContent?.trim()).toBe("Changed");
+    });
+
+    it("a removed method step shows struck-through original canonical values, in its original position among the other rows", async () => {
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const rows = methodRows();
+      const labels = rows.map((row) => row.querySelector(".step-line-label")?.textContent?.trim());
+      // Canonical order is pour-stir, cap, flip, press, bypass, then any
+      // added rows appended - "flip" (removed) stays in its own slot rather
+      // than being dropped or moved to the end.
+      expect(labels).toEqual([
+        "Pour & stir",
+        "Cap & degas",
+        "Flip",
+        "Press",
+        "Bypass & serve",
+        "Rest",
+      ]);
+
+      const flipRow = rows.find(
+        (row) => row.querySelector(".step-line-label")?.textContent?.trim() === "Flip",
+      );
+      expect(flipRow?.classList.contains("step-removed")).toBe(true);
+      expect(flipRow?.querySelector(".step-line-value")?.textContent?.trim()).toBe("00:10");
+      expect(flipRow?.querySelector(".diff-badge")?.textContent?.trim()).toBe("Removed");
+    });
+
+    it("an added method step (present in diffAgainst, absent from the canonical list) is appended at the end with an Added badge", async () => {
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const rows = methodRows();
+      const lastRow = rows[rows.length - 1];
+      expect(lastRow.querySelector(".step-line-label")?.textContent?.trim()).toBe("Rest");
+      expect(lastRow.classList.contains("step-added")).toBe(true);
+      expect(lastRow.querySelector(".step-line-value")?.textContent?.trim()).toBe("00:10");
+      expect(lastRow.querySelector(".diff-badge")?.textContent?.trim()).toBe("Added");
+    });
+
+    it("bug-fix regression guard: the Method section never contains a row for a setup key", async () => {
+      element.diffAgainst = diffAgainst;
+      await element.updateComplete;
+
+      const rows = methodRows();
+      // 5 canonical brew-only steps (pour-stir, cap, flip, press, bypass) + 1
+      // added ("rest") = 6 - never 6 (brew) + 6 (setup) = 12.
+      expect(rows).toHaveLength(6);
+
+      const setupKeys = Object.keys(diffRecipe.setup);
+      const methodLabels = rows.map((row) =>
+        row.querySelector(".step-line-label")?.textContent?.trim(),
+      );
+      for (const key of setupKeys) {
+        expect(methodLabels).not.toContain(key);
+      }
+    });
   });
 });

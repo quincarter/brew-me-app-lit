@@ -276,6 +276,58 @@ export const BrewStepsCardStyles = css`
     color: var(--brew-color-primary);
   }
 
+  /* Diff-view markers (only rendered when a consumer sets diffAgainst) -
+   * a thin accent left border plus a small text badge, kept light rather
+   * than a heavy box to match this card's otherwise minimal read-row style. */
+  .step-row.step-changed,
+  .step-row.step-added,
+  .step-row.step-removed {
+    border-left: 3px solid transparent;
+    padding-left: 9px;
+    border-radius: 4px;
+  }
+
+  .step-row.step-changed {
+    border-left-color: var(--brew-color-primary);
+  }
+
+  .step-row.step-added {
+    border-left-color: var(--brew-color-tertiary);
+  }
+
+  .step-row.step-removed {
+    border-left-color: var(--brew-color-error);
+    opacity: 0.7;
+  }
+
+  .step-row.step-removed .step-label,
+  .step-row.step-removed .step-note,
+  .step-row.step-removed .pill {
+    text-decoration: line-through;
+  }
+
+  .step-diff-badge {
+    align-self: flex-start;
+    margin-top: 1px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .step-row.step-changed .step-diff-badge {
+    color: var(--brew-color-primary);
+  }
+
+  .step-row.step-added .step-diff-badge {
+    color: var(--brew-color-tertiary);
+  }
+
+  .step-row.step-removed .step-diff-badge {
+    color: var(--brew-color-error);
+  }
+
   .step-text {
     flex: 1;
     min-width: 0;

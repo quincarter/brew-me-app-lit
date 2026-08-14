@@ -39,7 +39,18 @@ export class BottomSheet extends LitElement {
     }
   };
 
-  /** Clicking the native backdrop dispatches a click on the dialog itself with no descendant target, so a point-in-box check tells backdrop clicks apart from clicks on slotted content. */
+  /**
+   * Clicking the native backdrop dispatches a click on the dialog itself
+   * with no descendant target, so a point-in-box check tells backdrop
+   * clicks apart from clicks on slotted content. Registered as a *capture*
+   * listener (see `render()`) so this geometry read happens before any
+   * bubble-phase click handler on the slotted content itself - a control
+   * inside the sheet (e.g. a mode toggle) that changes what's rendered can
+   * shrink/reposition the dialog synchronously as its own bubble-phase
+   * handler runs, and reading the rect afterward would compare the click's
+   * original coordinates against the sheet's already-changed box, closing
+   * the sheet on what was actually a click on its own content.
+   */
   private _onDialogClick = (event: MouseEvent): void => {
     const rect = this._dialog.getBoundingClientRect();
     const clickedInside =
@@ -63,7 +74,7 @@ export class BottomSheet extends LitElement {
         aria-label="${this.label}"
         @cancel="${this._onCancel}"
         @close="${this._onClose}"
-        @click="${this._onDialogClick}"
+        @click="${{ handleEvent: this._onDialogClick, capture: true }}"
       >
         <slot></slot>
       </dialog>

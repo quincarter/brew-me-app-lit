@@ -101,6 +101,116 @@ export const PourOverRecipeCardStyles = css`
     color: var(--brew-color-on-surface);
   }
 
+  /* Diff-view treatment (only rendered when a consumer sets diffAgainst -
+   * the "Original recipe" sheet's Diff mode) - a thin accent left border
+   * plus a small text badge, kept light to match this card's own existing
+   * Setup/Method rhythm rather than borrowing brew-steps-card's heavier
+   * pill-row look wholesale. */
+  .setup-row-changed,
+  .setup-row-removed {
+    border-left: 3px solid transparent;
+    padding-left: 8px;
+    margin-left: -11px;
+    border-radius: 4px;
+  }
+
+  .setup-row-changed {
+    border-left-color: var(--brew-color-primary);
+  }
+
+  .setup-row-removed {
+    border-left-color: var(--brew-color-error);
+    opacity: 0.75;
+  }
+
+  .setup-row dd {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .diff-old {
+    color: var(--brew-color-on-surface-variant);
+    text-decoration: line-through;
+  }
+
+  .diff-arrow {
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .diff-new {
+    font-weight: 600;
+    color: var(--brew-color-on-surface);
+  }
+
+  .diff-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .setup-row-changed .diff-badge {
+    color: var(--brew-color-primary);
+  }
+
+  .setup-row-removed .diff-badge {
+    color: var(--brew-color-error);
+  }
+
+  .steps li.step-changed,
+  .steps li.step-added,
+  .steps li.step-removed {
+    border-left: 3px solid transparent;
+    padding-left: 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .steps li.step-changed {
+    border-left-color: var(--brew-color-primary);
+  }
+
+  .steps li.step-added {
+    border-left-color: var(--brew-color-tertiary);
+  }
+
+  .steps li.step-removed {
+    border-left-color: var(--brew-color-error);
+    opacity: 0.75;
+  }
+
+  .steps li.step-changed .diff-badge {
+    color: var(--brew-color-primary);
+  }
+
+  .steps li.step-added .diff-badge {
+    color: var(--brew-color-tertiary);
+  }
+
+  .steps li.step-removed .diff-badge {
+    color: var(--brew-color-error);
+  }
+
+  .steps li.step-removed .step-line-label,
+  .steps li.step-removed .step-line-value {
+    text-decoration: line-through;
+  }
+
+  .step-line-label {
+    font-weight: 500;
+  }
+
+  .step-line-value {
+    font-size: 13px;
+    color: var(--brew-color-on-surface-variant);
+  }
+
   .note {
     margin: 0;
     font-size: 13px;

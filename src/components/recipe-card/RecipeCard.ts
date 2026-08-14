@@ -1,11 +1,19 @@
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { property, state } from "lit/decorators.js";
-import type { IAeropressRecipe } from "../../shared/interfaces/brew.interface";
+import type { IAeropressRecipe, IBrewStep } from "../../shared/interfaces/brew.interface";
+import { getAeropressRecipeSteps } from "../../shared/utilities/aeropress-recipe.utility";
+import {
+  computeBrewStepsDiff,
+  type IBrewStepsDiff,
+} from "../../shared/utilities/brew-steps-diff.utility";
+import { formatSeconds } from "../../shared/utilities/format-time.utility";
 import "../button/brew-button";
 import "../icon/brew-icon";
 import { RecipeCardStyles } from "./recipe-card.styles";
 
 const PLACE_LABEL: Record<number, string> = { 1: "1st", 2: "2nd", 3: "3rd" };
+
+type DiffState = "changed" | "added" | "removed" | null;
 
 /**
  * # Recipe Card
@@ -27,6 +35,16 @@ export class RecipeCard extends LitElement {
   @property({ type: Boolean, attribute: "start-open" }) startOpen = false;
 
   @property({ type: Boolean, attribute: "hide-brew-button" }) hideBrewButton = false;
+
+  /**
+   * When set, renders a merged diff of this recipe's own canonical curated
+   * steps (`getAeropressRecipeSteps(recipe)`) against this array instead of
+   * the plain Setup table / raw-prose Method list - the "Original recipe"
+   * sheet's Diff mode (`recipe-provenance.utility.ts`). Null (the default)
+   * leaves every other consumer of this card (e.g. the WAC Recipes browser
+   * screen) completely unchanged.
+   */
+  @property({ type: Array }) diffAgainst: IBrewStep[] | null = null;
 
   @state() private _expanded = false;
 
@@ -56,11 +74,125 @@ export class RecipeCard extends LitElement {
     );
   };
 
+  private _renderSetupRow(
+    key: string,
+    value: string,
+    diff: IBrewStepsDiff | null,
+  ): HTMLTemplateResult {
+    const id = `${this.recipe.id}-setup-${key}`;
+    const removed = diff?.removed?.includes(id) ?? false;
+    const changed = diff?.changed?.some((change) => change.id === id) ?? false;
+
+    if (removed) {
+      return html`
+        <div class="setup-row setup-row-removed">
+          <dt>${key}</dt>
+          <dd>
+            <span class="diff-old">${value}</span>
+            <span class="diff-badge">Removed</span>
+          </dd>
+        </div>
+      `;
+    }
+
+    if (changed) {
+      const newValue = this.diffAgainst?.find((step) => step.id === id)?.value ?? value;
+      return html`
+        <div class="setup-row setup-row-changed">
+          <dt>${key}</dt>
+          <dd>
+            <span class="diff-old">${value}</span>
+            <span class="diff-arrow">→</span>
+            <span class="diff-new">${newValue}</span>
+            <span class="diff-badge">Changed</span>
+          </dd>
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="setup-row">
+        <dt>${key}</dt>
+        <dd>${value}</dd>
+      </div>
+    `;
+  }
+
+  private _renderMethodStepRow(step: IBrewStep, diffState: DiffState): HTMLTemplateResult {
+    const valueText =
+      step.kind === "timed"
+        ? typeof step.seconds === "number"
+          ? formatSeconds(step.seconds)
+          : "Now"
+        : (step.value ?? "");
+    const diffLabel =
+      diffState === "changed" ? "Changed" : diffState === "added" ? "Added" : "Removed";
+
+    return html`
+      <li class="${diffState ? `step-${diffState}` : ""}">
+        <span class="step-line-label">${step.label}</span>
+        ${valueText ? html`<span class="step-line-value">${valueText}</span>` : nothing}
+        ${diffState ? html`<span class="diff-badge">${diffLabel}</span>` : nothing}
+      </li>
+    `;
+  }
+
+  /**
+   * Merged, order-preserving diff render for the Method section, used in
+   * place of the raw-prose `steps` list when `diffAgainst` is set - walks
+   * this recipe's canonical curated steps in order (kept rows render with
+   * their CURRENT `diffAgainst` values, flagged "Changed" when their id is
+   * in `diff.changed`; removed rows render with their original canonical
+   * values struck through), then appends any `diff.added` rows at the end.
+   * Mirrors `BrewStepsCard`'s own `_renderDiffRows` approach, adapted to
+   * this card's own template/row shape.
+   */
+  private _renderDiffMethodRows(diff: IBrewStepsDiff): HTMLTemplateResult[] {
+    if (!this.diffAgainst) return [];
+
+    // `getAeropressRecipeSteps` returns setup rows *and* brew steps as one
+    // flat array (that's what makes a single `computeBrewStepsDiff` call
+    // cover both sections) - the Setup `<dl>` above already renders the
+    // `${recipe.id}-setup-*` rows, so exclude them here or they'd be
+    // duplicated into the Method list too.
+    const setupPrefix = `${this.recipe.id}-setup-`;
+    const canonicalSteps = getAeropressRecipeSteps(this.recipe).filter(
+      (step) => !step.id.startsWith(setupPrefix),
+    );
+    const currentById = new Map(this.diffAgainst.map((step) => [step.id, step]));
+    const changedIds = new Set((diff.changed ?? []).map((change) => change.id));
+    const removedIds = new Set(diff.removed ?? []);
+
+    const rows: HTMLTemplateResult[] = [];
+
+    for (const canonical of canonicalSteps) {
+      if (removedIds.has(canonical.id)) {
+        rows.push(this._renderMethodStepRow(canonical, "removed"));
+        continue;
+      }
+      const current = currentById.get(canonical.id);
+      if (!current) continue;
+      rows.push(
+        this._renderMethodStepRow(current, changedIds.has(canonical.id) ? "changed" : null),
+      );
+    }
+
+    for (const added of diff.added ?? []) {
+      rows.push(this._renderMethodStepRow(added, "added"));
+    }
+
+    return rows;
+  }
+
   render(): HTMLTemplateResult {
     if (!this.recipe) return html``;
 
     const { year, place, competitor, country, setup, steps, note } = this.recipe;
     const placeLabel = PLACE_LABEL[place] ?? `${place}th`;
+
+    const diff = this.diffAgainst
+      ? computeBrewStepsDiff(getAeropressRecipeSteps(this.recipe), this.diffAgainst)
+      : null;
 
     return html`
       <div class="card ${this._expanded ? "expanded" : ""}">
@@ -83,19 +215,18 @@ export class RecipeCard extends LitElement {
             ? html`
                 <div class="body">
                   <dl class="setup">
-                    ${Object.entries(setup).map(
-                      ([key, value]) => html`
-                        <div class="setup-row">
-                          <dt>${key}</dt>
-                          <dd>${value}</dd>
-                        </div>
-                      `,
+                    ${Object.entries(setup).map(([key, value]) =>
+                      this._renderSetupRow(key, value, diff),
                     )}
                   </dl>
 
                   <div class="method-title">Method</div>
                   <ol class="steps">
-                    ${steps.map((step) => html`<li>${step}</li>`)}
+                    ${
+                      diff
+                        ? this._renderDiffMethodRows(diff)
+                        : steps.map((step) => html`<li>${step}</li>`)
+                    }
                   </ol>
 
                   ${note ? html`<p class="note">${note}</p>` : nothing}

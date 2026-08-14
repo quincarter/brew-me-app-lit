@@ -102,6 +102,71 @@ describe("brew-bottom-sheet", () => {
     expect(dispatchSpy).not.toHaveBeenCalled();
   });
 
+  it("reads the dialog's box before a bubble-phase handler on the click's own content can shrink it - the capture-phase fix", async () => {
+    // Regression guard for the capture-vs-bubble fix described in
+    // `_onDialogClick`'s doc comment: a click on slotted content (e.g. a
+    // mode toggle) can synchronously shrink/reposition the dialog as its own
+    // *bubble*-phase handler runs. If `_onDialogClick` were also bubble-phase,
+    // it would run *after* that content handler and read the already-shrunk
+    // box; registered at *capture* phase (as it is), it always runs first.
+    //
+    // This is reproduced directly (not via Lit's real shadow-DOM slotting,
+    // which happy-dom doesn't propagate capture listeners across correctly)
+    // by appending a plain child into the dialog with its own BUBBLE-phase
+    // click listener that mutates the stubbed rect, then dispatching the
+    // click on that child. A click at coordinates inside the ORIGINAL rect
+    // but outside the shrunk one only stays "inside" if `_onDialogClick`'s
+    // read happens before the child's handler runs - i.e. only with the
+    // capture-phase registration this test guards. Reverting `BottomSheet.ts`
+    // to a plain bubble-phase `@click` binding makes this test fail.
+    element.open = true;
+    await element.updateComplete;
+
+    const dialog = element.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+    const originalRect = {
+      top: 100,
+      left: 100,
+      right: 300,
+      bottom: 300,
+      x: 100,
+      y: 100,
+      width: 200,
+      height: 200,
+      toJSON: () => ({}),
+    } as DOMRect;
+    const shrunkRect = {
+      top: 400,
+      left: 400,
+      right: 500,
+      bottom: 500,
+      x: 400,
+      y: 400,
+      width: 100,
+      height: 100,
+      toJSON: () => ({}),
+    } as DOMRect;
+    const rectSpy = vi.fn().mockReturnValue(originalRect);
+    dialog.getBoundingClientRect = rectSpy;
+
+    const content = document.createElement("button");
+    dialog.appendChild(content);
+    // Bubble-phase, like a real toggle button's own click handler - fires
+    // after any capture-phase listener on an ancestor, before any bubble-
+    // phase listener on an ancestor (i.e. exactly where `_onDialogClick`
+    // would run if it were still bubble-phase instead of capture-phase).
+    content.addEventListener("click", () => {
+      rectSpy.mockReturnValue(shrunkRect);
+    });
+
+    const dispatchSpy = vi.fn();
+    element.addEventListener("sheet-scrim-click", dispatchSpy);
+
+    // Inside the ORIGINAL rect, outside the post-mutation shrunk rect.
+    content.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: 150, clientY: 150 }));
+
+    expect(dispatchSpy).not.toHaveBeenCalled();
+  });
+
   it("dispatches sheet-scrim-click and prevents the default close when Escape triggers cancel", async () => {
     element.open = true;
     await element.updateComplete;
