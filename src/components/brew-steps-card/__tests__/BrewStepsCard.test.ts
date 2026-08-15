@@ -497,7 +497,9 @@ describe("brew-steps-card", () => {
     });
 
     it("renders a remove control and an add-step control", () => {
-      const removeButtons = element.shadowRoot?.querySelectorAll("brew-icon-button[icon='delete']");
+      const removeButtons = element.shadowRoot?.querySelectorAll(
+        "brew-icon-button[aria-label='Remove step']",
+      );
       expect(removeButtons).toHaveLength(3);
       const addButton = Array.from(element.shadowRoot?.querySelectorAll("brew-button") ?? []).find(
         (button) => button.textContent?.includes("Add step"),
@@ -702,7 +704,9 @@ describe("brew-steps-card", () => {
     });
 
     it("fires config-change with the row removed when its remove control is activated", async () => {
-      const removeButtons = element.shadowRoot?.querySelectorAll("brew-icon-button[icon='delete']");
+      const removeButtons = element.shadowRoot?.querySelectorAll(
+        "brew-icon-button[aria-label='Remove step']",
+      );
       const filterRemove = removeButtons?.[2];
       if (!filterRemove) throw new Error("expected the Filter row's remove control");
       const changed = waitForConfigChange();

@@ -9,6 +9,7 @@ import "../../components/switch/brew-switch";
 import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
 import { BREW_TYPES } from "../../shared/data/brew-content.data";
+import { ARROW_BACK_ICON_SVG, CLOSE_ICON } from "../../shared/icons/icons";
 import {
   addCustomBrewType,
   customBrewTypesSignal,
@@ -120,7 +121,7 @@ export class SettingsPage extends SignalWatcher(LitElement) {
 
     return html`
       <div class="screen">
-        <brew-top-bar title="Settings" icon="arrow_back" href="/more"></brew-top-bar>
+        <brew-top-bar title="Settings" .icon="${ARROW_BACK_ICON_SVG}" href="/more"></brew-top-bar>
 
         <div class="content">
           <div class="section-title">Brew types</div>
@@ -140,7 +141,7 @@ export class SettingsPage extends SignalWatcher(LitElement) {
                     aria-label="Remove ${name}"
                     @click="${() => deleteCustomBrewType(name)}"
                   >
-                    <brew-icon name="close" size="14"></brew-icon>
+                    <brew-icon .svg="${CLOSE_ICON}" size="14"></brew-icon>
                   </button>
                 </span>
               `,

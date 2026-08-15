@@ -20,6 +20,15 @@ import "../icon-button/brew-icon-button";
 import "../icon/brew-icon";
 import "../text-field/brew-text-field";
 import { BrewStepsCardStyles } from "./brew-steps-card.styles";
+import {
+  ADD_ICON_SVG,
+  CHECK_CIRCLE_ICON_SVG,
+  CHECK_ICON_SVG,
+  DELETE_ICON,
+  DRAG_INDICATOR_ICON_SVG,
+  EXPAND_LESS_ICON_SVG,
+  EXPAND_MORE_ICON_SVG,
+} from "../../shared/icons/icons";
 
 /** `<select>` value that means "let me type a new label" rather than picking an existing one. */
 const ADD_CUSTOM_LABEL_OPTION = "__add_custom__";
@@ -500,13 +509,17 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
 
     return html`
       <div
-        class="step-row ${status ? `step-${status}` : ""} ${diffState ? `step-${diffState}` : ""} ${
-          moved ? "step-moved" : ""
-        }"
+        class="step-row ${status ? `step-${status}` : ""} ${
+          diffState ? `step-${diffState}` : ""
+        } ${moved ? "step-moved" : ""}"
       >
         ${
           status === "done"
-            ? html`<brew-icon class="step-check" name="check_circle" size="18"></brew-icon>`
+            ? html`<brew-icon
+                class="step-check"
+                .svg="${CHECK_CIRCLE_ICON_SVG}"
+                size="18"
+              ></brew-icon>`
             : nothing
         }
         <div class="step-text">
@@ -585,7 +598,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
       >
         <brew-icon-button
           class="drag-handle"
-          icon="drag_indicator"
+          .svgIcon="${DRAG_INDICATOR_ICON_SVG}"
           size="18"
           aria-label="Reorder ${step.label || "step"} - use arrow keys or drag"
           @pointerdown="${(e: PointerEvent) => this._onDragHandlePointerDown(step, e)}"
@@ -646,7 +659,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
                           <span class="item-text">${label}</span>
                           ${
                             label === step.label
-                              ? html`<brew-icon name="check" size="18"></brew-icon>`
+                              ? html`<brew-icon .svg="${CHECK_ICON_SVG}" size="18"></brew-icon>`
                               : nothing
                           }
                         </button>
@@ -657,7 +670,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
                       type="button"
                       @click="${() => this._selectLabelOption(step, ADD_CUSTOM_LABEL_OPTION)}"
                     >
-                      <brew-icon name="add" size="18"></brew-icon>
+                      <brew-icon .svg="${ADD_ICON_SVG}" size="18"></brew-icon>
                       <span class="item-text">Add custom…</span>
                     </button>
                   </div>
@@ -701,7 +714,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
         </button>
 
         <brew-icon-button
-          icon="delete"
+          .svgIcon="${DELETE_ICON}"
           size="18"
           aria-label="Remove step"
           @icon-click="${() => this._removeRow(step.id)}"
@@ -955,7 +968,9 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
             aria-label="${this._expanded ? "Collapse" : "Expand"} Brew Steps"
             @click="${this._toggleExpanded}"
           >
-            <brew-icon name="${this._expanded ? "expand_less" : "expand_more"}"></brew-icon>
+            <brew-icon
+              .svg="${this._expanded ? EXPAND_LESS_ICON_SVG : EXPAND_MORE_ICON_SVG}"
+            ></brew-icon>
           </button>
         </div>
 
@@ -992,9 +1007,10 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
                     this.editing
                       ? html`
                           <div class="edit-footer">
-                            <brew-button variant="text" @button-click="${this._addRow}"
-                              ><brew-icon name="add" size="18"></brew-icon> Add step</brew-button
-                            >
+                            <brew-button variant="text" @button-click="${this._addRow}">
+                              <brew-icon .svg="${ADD_ICON_SVG}" size="18"></brew-icon>
+                              Add step
+                            </brew-button>
                             <brew-button variant="text" @button-click="${this._resetToPreset}"
                               >Reset to preset</brew-button
                             >

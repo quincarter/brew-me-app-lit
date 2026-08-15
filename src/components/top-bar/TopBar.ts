@@ -1,7 +1,8 @@
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import { type HTMLTemplateResult, html, LitElement, SVGTemplateResult } from "lit";
 import { property } from "lit/decorators.js";
 import "../icon-button/brew-icon-button";
 import { TopBarStyles } from "./top-bar.styles";
+import { LOCAL_CAFE_ICON_SVG } from "../../shared/icons/icons";
 
 /**
  * # Top Bar
@@ -18,7 +19,7 @@ export class TopBar extends LitElement {
   static styles = [TopBarStyles];
 
   @property({ type: String }) title = "";
-  @property({ type: String }) icon = "local_cafe";
+  @property({ type: String }) icon: SVGTemplateResult = LOCAL_CAFE_ICON_SVG;
   @property({ type: String }) href = "/";
   @property({ type: String, attribute: "aria-label-text" }) ariaLabelText = "Home";
 
@@ -26,7 +27,7 @@ export class TopBar extends LitElement {
     return html`
       <div class="bar">
         <brew-icon-button
-          icon="${this.icon}"
+          .svgIcon="${this.icon}"
           href="${this.href}"
           aria-label="${this.ariaLabelText}"
         ></brew-icon-button>

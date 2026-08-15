@@ -255,7 +255,15 @@ describe("saved-detail-page", () => {
       clickButton(editButton());
       await element.updateComplete;
 
-      expect(element.shadowRoot?.querySelector(".brew-steps-view-toggle")).toBeNull();
+      // The "Original recipe" sheet stays mounted (closed) once a
+      // recipeSource exists rather than being unmounted, so its own toggle
+      // is still in the DOM - only the *inline* toggle (outside the sheet)
+      // is what edit mode should suppress.
+      const toggles = Array.from(
+        element.shadowRoot?.querySelectorAll(".brew-steps-view-toggle") ?? [],
+      );
+      const inlineToggle = toggles.find((toggle) => !toggle.closest("brew-bottom-sheet"));
+      expect(inlineToggle).toBeUndefined();
     });
 
     it("renders no toggle when recipeSource is present but the brew is unmodified - nothing to diff means the toggle would just be a confusing no-op", async () => {

@@ -3,6 +3,7 @@ import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { isDarkThemeSignal, toggleDarkTheme } from "../../shared/stores/theme.store";
 import "../icon/brew-icon";
 import { ThemeToggleStyles } from "./theme-toggle.styles";
+import { LIGHT_MODE_ICON_SVG, DARK_MODE_ICON_SVG } from "../../shared/icons/icons";
 
 /**
  * # Theme Toggle
@@ -21,7 +22,10 @@ export class ThemeToggle extends SignalWatcher(LitElement) {
     const isDark = isDarkThemeSignal.value;
     return html`
       <button type="button" aria-label="Toggle dark mode" @click="${toggleDarkTheme}">
-        <brew-icon name="${isDark ? "light_mode" : "dark_mode"}" size="20"></brew-icon>
+        <brew-icon
+          .svg="${isDark ? LIGHT_MODE_ICON_SVG : DARK_MODE_ICON_SVG}"
+          size="20"
+        ></brew-icon>
       </button>
     `;
   }

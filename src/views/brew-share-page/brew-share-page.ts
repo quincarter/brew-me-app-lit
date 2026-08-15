@@ -38,6 +38,7 @@ import {
   shareBrew,
 } from "../../shared/utilities/share.utility";
 import { BrewSharePageStyles } from "./brew-share-page.styles";
+import { MENU_BOOK_ICON_SVG } from "../../shared/icons/menu-book.svg";
 
 /**
  * Read-only landing screen for a `/share?brewType=...&ratio=...` link -
@@ -215,7 +216,7 @@ export class BrewSharePage extends SignalWatcher(LitElement) {
               ? html`
                   <brew-link-card
                     href="/more/guide/${matchingGuide.id}"
-                    icon="menu_book"
+                    .svg="${MENU_BOOK_ICON_SVG}"
                     label="${matchingGuide.name} Brew Guide"
                     description="Ratio tips, grind size, and video walkthroughs"
                   ></brew-link-card>

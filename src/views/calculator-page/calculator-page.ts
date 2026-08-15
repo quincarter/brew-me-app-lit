@@ -12,7 +12,17 @@ import "../../components/save-sheet/brew-save-sheet";
 import "../../components/saved-card/brew-saved-card";
 import "../../components/top-bar/brew-top-bar";
 import "../../components/type-picker/brew-type-picker";
-import { REFRESH_ICON, SHARE_ICON } from "../../shared/icons/icons";
+import {
+  CALCULATE_ICON_SVG,
+  CLOSE_ICON,
+  INFO_ICON_SVG,
+  MENU_BOOK_ICON_SVG,
+  REFRESH_ICON,
+  REPLAY_ICON,
+  SAVED_ICON_SVG,
+  SHARE_ICON,
+  TIMER_ICON_SVG,
+} from "../../shared/icons/icons";
 import type {
   IAeropressRecipe,
   IBrewStepsConfig,
@@ -163,7 +173,8 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             large
             data-tour="quick-calculator-button"
             @button-click="${() => selectBrewType(QUICK_CALCULATOR)}"
-            ><brew-icon name="calculate" size="18"></brew-icon> Quick calculator</brew-button
+            ><brew-icon .svg="${CALCULATE_ICON_SVG}" size="18"></brew-icon> Quick
+            calculator</brew-button
           >
 
           <div class="chooser-divider"><span>or pick a method</span></div>
@@ -230,12 +241,12 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             primedFromNameSignal.value
               ? html`
                   <div class="primed-banner">
-                    <brew-icon name="replay" size="18"></brew-icon>
+                    <brew-icon .svg="${REPLAY_ICON}" size="18"></brew-icon>
                     <span class="primed-banner-text"
                       >Loaded from ${primedFromNameSignal.value}</span
                     >
                     <brew-icon-button
-                      icon="close"
+                      .svgIcon="${CLOSE_ICON}"
                       size="18"
                       aria-label="Dismiss"
                       @icon-click="${dismissPrimedBanner}"
@@ -322,7 +333,8 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             full-width
             ?disabled="${!isValid}"
             @button-click="${() => openSaveDialog({ intent: "guided-timer" })}"
-            ><brew-icon name="timer" size="22"></brew-icon> Start guided timer</brew-button
+            ><brew-icon .svg="${TIMER_ICON_SVG}" size="22"></brew-icon> Start guided
+            timer</brew-button
           >
           <brew-button
             variant="filled"
@@ -330,7 +342,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
             large
             ?disabled="${!isValid}"
             @button-click="${openSaveDialog}"
-            ><brew-icon name="bookmark" size="18"></brew-icon> Save</brew-button
+            ><brew-icon .svg="${SAVED_ICON_SVG}" size="18"></brew-icon> Save</brew-button
           >
           ${
             this._shareStatusText
@@ -346,7 +358,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
                     @button-click="${() => {
                       this._recipePickerOpen = true;
                     }}"
-                    ><brew-icon name="menu_book" size="18"></brew-icon> ${
+                    ><brew-icon .svg="${MENU_BOOK_ICON_SVG}" size="18"></brew-icon> ${
                       selectedType === "Aeropress"
                         ? "Load a WAC recipe"
                         : `Load ${regexVowels.test(selectedType.toLowerCase()) ? "an" : "a"} ${selectedType} barista recipe`
@@ -358,7 +370,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
 
           <div class="ratio-tips">
             <div class="ratio-tips-header">
-              <brew-icon name="info" size="20"></brew-icon>
+              <brew-icon .svg="${INFO_ICON_SVG}" size="20"></brew-icon>
               <span class="ratio-tips-title">Ratio tips</span>
             </div>
             <p class="ratio-tips-body">Lower ratio = stronger, more intense brew.</p>

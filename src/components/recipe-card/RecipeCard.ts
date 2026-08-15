@@ -11,6 +11,8 @@ import { formatSeconds } from "../../shared/utilities/format-time.utility";
 import "../button/brew-button";
 import "../icon/brew-icon";
 import { RecipeCardStyles } from "./recipe-card.styles";
+import { EXPAND_LESS_ICON_SVG } from "../../shared/icons/expand-less.svg";
+import { EXPAND_MORE_ICON_SVG } from "../../shared/icons/expand-more.svg";
 
 const PLACE_LABEL: Record<number, string> = { 1: "1st", 2: "2nd", 3: "3rd" };
 
@@ -261,7 +263,9 @@ export class RecipeCard extends LitElement {
             <span class="competitor">${competitor}</span>
             <span class="country">${country} · ${year}</span>
           </span>
-          <brew-icon name="${this._expanded ? "expand_less" : "expand_more"}"></brew-icon>
+          <brew-icon
+            .svg="${this._expanded ? EXPAND_LESS_ICON_SVG : EXPAND_MORE_ICON_SVG}"
+          ></brew-icon>
         </button>
 
         ${

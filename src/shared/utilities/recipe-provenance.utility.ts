@@ -5,6 +5,7 @@ import type { ILoadedRecipeSource } from "../interfaces/brew.interface";
 import { type RecipeSheetViewMode, renderRecipeSheetViewToggle } from "./brew-steps-view.utility";
 import { isRecipeModified, type IRecipeModifiedCurrent } from "./recipe-modified.utility";
 import { type IRenderRecipeCardOptions, renderRecipeCard } from "./recipe-registry.utility";
+import { MENU_BOOK_ICON_SVG } from "../icons/menu-book.svg";
 
 /**
  * Shared "Pulled from {label}" / "Modified from {label} — tap to see the
@@ -25,7 +26,7 @@ export const renderRecipeProvenanceBanner = (
 
   return html`
     <button class="primed-banner recipe-banner" type="button" @click="${onOpen}">
-      <brew-icon name="menu_book" size="18"></brew-icon>
+      <brew-icon .svg="${MENU_BOOK_ICON_SVG}" size="18"></brew-icon>
       <span class="primed-banner-text"
         >${
           modified
@@ -64,12 +65,12 @@ export const renderOriginalRecipeSheet = (
   onViewModeChange: (mode: RecipeSheetViewMode) => void,
   options?: IRenderRecipeCardOptions,
 ): HTMLTemplateResult | typeof nothing => {
-  if (!isOpen || !source) return nothing;
+  if (!source) return nothing;
 
   const modified = isRecipeModified(current, source);
 
   return html`
-    <brew-bottom-sheet open label="Original recipe" @sheet-scrim-click="${onClose}">
+    <brew-bottom-sheet ?open="${isOpen}" label="Original recipe" @sheet-scrim-click="${onClose}">
       <div class="title">Original recipe</div>
       ${modified ? renderRecipeSheetViewToggle(viewMode, onViewModeChange) : nothing}
       ${renderRecipeCard(source.recipeId, {

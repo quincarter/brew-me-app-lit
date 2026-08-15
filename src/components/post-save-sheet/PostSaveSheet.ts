@@ -1,6 +1,12 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
-import { EDIT_ICON } from "../../shared/icons/icons";
+import {
+  ARROW_FORWARD_ICON_SVG,
+  CHECK_CIRCLE_ICON_SVG,
+  CLOSE_ICON,
+  EDIT_ICON,
+  TIMER_ICON_SVG,
+} from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import {
   closePostSaveSheet,
@@ -67,11 +73,11 @@ export class PostSaveSheet extends SignalWatcher(LitElement) {
     return html`
       <div class="header">
         <div class="header-text">
-          <brew-icon name="check_circle" size="20" filled></brew-icon>
+          <brew-icon .svg="${CHECK_CIRCLE_ICON_SVG}" size="20" filled></brew-icon>
           <span>Brew saved</span>
         </div>
         <brew-icon-button
-          icon="close"
+          .svgIcon="${CLOSE_ICON}"
           size="18"
           aria-label="Close"
           @icon-click="${closePostSaveSheet}"
@@ -108,15 +114,17 @@ export class PostSaveSheet extends SignalWatcher(LitElement) {
                   brewing</brew-button
                 >
                 <brew-button variant="filled" full-width @button-click="${this._onStartTimer}"
-                  ><brew-icon name="timer" size="18"></brew-icon> Start guided timer</brew-button
+                  ><brew-icon .svg="${TIMER_ICON_SVG}" size="18"></brew-icon> Start guided
+                  timer</brew-button
                 >
               `
             : html`
                 <brew-button variant="outlined" full-width @button-click="${this._onStartTimer}"
-                  ><brew-icon name="timer" size="18"></brew-icon> Start guided timer</brew-button
+                  ><brew-icon .svg="${TIMER_ICON_SVG}" size="18"></brew-icon> Start guided
+                  timer</brew-button
                 >
                 <brew-button variant="filled" full-width @button-click="${this._onViewDetail}"
-                  ><brew-icon name="arrow_forward" size="18"></brew-icon> Go to brew
+                  ><brew-icon .svg="${ARROW_FORWARD_ICON_SVG}" size="18"></brew-icon> Go to brew
                   detail</brew-button
                 >
               `

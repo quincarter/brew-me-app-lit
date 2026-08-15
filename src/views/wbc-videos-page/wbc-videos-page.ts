@@ -11,6 +11,11 @@ import {
   WBC_ROUTINES,
   WBC_UPCOMING_EVENT,
 } from "../../shared/data/wbc-content.data";
+import {
+  ARROW_BACK_ICON_SVG,
+  EMOJI_EVENTS_ICON_SVG,
+  EVENT_ICON_SVG,
+} from "../../shared/icons/icons";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { WbcVideosPageStyles } from "./wbc-videos-page.styles";
 
@@ -25,7 +30,7 @@ export class WbcVideosPage extends LitElement {
       <div class="screen">
         <brew-top-bar
           title="World Barista Championship"
-          icon="arrow_back"
+          .icon="${ARROW_BACK_ICON_SVG}"
           href="/more"
         ></brew-top-bar>
 
@@ -35,7 +40,7 @@ export class WbcVideosPage extends LitElement {
             <div class="event-header">
               <h2 class="event-title">${event.title}</h2>
               <span class="event-badge">
-                <brew-icon name="event" size="16"></brew-icon>
+                <brew-icon .svg="${EVENT_ICON_SVG}" size="16"></brew-icon>
                 ${event.dates} · ${event.location}
               </span>
             </div>
@@ -50,7 +55,7 @@ export class WbcVideosPage extends LitElement {
               ></brew-link-card>
               <brew-link-card
                 href="${event.wbcOfficialUrl}"
-                icon="emoji_events"
+                .svg=${EMOJI_EVENTS_ICON_SVG}
                 label="World Barista Championship Official"
                 description="Competition rules, competitor stats &amp; WCC news"
                 external
@@ -77,7 +82,9 @@ export class WbcVideosPage extends LitElement {
           <div class="divider"></div>
 
           <!-- Misc & Behind the Scenes Section -->
-          <h3 class="section-title">Beverage Breakdown &amp; Behind the Scenes</h3>
+          <h3 class="section-title">
+            Beverage Breakdown &amp; Behind the Scenes
+          </h3>
           <div class="video-list">
             ${WBC_MISC_VIDEOS.map(
               (video) => html`

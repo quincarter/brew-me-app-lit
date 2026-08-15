@@ -4,6 +4,7 @@ import "../components/bottom-nav/brew-bottom-nav";
 import "../components/icon/brew-icon";
 import "../components/link-card/brew-link-card";
 import "../components/top-bar/brew-top-bar";
+import { ARROW_BACK_ICON_SVG } from "../shared/icons/arrow-back.svg";
 
 export type Constructor<T = {}> = new (...args: any[]) => T;
 
@@ -48,7 +49,7 @@ export function RecipePageMixin<T extends Constructor<LitElement>>(superClass: T
         <div class="screen">
           <brew-top-bar
             title="${config.title}"
-            icon="arrow_back"
+            .icon="${ARROW_BACK_ICON_SVG}"
             href="/more/guide/${config.guideId}"
           ></brew-top-bar>
 

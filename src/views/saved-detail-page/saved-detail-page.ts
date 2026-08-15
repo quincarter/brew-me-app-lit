@@ -15,6 +15,14 @@ import "../../components/type-picker/brew-type-picker";
 import "../../components/video-search/brew-video-search";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
 import { BREW_STEPS_PRESETS } from "../../shared/data/brew-steps-presets.data";
+import {
+  ARROW_BACK_ICON_SVG,
+  DELETE_ICON,
+  EDIT_ICON,
+  MENU_BOOK_ICON_SVG,
+  REPLAY_ICON,
+  SHARE_ICON,
+} from "../../shared/icons/icons";
 import type { IBrewStepsConfig, ISavedBrew } from "../../shared/interfaces/brew.interface";
 import { addCustomBrewType, allBrewTypesSignal } from "../../shared/stores/brew-types.store";
 import {
@@ -24,7 +32,6 @@ import {
   updateSavedBrew,
 } from "../../shared/stores/brew.store";
 import { editBeforeBrewingIdSignal } from "../../shared/stores/post-save-sheet.store";
-import { DELETE_ICON, EDIT_ICON, REPLAY_ICON, SHARE_ICON } from "../../shared/icons/icons";
 import { BrewStepsViewToggleStyles } from "../../shared/styles/brew-steps-view-toggle.styles";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
@@ -36,15 +43,15 @@ import {
   resolveBrewStepsForMode,
 } from "../../shared/utilities/brew-steps-view.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
+import { coffeeForWater, gramsToOunces, ouncesToGrams } from "../../shared/utilities/ratio.utility";
 import {
-  isRecipeModified,
   type IRecipeModifiedCurrent,
+  isRecipeModified,
 } from "../../shared/utilities/recipe-modified.utility";
 import {
   renderOriginalRecipeSheet,
   renderRecipeProvenanceBanner,
 } from "../../shared/utilities/recipe-provenance.utility";
-import { coffeeForWater, gramsToOunces, ouncesToGrams } from "../../shared/utilities/ratio.utility";
 import { SHARE_OUTCOME_MESSAGES, shareBrew } from "../../shared/utilities/share.utility";
 import { SavedDetailPageStyles } from "./saved-detail-page.styles";
 
@@ -201,7 +208,11 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     if (!brew) {
       return html`
         <div class="screen">
-          <brew-top-bar title="Not found" icon="arrow_back" href="/saved"></brew-top-bar>
+          <brew-top-bar
+            title="Not found"
+            .icon="${ARROW_BACK_ICON_SVG}"
+            href="/saved"
+          ></brew-top-bar>
           <div class="content"><p>This saved ratio no longer exists.</p></div>
           <brew-bottom-nav active="saved"></brew-bottom-nav>
         </div>
@@ -232,7 +243,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
       <div class="screen">
         <brew-top-bar
           title="${getBrewDisplayName(brew)}"
-          icon="arrow_back"
+          .icon="${ARROW_BACK_ICON_SVG}"
           href="/saved"
         ></brew-top-bar>
 
@@ -403,7 +414,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                       ? html`
                           <brew-link-card
                             href="/more/guide/${matchingGuide.id}"
-                            icon="menu_book"
+                            .svg="${MENU_BOOK_ICON_SVG}"
                             label="${matchingGuide.name} Brew Guide"
                             description="Ratio tips, grind size, and video walkthroughs"
                           ></brew-link-card>

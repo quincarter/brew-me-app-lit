@@ -5,6 +5,8 @@ import "../icon/brew-icon";
 import "../icon-button/brew-icon-button";
 import "../star-rating/brew-star-rating";
 import { ListRowStyles } from "./list-row.styles";
+import { REPLAY_ICON } from "../../shared/icons/replay.svg";
+import { CHEVRON_RIGHT_ICON_SVG } from "../../shared/icons/chevron-right.svg";
 
 /**
  * # List Row
@@ -31,7 +33,7 @@ export class ListRow extends LitElement {
 
   @property({ type: String }) headline = "";
   @property({ type: String }) supporting = "";
-  @property({ type: String, attribute: "leading-icon" }) leadingIcon = "";
+  @property({ attribute: "leading-icon" }) leadingIcon: string | SVGTemplateResult = "";
   @property({ type: String, attribute: "leading-initial" }) leadingInitial = "";
   @property({ type: String, attribute: "leading-bg" }) leadingBg =
     "var(--brew-color-secondary-container)";
@@ -63,7 +65,11 @@ export class ListRow extends LitElement {
     if (this.leadingIcon) {
       return html`
         <span class="icon-circle" style="background:${this.leadingBg};color:${this.leadingFg}">
-          <brew-icon name="${this.leadingIcon}"></brew-icon>
+          ${
+            typeof this.leadingIcon === "string"
+              ? html`<brew-icon name="${this.leadingIcon}"></brew-icon>`
+              : html`<brew-icon .svg="${this.leadingIcon}"></brew-icon>`
+          }
         </span>
       `;
     }
@@ -86,14 +92,14 @@ export class ListRow extends LitElement {
         ${
           this.replayable
             ? html`<brew-icon-button
-                icon="replay"
+                .svgIcon="${REPLAY_ICON}"
                 aria-label="Brew again"
                 style="--icon-button-size: 36px; --icon-button-color: var(--brew-color-primary)"
                 @click="${this._onReplayClick}"
               ></brew-icon-button>`
             : nothing
         }
-        <brew-icon name="chevron_right" class="chevron"></brew-icon>
+        <brew-icon .svg="${CHEVRON_RIGHT_ICON_SVG}" class="chevron"></brew-icon>
       </a>
     `;
   }

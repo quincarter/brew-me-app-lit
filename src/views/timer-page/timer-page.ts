@@ -7,11 +7,12 @@ import "../../components/timer-controls/brew-timer-controls";
 import "../../components/timer-dial/brew-timer-dial";
 import "../../components/timer-recipe-panel/brew-timer-recipe-panel";
 import "../../components/top-bar/brew-top-bar";
+import { ARROW_BACK_ICON_SVG } from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
 import {
-  clearPrimedRecipe,
   type GuidedTimerMode,
+  clearPrimedRecipe,
   guidedModeSignal,
   primedRecipeSignal,
   primeTimerForSavedBrew,
@@ -63,7 +64,7 @@ export class TimerPage extends SignalWatcher(LitElement) {
 
     return html`
       <div class="screen">
-        <brew-top-bar title="${title}" icon="arrow_back" href="/more"></brew-top-bar>
+        <brew-top-bar title="${title}" .icon="${ARROW_BACK_ICON_SVG}" href="/more"></brew-top-bar>
 
         <div class="content">
           <brew-timer-dial

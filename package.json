@@ -13,7 +13,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run --coverage",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --workers 8",
     "screenshots": "node scripts/capture-screenshots.js"
   },
   "dependencies": {

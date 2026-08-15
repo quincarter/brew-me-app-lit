@@ -23,6 +23,14 @@ import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
 import { formatRatio } from "../../shared/utilities/format-ratio.utility";
 import { formatRelativeDay } from "../../shared/utilities/relative-date.utility";
 import { HomePageStyles } from "./home-page.styles";
+import { REPLAY_ICON } from "../../shared/icons/replay.svg";
+import {
+  BOOKMARK_ADDED_ICON_SVG,
+  CALCULATE_ICON_SVG,
+  LOCAL_FIRE_DEPARTMENT_SVG,
+  SAVED_ICON_SVG,
+  TIMER_ICON_SVG,
+} from "../../shared/icons/icons";
 
 /** A real time-of-day greeting instead of a hardcoded one. */
 const getGreeting = (): string => {
@@ -58,7 +66,7 @@ export class HomePage extends SignalWatcher(LitElement) {
           <span class="brew-again-meta">Last brewed ${relativeLower}</span>
         </span>
         <brew-icon-button
-          icon="replay"
+          .svgIcon="${REPLAY_ICON}"
           variant="filled"
           aria-label="Brew again"
           style="--icon-button-size: 44px"
@@ -88,19 +96,19 @@ export class HomePage extends SignalWatcher(LitElement) {
 
           <div class="actions" data-tour="home-actions">
             <brew-action-tile
-              icon="calculate"
+              .svg="${CALCULATE_ICON_SVG}"
               label="Calculate"
               tone="primary"
               href="/calculate"
             ></brew-action-tile>
             <brew-action-tile
-              icon="bookmark"
+              .svg="${SAVED_ICON_SVG}"
               label="Saved Brews"
               tone="secondary"
               href="/saved"
             ></brew-action-tile>
             <brew-action-tile
-              icon="timer"
+              .svg="${TIMER_ICON_SVG}"
               label="Timer"
               tone="tertiary"
               href="/timer"
@@ -109,12 +117,12 @@ export class HomePage extends SignalWatcher(LitElement) {
 
           <div class="stats">
             <brew-stat-tile
-              icon="bookmark_added"
+              .svg="${BOOKMARK_ADDED_ICON_SVG}"
               value="${totalBrewsSignal.value}"
               label="saved brews"
             ></brew-stat-tile>
             <brew-stat-tile
-              icon="local_fire_department"
+              .svg="${LOCAL_FIRE_DEPARTMENT_SVG}"
               value="${streakDaysSignal.value}"
               label="day streak"
             ></brew-stat-tile>

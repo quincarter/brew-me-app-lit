@@ -12,9 +12,11 @@ export const BottomSheetStyles = css`
 	 * it here unconditionally would be an *author*-origin rule, which beats
 	 * the UA-origin default regardless of selector specificity, silently
 	 * keeping the (opacity: 0) dialog laid out and hit-testable even while
-	 * closed. "display" only needs to be set explicitly for the open state
-	 * below; "allow-discrete" still lets the close transition play before
-	 * the browser reverts to the native "display: none". */
+	 * closed. "display" is set explicitly (and unconditionally) for the
+	 * open state below - including while ".closing" - so the sheet stays
+	 * laid out and visible for the whole exit transition; BottomSheet.ts
+	 * only calls the real dialog.close() (which reverts to the UA default)
+	 * once that transition has actually finished. */
   .sheet {
     margin: 0;
     inset: auto 0 0 0;
@@ -31,20 +33,21 @@ export const BottomSheetStyles = css`
     transform: translateY(100%);
     transition:
       opacity 0.22s ease,
-      transform 0.28s cubic-bezier(0.2, 0, 0, 1),
-      overlay 0.28s allow-discrete,
-      display 0.28s allow-discrete;
+      transform 0.28s cubic-bezier(0.2, 0, 0, 1);
   }
 
   .sheet[open] {
     display: flex;
     flex-direction: column;
+  }
+
+  .sheet[open]:not(.closing) {
     opacity: 1;
     transform: translateY(0);
   }
 
   @starting-style {
-    .sheet[open] {
+    .sheet[open]:not(.closing) {
       opacity: 0;
       transform: translateY(100%);
     }
@@ -52,15 +55,16 @@ export const BottomSheetStyles = css`
 
   .sheet::backdrop {
     background: rgba(32, 27, 19, 0.45);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+  }
+
+  .sheet[open]:not(.closing)::backdrop {
     opacity: 1;
-    transition:
-      opacity 0.22s ease,
-      overlay 0.28s allow-discrete,
-      display 0.28s allow-discrete;
   }
 
   @starting-style {
-    .sheet[open]::backdrop {
+    .sheet[open]:not(.closing)::backdrop {
       opacity: 0;
     }
   }
@@ -78,12 +82,12 @@ export const BottomSheetStyles = css`
       transform: translateY(24px) scale(0.96);
     }
 
-    .sheet[open] {
+    .sheet[open]:not(.closing) {
       transform: translateY(0) scale(1);
     }
 
     @starting-style {
-      .sheet[open] {
+      .sheet[open]:not(.closing) {
         transform: translateY(24px) scale(0.96);
       }
     }
