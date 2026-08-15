@@ -15,12 +15,12 @@ router can intercept navigation.
   href="/saved/1"
 ></brew-list-row>
 
-<!-- with an icon circle (brewing tools list) -->
+<!-- with a Material Symbols icon circle (name as a plain attribute) -->
 <brew-list-row
-  headline="Pour-over Timer"
-  supporting="Guided brew countdown"
-  .leading-icon="${TIMER_ICON_SVG}"
-  href="/timer"
+  headline="Settings"
+  supporting="Brew types, dark mode, refresh, data"
+  leading-icon="settings"
+  href="/more/settings"
 ></brew-list-row>
 
 <!-- with a custom SVG icon circle (set as a property, not an attribute) -->

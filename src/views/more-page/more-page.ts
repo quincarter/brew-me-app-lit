@@ -75,7 +75,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="Pour-over Timer"
             supporting="Guided brew countdown"
-            .leading-icon="${TIMER_ICON_SVG}"
+            .leadingIcon="${TIMER_ICON_SVG}"
             leading-bg="var(--brew-color-tertiary-container)"
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/timer"
@@ -102,7 +102,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="Aeropress (WAC) Recipes"
             supporting="World AeroPress Championship winners"
-            .leading-icon="${MENU_BOOK_ICON_SVG}"
+            .leadingIcon="${MENU_BOOK_ICON_SVG}"
             leading-bg="var(--brew-color-tertiary-container)"
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/more/aeropress-recipes"
@@ -110,7 +110,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="Chemex Recipes"
             supporting="Expert &amp; roastery glass dripper recipes"
-            .leading-icon="${MENU_BOOK_ICON_SVG}"
+            .leadingIcon="${MENU_BOOK_ICON_SVG}"
             leading-bg="var(--brew-color-tertiary-container)"
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/more/chemex-recipes"
@@ -118,7 +118,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="Clever Dripper Recipes"
             supporting="Immersion &amp; barista dripper recipes"
-            .leading-icon="${MENU_BOOK_ICON_SVG}"
+            .leadingIcon="${MENU_BOOK_ICON_SVG}"
             leading-bg="var(--brew-color-tertiary-container)"
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/more/clever-dripper-recipes"
@@ -126,7 +126,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="Hario Switch Recipes"
             supporting="Hybrid immersion &amp; WBrC champion recipes"
-            .leading-icon="${MENU_BOOK_ICON_SVG}"
+            .leadingIcon="${MENU_BOOK_ICON_SVG}"
             leading-bg="var(--brew-color-tertiary-container)"
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/more/hario-switch-recipes"
@@ -134,7 +134,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="Kalita Wave Recipes"
             supporting="Champion &amp; roastery dripper recipes"
-            .leading-icon="${MENU_BOOK_ICON_SVG}"
+            .leadingIcon="${MENU_BOOK_ICON_SVG}"
             leading-bg="var(--brew-color-tertiary-container)"
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/more/kalita-wave-recipes"
@@ -142,7 +142,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="Origami Recipes"
             supporting="Champion &amp; barista dripper recipes"
-            .leading-icon="${MENU_BOOK_ICON_SVG}"
+            .leadingIcon="${MENU_BOOK_ICON_SVG}"
             leading-bg="var(--brew-color-tertiary-container)"
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/more/origami-recipes"
@@ -150,7 +150,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="V60 Recipes"
             supporting="Expert pour-over recipes compared"
-            .leading-icon="${MENU_BOOK_ICON_SVG}"
+            .leadingIcon="${MENU_BOOK_ICON_SVG}"
             leading-bg="var(--brew-color-tertiary-container)"
             leading-fg="var(--brew-color-on-tertiary-container)"
             href="/more/v60-recipes"
