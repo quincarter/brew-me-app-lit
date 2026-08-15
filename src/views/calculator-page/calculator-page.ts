@@ -260,12 +260,19 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
 
     const hasCuratedRecipes = curatedRecipes.includes(selectedType);
     const recipeSource = isQuickCalculator ? null : loadedRecipeSourceSignal.value;
-    const recipeCurrent: IRecipeModifiedCurrent = {
-      ratio: ratioSignal.value,
-      water: waterSignal.value,
-      coffee: coffeeSignal.value,
-      steps: brewStepsSignal.value?.steps ?? [],
-    };
+    const recipeCurrent: IRecipeModifiedCurrent = isEspresso
+      ? {
+          ratio: espressoRatioSignal.value.toString(),
+          water: espressoDoseOutSignal.value.toString(),
+          coffee: espressoDoseInSignal.value,
+          steps: brewStepsSignal.value?.steps ?? [],
+        }
+      : {
+          ratio: ratioSignal.value,
+          water: waterSignal.value,
+          coffee: coffeeSignal.value,
+          steps: brewStepsSignal.value?.steps ?? [],
+        };
     /** The toggle+diff-aware card only applies to the static display of an actually-modified recipe - while `_stepsEditing`, or when nothing's actually changed (nothing to diff), behavior is unchanged (plain card, no toggle). */
     const isRecipeActuallyModified = recipeSource
       ? isRecipeModified(recipeCurrent, recipeSource)

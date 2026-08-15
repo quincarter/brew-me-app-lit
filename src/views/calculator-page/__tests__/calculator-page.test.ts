@@ -5,6 +5,7 @@ import { ESPRESSO_PROFILES } from "../../../shared/data/espresso-profiles.data";
 import { ESPRESSO_SHOT_STYLES } from "../../../shared/data/espresso-shot-styles.data";
 import {
   loadAeropressRecipeIntoCalculator,
+  loadEspressoShotStyleIntoCalculator,
   selectBrewType,
   selectedBrewTypeSignal,
 } from "../../../shared/stores/brew-steps.store";
@@ -16,6 +17,7 @@ import {
   espressoDoseOutSignal,
   espressoRatioSignal,
   resetEspressoCalculator,
+  setEspressoDoseIn,
 } from "../../../shared/stores/espresso-calculator.store";
 import { cancelSaveDialog } from "../../../shared/stores/save-dialog.store";
 import "../calculator-page";
@@ -302,6 +304,33 @@ describe("calculator-page", () => {
       selectBrewType("Espresso Shot");
       await element.updateComplete;
       expect(findButtonByText("Load an espresso recipe")).not.toBeUndefined();
+    });
+
+    describe("Pulled from / Modified from banner", () => {
+      const style = ESPRESSO_SHOT_STYLES[0];
+
+      it("shows 'Pulled from' right after loading a recipe, unedited - not a false-positive 'Modified from'", async () => {
+        selectBrewType("Espresso Shot");
+        loadEspressoShotStyleIntoCalculator(style);
+        await element.updateComplete;
+
+        const banner = element.shadowRoot?.querySelector(".recipe-banner .primed-banner-text");
+        expect(banner?.textContent?.trim()).toBe(`Pulled from ${style.label}`);
+      });
+
+      it("switches to 'Modified from … — tap to see the original' once dose-in is hand-edited", async () => {
+        selectBrewType("Espresso Shot");
+        loadEspressoShotStyleIntoCalculator(style);
+        await element.updateComplete;
+
+        setEspressoDoseIn(String(style.doseIn + 2));
+        await element.updateComplete;
+
+        const banner = element.shadowRoot?.querySelector(".recipe-banner .primed-banner-text");
+        expect(banner?.textContent?.trim()).toBe(
+          `Modified from ${style.label} — tap to see the original`,
+        );
+      });
     });
   });
 });
