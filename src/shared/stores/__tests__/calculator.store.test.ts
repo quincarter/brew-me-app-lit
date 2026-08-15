@@ -25,11 +25,18 @@ import {
   setWater,
   waterSignal,
 } from "../calculator.store";
+import {
+  espressoDoseInSignal,
+  espressoDoseOutSignal,
+  espressoRatioSignal,
+  resetEspressoCalculator,
+} from "../espresso-calculator.store";
 
 describe("calculator.store", () => {
   beforeEach(() => {
     resetCalculator();
     deleteAllSavedBrews();
+    resetEspressoCalculator();
   });
 
   it("computes coffee when water is entered", () => {
@@ -259,6 +266,75 @@ describe("calculator.store", () => {
 
       expect(selectedBrewTypeSignal.value).toBe("Cold Brew");
       expect(brewStepsSignal.value).toBeNull();
+    });
+
+    describe("with an Espresso Shot brew", () => {
+      const brewSteps: IBrewStepsConfig = {
+        steps: [
+          { id: "espresso-grind", label: "Grind", kind: "note", value: "Fine" },
+          { id: "espresso-temp", label: "Water temp", kind: "note", value: "200°F" },
+          { id: "espresso-preinfusion", label: "Preinfusion", kind: "timed", seconds: 5 },
+          { id: "espresso-shot", label: "Shot time", kind: "timed", seconds: 28 },
+        ],
+      };
+      const recipeSource: ILoadedRecipeSource = {
+        recipeId: "double",
+        label: "Double",
+        ratio: 2,
+        water: 36,
+        coffee: 18,
+        steps: brewSteps.steps,
+      };
+
+      it("populates the espresso dose-in/ratio/dose-out signals from coffee/ratio/water, not the shared ratio/water/oz signals", () => {
+        primeCalculatorForBrew({
+          brewType: "Espresso Shot",
+          ratio: 2,
+          water: 36,
+          coffee: 18,
+          oz: 1.27,
+          brewSteps,
+          recipeSource,
+        });
+
+        expect(espressoDoseInSignal.value).toBe(18);
+        expect(espressoRatioSignal.value).toBe(2);
+        expect(espressoDoseOutSignal.value).toBe(36);
+        // The shared pour-over signals are left untouched.
+        expect(ratioSignal.value).toBe("16");
+        expect(waterSignal.value).toBe("");
+        expect(coffeeSignal.value).toBeNull();
+      });
+
+      it("sets selectedBrewTypeSignal/brewStepsSignal/loadedRecipeSourceSignal/primedBrewTypeSignal", () => {
+        primeCalculatorForBrew({
+          brewType: "Espresso Shot",
+          ratio: 2,
+          water: 36,
+          coffee: 18,
+          oz: 1.27,
+          brewSteps,
+          recipeSource,
+        });
+
+        expect(selectedBrewTypeSignal.value).toBe("Espresso Shot");
+        expect(brewStepsSignal.value).toEqual(brewSteps);
+        expect(loadedRecipeSourceSignal.value).toEqual(recipeSource);
+        expect(primedBrewTypeSignal.value).toBe("Espresso Shot");
+      });
+
+      it("falls back to the Espresso Shot preset when the brew has no brewSteps of its own", () => {
+        primeCalculatorForBrew({
+          brewType: "Espresso Shot",
+          ratio: 2,
+          water: 36,
+          coffee: 18,
+          oz: 1.27,
+        });
+
+        expect(brewStepsSignal.value).toEqual(BREW_STEPS_PRESETS["Espresso Shot"]);
+        expect(loadedRecipeSourceSignal.value).toBeNull();
+      });
     });
   });
 });

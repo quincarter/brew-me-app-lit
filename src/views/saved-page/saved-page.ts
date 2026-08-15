@@ -43,6 +43,7 @@ export class SavedPage extends SignalWatcher(LitElement) {
                       is-saved-brew
                       href="/saved/${brew.id}"
                       rating="${brew.rating ?? 0}"
+                      ?has-recipe-source="${Boolean(brew.recipeSource)}"
                       ?replayable="${true}"
                       @replay-click="${() => brewAgain(brew)}"
                     ></brew-list-row>

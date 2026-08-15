@@ -1,9 +1,12 @@
 import { type HTMLTemplateResult, html } from "lit";
+import "../../components/espresso-recipe-card/brew-espresso-recipe-card";
 import "../../components/pourover-recipe-card/brew-pourover-recipe-card";
 import "../../components/recipe-card/brew-recipe-card";
 import { AEROPRESS_RECIPES } from "../data/aeropress-recipes.data";
 import { CHEMEX_RECIPES } from "../data/chemex-recipes.data";
 import { CLEVER_DRIPPER_RECIPES } from "../data/clever-dripper-recipes.data";
+import { ESPRESSO_PROFILES } from "../data/espresso-profiles.data";
+import { ESPRESSO_SHOT_STYLES } from "../data/espresso-shot-styles.data";
 import { HARIO_SWITCH_RECIPES } from "../data/hario-switch-recipes.data";
 import { KALITA_WAVE_RECIPES } from "../data/kalita-wave-recipes.data";
 import { ORIGAMI_RECIPES } from "../data/origami-recipes.data";
@@ -11,6 +14,8 @@ import { V60_RECIPES } from "../data/v60-recipes.data";
 import type {
   IAeropressRecipe,
   IBrewStep,
+  IEspressoProfile,
+  IEspressoShotStyle,
   ILoadedRecipeSource,
 } from "../interfaces/brew.interface";
 import {
@@ -18,6 +23,7 @@ import {
   getAeropressRecipeRatio,
   getAeropressRecipeSteps,
 } from "./aeropress-recipe.utility";
+import { getEspressoRecipeLabel, getEspressoRecipeSteps } from "./espresso-recipe.utility";
 import {
   getPouroverRecipeLabel,
   getPouroverRecipeRatio,
@@ -27,11 +33,11 @@ import {
   parseWaterGrams,
 } from "./pourover-recipe.utility";
 
-export type IAnyRecipe = IAeropressRecipe | IPouroverRecipe;
+export type IAnyRecipe = IAeropressRecipe | IPouroverRecipe | IEspressoShotStyle | IEspressoProfile;
 
 export interface IResolvedRecipe {
   recipe: IAnyRecipe;
-  kind: "aeropress" | "pourover";
+  kind: "aeropress" | "pourover" | "espresso";
 }
 
 /** Pre-indexed O(1) map for recipe lookup by ID across all categories. */
@@ -56,6 +62,15 @@ for (const collection of POUROVER_COLLECTIONS) {
   for (const recipe of collection) {
     RECIPE_REGISTRY.set(recipe.id, { recipe, kind: "pourover" });
   }
+}
+
+// Index espresso shot styles and technique profiles
+for (const recipe of ESPRESSO_SHOT_STYLES) {
+  RECIPE_REGISTRY.set(recipe.id, { recipe, kind: "espresso" });
+}
+
+for (const recipe of ESPRESSO_PROFILES) {
+  RECIPE_REGISTRY.set(recipe.id, { recipe, kind: "espresso" });
 }
 
 /**
@@ -90,6 +105,18 @@ export const buildRecipeSource = (recipeId: string): ILoadedRecipeSource | null 
     };
   }
 
+  if (resolved.kind === "espresso") {
+    const recipe = resolved.recipe as IEspressoShotStyle | IEspressoProfile;
+    return {
+      recipeId: recipe.id,
+      label: getEspressoRecipeLabel(recipe),
+      ratio: recipe.ratio,
+      water: recipe.doseOut,
+      coffee: recipe.doseIn,
+      steps: getEspressoRecipeSteps(recipe),
+    };
+  }
+
   const recipe = resolved.recipe as IPouroverRecipe;
   return {
     recipeId: recipe.id,
@@ -109,8 +136,9 @@ export interface IRenderRecipeCardOptions {
 }
 
 /**
- * Clean component helper to render the appropriate recipe card (<brew-recipe-card> or <brew-pourover-recipe-card>)
- * for any recipe by ID.
+ * Clean component helper to render the appropriate recipe card
+ * (<brew-recipe-card>, <brew-pourover-recipe-card>, or
+ * <brew-espresso-recipe-card>) for any recipe by ID.
  */
 export const renderRecipeCard = (
   recipeId: string,
@@ -131,6 +159,17 @@ export const renderRecipeCard = (
         ?hide-brew-button="${hideBrewButton}"
         .diffAgainst="${diffAgainst}"
       ></brew-recipe-card>
+    `;
+  }
+
+  if (resolved.kind === "espresso") {
+    return html`
+      <brew-espresso-recipe-card
+        .recipe="${resolved.recipe as IEspressoShotStyle | IEspressoProfile}"
+        ?start-open="${startOpen}"
+        ?hide-brew-button="${hideBrewButton}"
+        .diffAgainst="${diffAgainst}"
+      ></brew-espresso-recipe-card>
     `;
   }
 

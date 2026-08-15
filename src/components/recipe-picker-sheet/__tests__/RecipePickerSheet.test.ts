@@ -1,8 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AEROPRESS_RECIPES } from "../../../shared/data/aeropress-recipes.data";
+import { ESPRESSO_PROFILES } from "../../../shared/data/espresso-profiles.data";
+import { ESPRESSO_SHOT_STYLES } from "../../../shared/data/espresso-shot-styles.data";
 import { ORIGAMI_RECIPES } from "../../../shared/data/origami-recipes.data";
 import { V60_RECIPES } from "../../../shared/data/v60-recipes.data";
-import type { IAeropressRecipe } from "../../../shared/interfaces/brew.interface";
+import type {
+  IAeropressRecipe,
+  IEspressoProfile,
+  IEspressoShotStyle,
+} from "../../../shared/interfaces/brew.interface";
 import "../brew-recipe-picker-sheet";
 import type { RecipePickerSheet } from "../RecipePickerSheet";
 
@@ -73,6 +79,68 @@ describe("brew-recipe-picker-sheet", () => {
     await element.updateComplete;
 
     expect(element.shadowRoot?.querySelector("brew-bottom-sheet")?.hasAttribute("open")).toBe(true);
+  });
+
+  it("renders the combined ESPRESSO_SHOT_STYLES + ESPRESSO_PROFILES list when brewType is Espresso Shot", async () => {
+    element.brewType = "Espresso Shot";
+    element.open = true;
+    await element.updateComplete;
+
+    const rows = element.shadowRoot?.querySelectorAll("brew-list-row");
+    expect(rows).toHaveLength(ESPRESSO_SHOT_STYLES.length + ESPRESSO_PROFILES.length);
+    expect(rows?.[0].getAttribute("headline")).toBe(ESPRESSO_SHOT_STYLES[0].label);
+    expect(rows?.[ESPRESSO_SHOT_STYLES.length].getAttribute("headline")).toBe(
+      ESPRESSO_PROFILES[0].name,
+    );
+  });
+
+  it("fires recipe-select with the tapped shot style's full object", async () => {
+    element.brewType = "Espresso Shot";
+    element.open = true;
+    await element.updateComplete;
+
+    const targetStyle = ESPRESSO_SHOT_STYLES[0];
+    const row = element.shadowRoot?.querySelectorAll("brew-list-row")[0];
+    const anchor = row?.shadowRoot?.querySelector("a.row");
+    if (!anchor) throw new Error("expected the row's inner anchor");
+
+    const selectEvent = new Promise<CustomEvent<IEspressoShotStyle>>((resolve) => {
+      element.addEventListener("recipe-select", (event) =>
+        resolve(event as CustomEvent<IEspressoShotStyle>),
+      );
+    });
+
+    anchor.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, cancelable: true, composed: true }),
+    );
+
+    const event = await selectEvent;
+    expect(event.detail).toEqual(targetStyle);
+  });
+
+  it("fires recipe-select with the tapped profile's full object", async () => {
+    element.brewType = "Espresso Shot";
+    element.open = true;
+    await element.updateComplete;
+
+    const targetProfile = ESPRESSO_PROFILES[0];
+    const rows = element.shadowRoot?.querySelectorAll("brew-list-row");
+    const row = rows?.[ESPRESSO_SHOT_STYLES.length];
+    const anchor = row?.shadowRoot?.querySelector("a.row");
+    if (!anchor) throw new Error("expected the row's inner anchor");
+
+    const selectEvent = new Promise<CustomEvent<IEspressoProfile>>((resolve) => {
+      element.addEventListener("recipe-select", (event) =>
+        resolve(event as CustomEvent<IEspressoProfile>),
+      );
+    });
+
+    anchor.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, cancelable: true, composed: true }),
+    );
+
+    const event = await selectEvent;
+    expect(event.detail).toEqual(targetProfile);
   });
 
   it("fires recipe-select with the tapped recipe and suppresses the row's own navigation", async () => {

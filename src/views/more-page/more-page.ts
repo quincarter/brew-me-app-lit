@@ -57,7 +57,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="Settings"
             supporting="Brew types, dark mode, refresh, data"
-            .leading-icon="${SETTINGS_ICON_SVG}"
+            .leadingIcon="${SETTINGS_ICON_SVG}"
             leading-bg="var(--brew-color-surface-container-high)"
             leading-fg="var(--brew-color-on-surface)"
             href="/more/settings"
@@ -131,6 +131,14 @@ export class MorePage extends SignalWatcher(LitElement) {
             href="/more/clever-dripper-recipes"
           ></brew-list-row>
           <brew-list-row
+            headline="Espresso Recipes"
+            supporting="Standard shot styles &amp; named technique profiles"
+            .leadingIcon="${MENU_BOOK_ICON_SVG}"
+            leading-bg="var(--brew-color-tertiary-container)"
+            leading-fg="var(--brew-color-on-tertiary-container)"
+            href="/more/espresso-recipes"
+          ></brew-list-row>
+          <brew-list-row
             headline="Hario Switch Recipes"
             supporting="Hybrid immersion &amp; WBrC champion recipes"
             .leadingIcon="${MENU_BOOK_ICON_SVG}"
@@ -168,7 +176,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="World Barista Championship"
             supporting="2026 Panama events &amp; competition videos"
-            .leading-icon="${EMOJI_EVENTS_ICON_SVG}"
+            .leadingIcon="${EMOJI_EVENTS_ICON_SVG}"
             leading-bg="var(--brew-color-secondary-container)"
             leading-fg="var(--brew-color-on-secondary-container)"
             href="/more/wbc-videos"

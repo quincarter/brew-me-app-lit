@@ -147,4 +147,77 @@ describe("brew-list-row", () => {
     expect(clickEvent.defaultPrevented).toBe(true);
     expect(anchorClickReceived).toBe(false);
   });
+
+  describe("trailingActionIcon / trailingActionLabel", () => {
+    const testIconSvg = svg`<svg><rect /></svg>`;
+
+    it("does not render a trailing-action icon button by default", () => {
+      expect(element.shadowRoot?.querySelector("brew-icon-button")).toBeNull();
+    });
+
+    it("renders a trailing-action icon button with the given aria-label when trailingActionIcon is set", async () => {
+      element.trailingActionIcon = testIconSvg;
+      element.trailingActionLabel = "Brew now";
+      await element.updateComplete;
+
+      const button = element.shadowRoot?.querySelector("brew-icon-button");
+      expect(button).not.toBeNull();
+      expect(button?.getAttribute("aria-label")).toBe("Brew now");
+    });
+
+    it("prioritizes trailingActionIcon over replayable when both are set", async () => {
+      element.replayable = true;
+      element.trailingActionIcon = testIconSvg;
+      element.trailingActionLabel = "Brew now";
+      await element.updateComplete;
+
+      const buttons = element.shadowRoot?.querySelectorAll("brew-icon-button");
+      expect(buttons).toHaveLength(1);
+      expect(buttons?.[0].getAttribute("aria-label")).toBe("Brew now");
+    });
+
+    it("dispatches trailing-action-click without triggering the row's own navigation", async () => {
+      element.href = "/more/espresso-recipes";
+      element.trailingActionIcon = testIconSvg;
+      element.trailingActionLabel = "Brew now";
+      await element.updateComplete;
+
+      const actionButton = element.shadowRoot?.querySelector("brew-icon-button");
+      const anchor = element.shadowRoot?.querySelector("a.row");
+      expect(actionButton).not.toBeNull();
+
+      let actionClickFired = false;
+      element.addEventListener("trailing-action-click", () => {
+        actionClickFired = true;
+      });
+      let anchorClickReceived = false;
+      anchor?.addEventListener("click", () => {
+        anchorClickReceived = true;
+      });
+
+      const clickEvent = new MouseEvent("click", { bubbles: true, cancelable: true });
+      actionButton?.dispatchEvent(clickEvent);
+
+      expect(actionClickFired).toBe(true);
+      expect(clickEvent.defaultPrevented).toBe(true);
+      expect(anchorClickReceived).toBe(false);
+    });
+
+    it("does not fire replay-click when trailing-action-click fires (mutually exclusive controls)", async () => {
+      element.replayable = true;
+      element.trailingActionIcon = testIconSvg;
+      element.trailingActionLabel = "Brew now";
+      await element.updateComplete;
+
+      let replayClickFired = false;
+      element.addEventListener("replay-click", () => {
+        replayClickFired = true;
+      });
+
+      const actionButton = element.shadowRoot?.querySelector("brew-icon-button");
+      actionButton?.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+
+      expect(replayClickFired).toBe(false);
+    });
+  });
 });

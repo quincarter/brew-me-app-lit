@@ -376,6 +376,11 @@ export const BREW_GUIDE: IBrewGuideItem[] = [
     ],
     videos: ESPRESSO_VIDEOS,
     glossary: ESPRESSO_GLOSSARY,
+    recipesLink: {
+      label: "Espresso Recipes",
+      description: "Standard shot styles and named profiles for dialing in a shot",
+      route: "/more/espresso-recipes",
+    },
     externalLinks: [
       {
         label: "Learn more about espresso",

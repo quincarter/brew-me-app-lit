@@ -18,6 +18,15 @@ import {
   waterSignal,
 } from "../calculator.store";
 import {
+  espressoDoseInSignal,
+  espressoDoseOutSignal,
+  espressoRatioSignal,
+  resetEspressoCalculator,
+  setEspressoDoseIn,
+  setEspressoDoseOut,
+  setEspressoRatio,
+} from "../espresso-calculator.store";
+import {
   cancelSaveDialog,
   confirmSave,
   openSaveDialog,
@@ -34,6 +43,7 @@ import {
 describe("save-dialog.store", () => {
   beforeEach(() => {
     resetCalculator();
+    resetEspressoCalculator();
     deleteAllSavedBrews();
     saveDialogOpenSignal.value = false;
     pendingBrewTypeSignal.value = null;
@@ -313,6 +323,138 @@ describe("save-dialog.store", () => {
       expect(ozSignal.value).toBe("");
       expect(coffeeSignal.value).toBeNull();
       expect(ratioSignal.value).toBe("16");
+    });
+
+    describe("with an Espresso Shot source", () => {
+      it("sources coffee/ratio/water/oz from the espresso store instead of the pour-over signals", async () => {
+        selectBrewType("Espresso Shot");
+        setEspressoDoseIn("20");
+        setEspressoRatio("2.5");
+        selectPendingBrewType("Espresso Shot");
+        const expectedDoseIn = espressoDoseInSignal.value;
+        const expectedRatio = espressoRatioSignal.value;
+        const expectedDoseOut = espressoDoseOutSignal.value;
+
+        await confirmSave();
+
+        const saved = savedBrewsSignal.value[0];
+        expect(saved.brewType).toBe("Espresso Shot");
+        expect(saved.coffee).toBe(expectedDoseIn);
+        expect(saved.ratio).toBe(expectedRatio);
+        expect(saved.water).toBe(expectedDoseOut);
+        expect(saved.oz).toBeCloseTo(expectedDoseOut * 0.035274, 2);
+      });
+
+      it("still saves when the espresso dose-in is 0, since 0 is a valid coffee amount, not the 'unset' null sentinel", async () => {
+        selectBrewType("Espresso Shot");
+        setEspressoDoseIn("0");
+        selectPendingBrewType("Espresso Shot");
+
+        const result = await confirmSave();
+
+        expect(result).not.toBeNull();
+        expect(savedBrewsSignal.value).toHaveLength(1);
+        expect(savedBrewsSignal.value[0]?.coffee).toBe(0);
+      });
+
+      it("resets the espresso calculator (not the pour-over signals) after a plain save", async () => {
+        selectBrewType("Espresso Shot");
+        setEspressoDoseIn("20");
+        setEspressoDoseOut("50");
+        selectPendingBrewType("Espresso Shot");
+
+        await confirmSave();
+
+        expect(espressoDoseInSignal.value).toBe(18);
+        expect(espressoRatioSignal.value).toBe(2);
+        expect(espressoDoseOutSignal.value).toBe(36);
+      });
+
+      it("does not regress the pour-over path: a non-espresso save still sources numbers from the shared calculator signals", async () => {
+        setWater("480");
+        selectPendingBrewType("Pour-over");
+
+        await confirmSave();
+
+        const saved = savedBrewsSignal.value[0];
+        expect(saved.coffee).toBe(30);
+        expect(saved.water).toBe(480);
+        expect(saved.ratio).toBe(16);
+      });
+    });
+
+    describe("when the Save sheet's pending type diverges from the Calculator's active flow", () => {
+      it("sources coffee/ratio/water from the espresso store when relabeled to Espresso Shot, even though the pour-over flow is the one active", async () => {
+        // Pour-over flow is active with real entered numbers...
+        selectBrewType("Pour-over");
+        setWater("480");
+        // ...and the espresso store separately holds its own (different) numbers.
+        setEspressoDoseIn("20");
+        setEspressoRatio("2.5");
+        // The Save sheet's own picker is then relabeled to Espresso Shot.
+        selectPendingBrewType("Espresso Shot");
+
+        await confirmSave();
+
+        const saved = savedBrewsSignal.value[0];
+        expect(saved.brewType).toBe("Espresso Shot");
+        expect(saved.coffee).toBe(20);
+        expect(saved.ratio).toBe(2.5);
+        expect(saved.water).toBe(50);
+      });
+
+      it("sources coffee/ratio/water from the shared calculator signals when relabeled to a pour-over type, even though the espresso flow is the one active", async () => {
+        // Pour-over signals separately hold their own (different) numbers...
+        setWater("480");
+        // ...and the espresso flow is the one actually active, with its own numbers.
+        selectBrewType("Espresso Shot");
+        setEspressoDoseIn("20");
+        setEspressoRatio("2.5");
+        // The Save sheet's own picker is then relabeled to a pour-over type.
+        selectPendingBrewType("Pour-over");
+
+        await confirmSave();
+
+        const saved = savedBrewsSignal.value[0];
+        expect(saved.brewType).toBe("Pour-over");
+        expect(saved.coffee).toBe(30);
+        expect(saved.ratio).toBe(16);
+        expect(saved.water).toBe(480);
+      });
+
+      it("still resets the active pour-over flow's own signals after save, not the espresso store, when saved-as diverges to Espresso Shot", async () => {
+        selectBrewType("Pour-over");
+        setWater("480");
+        setEspressoDoseIn("20");
+        setEspressoRatio("2.5");
+        selectPendingBrewType("Espresso Shot");
+
+        await confirmSave();
+
+        expect(waterSignal.value).toBe("");
+        expect(coffeeSignal.value).toBeNull();
+        expect(ratioSignal.value).toBe("16");
+        // The espresso store wasn't the active flow, so it's left untouched.
+        expect(espressoDoseInSignal.value).toBe(20);
+        expect(espressoRatioSignal.value).toBe(2.5);
+      });
+
+      it("still resets the active espresso flow's own signals after save, not the pour-over signals, when saved-as diverges to a pour-over type", async () => {
+        setWater("480");
+        selectBrewType("Espresso Shot");
+        setEspressoDoseIn("20");
+        setEspressoRatio("2.5");
+        selectPendingBrewType("Pour-over");
+
+        await confirmSave();
+
+        expect(espressoDoseInSignal.value).toBe(18);
+        expect(espressoRatioSignal.value).toBe(2);
+        expect(espressoDoseOutSignal.value).toBe(36);
+        // The pour-over signals weren't the active flow, so they're left untouched.
+        expect(waterSignal.value).toBe("480");
+        expect(coffeeSignal.value).toBe(30);
+      });
     });
 
     describe("with the share intent", () => {

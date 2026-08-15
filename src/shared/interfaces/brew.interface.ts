@@ -262,3 +262,40 @@ export interface IHarioSwitchRecipe {
   /** Hand-curated timed brew sequence derived from this recipe's steps for the timer to ingest. */
   timedSteps?: IBrewStep[];
 }
+
+/**
+ * A standard named espresso pull style (ristretto, double, lungo, ...) - a
+ * fixed dose/ratio/yield/shot-time combination with no machine-specific
+ * technique (no preinfusion, grind, or water temp of its own). See
+ * `IEspressoProfile` for the technique-driven counterpart.
+ */
+export interface IEspressoShotStyle {
+  id: string;
+  label: string;
+  ratio: number;
+  doseIn: number;
+  doseOut: number;
+  shotTimeSec: number;
+  /** Short description shown on the Espresso Recipes screen and as a Brew Steps note, e.g. "Ristretto — 1:1–1.5, 20–25s, concentrated and syrupy." */
+  blurb: string;
+}
+
+/**
+ * A named espresso technique/profile (blooming espresso, turbo shot, ...) -
+ * unlike `IEspressoShotStyle`, carries its own preinfusion time, grind, and
+ * water temp since the technique itself is the point, not just the ratio.
+ */
+export interface IEspressoProfile {
+  id: string;
+  name: string;
+  ratio: number;
+  doseIn: number;
+  doseOut: number;
+  shotTimeSec: number;
+  preinfusionSec: number;
+  grind: string;
+  waterTemp: string;
+  tagline: string;
+  /** Optional extra instruction that doesn't fit the other fields, e.g. Allongé's "top with hot water to taste". */
+  note?: string;
+}

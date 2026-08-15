@@ -5,6 +5,8 @@ import type {
   IBrewStepsConfig,
   IChemexRecipe,
   ICleverDripperRecipe,
+  IEspressoProfile,
+  IEspressoShotStyle,
   IHarioSwitchRecipe,
   IKalitaWaveRecipe,
   ILoadedRecipeSource,
@@ -16,6 +18,7 @@ import {
   getAeropressRecipeRatio,
   getAeropressRecipeSteps,
 } from "../utilities/aeropress-recipe.utility";
+import { getEspressoRecipeSteps } from "../utilities/espresso-recipe.utility";
 import {
   getPouroverRecipeLabel,
   getPouroverRecipeRatio,
@@ -25,6 +28,12 @@ import {
 } from "../utilities/pourover-recipe.utility";
 import { gramsToOunces } from "../utilities/ratio.utility";
 import { coffeeSignal, ozSignal, ratioSignal, waterSignal } from "./calculator.store";
+import {
+  espressoDoseInSignal,
+  espressoDoseOutSignal,
+  espressoRatioSignal,
+  resetEspressoCalculator,
+} from "./espresso-calculator.store";
 
 /**
  * Sentinel for "just calculate a ratio, no method chosen" - kept distinct
@@ -53,6 +62,10 @@ export const selectBrewType = (type: string): void => {
   selectedBrewTypeSignal.value = type;
   brewStepsSignal.value = BREW_STEPS_PRESETS[type] ?? null;
   loadedRecipeSourceSignal.value = null;
+  // Espresso uses its own dose-in/ratio/dose-out signals, not the shared
+  // ratio/water/oz ones - reset them too so switching into espresso never
+  // shows numbers left over from a previous espresso session.
+  if (type === "Espresso Shot") resetEspressoCalculator();
 };
 
 /** A lighter reset than `clearBrewStepsState` - used by the Calculator's "Change" chip to re-open the brew-type chooser without touching the entered numbers. Whatever steps/recipe provenance were loaded stay put until a new type is actually picked via `selectBrewType`. */
@@ -238,6 +251,53 @@ export const loadHarioSwitchRecipeIntoCalculator = (recipe: IHarioSwitchRecipe):
     ratio,
     water,
     coffee: dose,
+    steps,
+  };
+};
+
+/**
+ * Loads a curated espresso shot style (Ristretto, Double, Lungo, ...) into
+ * the calculator - unlike the pour-over loaders above, this drives the
+ * espresso dose-in/ratio/dose-out signals, not `ratioSignal`/`waterSignal`.
+ * Preinfusion/grind/water temp fall back to the style-wide defaults since a
+ * plain shot style has no technique of its own (see `IEspressoProfile` for
+ * one that does).
+ */
+export const loadEspressoShotStyleIntoCalculator = (style: IEspressoShotStyle): void => {
+  selectedBrewTypeSignal.value = "Espresso Shot";
+  espressoDoseInSignal.value = style.doseIn;
+  espressoRatioSignal.value = style.ratio;
+  espressoDoseOutSignal.value = style.doseOut;
+
+  const steps = getEspressoRecipeSteps(style);
+
+  brewStepsSignal.value = { steps };
+  loadedRecipeSourceSignal.value = {
+    recipeId: style.id,
+    label: style.label,
+    ratio: style.ratio,
+    water: style.doseOut,
+    coffee: style.doseIn,
+    steps,
+  };
+};
+
+/** Loads a curated espresso profile (Blooming Espresso, Turbo Shot, ...) into the calculator, using its own preinfusion/grind/water temp. */
+export const loadEspressoProfileIntoCalculator = (profile: IEspressoProfile): void => {
+  selectedBrewTypeSignal.value = "Espresso Shot";
+  espressoDoseInSignal.value = profile.doseIn;
+  espressoRatioSignal.value = profile.ratio;
+  espressoDoseOutSignal.value = profile.doseOut;
+
+  const steps = getEspressoRecipeSteps(profile);
+
+  brewStepsSignal.value = { steps };
+  loadedRecipeSourceSignal.value = {
+    recipeId: profile.id,
+    label: profile.name,
+    ratio: profile.ratio,
+    water: profile.doseOut,
+    coffee: profile.doseIn,
     steps,
   };
 };
