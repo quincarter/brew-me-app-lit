@@ -9,8 +9,8 @@ import { CHEMEX_ICON } from "./chemex.svg";
 import { CHEVRON_RIGHT_ICON_SVG } from "./chevron-right.svg";
 import { CLEVER_DRIPPER_ICON } from "./clever-dripper.svg";
 import { CLOSE_ICON } from "./close.svg";
-
 import { COLD_BREW_ICON } from "./cold-brew.svg";
+import { DARK_MODE_ICON_SVG } from "./dark-mode.svg";
 import { DELETE_ICON } from "./delete.svg";
 import { DRAG_INDICATOR_ICON_SVG } from "./drag-indicator.svg";
 import { DRIP_ICON } from "./drip.svg";
@@ -62,6 +62,7 @@ export {
   CLEVER_DRIPPER_ICON,
   CLOSE_ICON,
   COLD_BREW_ICON,
+  DARK_MODE_ICON_SVG,
   DELETE_ICON,
   DRAG_INDICATOR_ICON_SVG,
   DRIP_ICON,

@@ -3,8 +3,7 @@ import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { isDarkThemeSignal, toggleDarkTheme } from "../../shared/stores/theme.store";
 import "../icon/brew-icon";
 import { ThemeToggleStyles } from "./theme-toggle.styles";
-import { LIGHT_MODE_ICON_SVG } from "../../shared/icons/light-mode.svg";
-import { DARK_MODE_ICON_SVG } from "../../shared/icons/light-mode.svg copy";
+import { LIGHT_MODE_ICON_SVG, DARK_MODE_ICON_SVG } from "../../shared/icons/icons";
 
 /**
  * # Theme Toggle
