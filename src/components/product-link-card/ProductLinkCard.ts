@@ -2,6 +2,7 @@ import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
 import "../icon/brew-icon";
 import { ProductLinkCardStyles } from "./product-link-card.styles";
+import { OPEN_IN_NEW_ICON_SVG } from "../../shared/icons/icons";
 
 /**
  * # Product Link Card
@@ -43,7 +44,7 @@ export class ProductLinkCard extends LitElement {
             <span class="product-subtitle">${this.description}</span>
           </span>
         </div>
-        <brew-icon name="open_in_new" size="20"></brew-icon>
+        <brew-icon .svg="${OPEN_IN_NEW_ICON_SVG}" size="20"></brew-icon>
       </a>
     `;
   }

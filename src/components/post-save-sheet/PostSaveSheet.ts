@@ -1,6 +1,6 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
-import { EDIT_ICON } from "../../shared/icons/icons";
+import { CHECK_CIRCLE_ICON_SVG, CLOSE_ICON, EDIT_ICON } from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import {
   closePostSaveSheet,
@@ -67,11 +67,11 @@ export class PostSaveSheet extends SignalWatcher(LitElement) {
     return html`
       <div class="header">
         <div class="header-text">
-          <brew-icon name="check_circle" size="20" filled></brew-icon>
+          <brew-icon .svg="${CHECK_CIRCLE_ICON_SVG}" size="20" filled></brew-icon>
           <span>Brew saved</span>
         </div>
         <brew-icon-button
-          icon="close"
+          .svgIcon="${CLOSE_ICON}"
           size="18"
           aria-label="Close"
           @icon-click="${closePostSaveSheet}"

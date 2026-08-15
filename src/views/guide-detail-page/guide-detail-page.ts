@@ -20,6 +20,11 @@ import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palet
 import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
 import { navigateTo } from "../../shared/utilities/navigation.utility";
 import { GuideDetailPageStyles } from "./guide-detail-page.styles";
+import {
+  AUTO_AWESOME_ICON_SVG,
+  MENU_BOOK_ICON_SVG,
+  ARROW_BACK_ICON_SVG,
+} from "../../shared/icons/icons";
 
 @customElement("guide-detail-page")
 export class GuideDetailPage extends SignalWatcher(LitElement) {
@@ -53,7 +58,11 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
 
     return html`
       <div class="screen">
-        <brew-top-bar title="${guide.name}" icon="arrow_back" href="/more"></brew-top-bar>
+        <brew-top-bar
+          title="${guide.name}"
+          .icon="${ARROW_BACK_ICON_SVG}"
+          href="/more"
+        ></brew-top-bar>
 
         <div class="content">
           <p class="description">${guide.desc}</p>
@@ -63,7 +72,7 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
               ? html`
                   <brew-link-card
                     href="${guide.recipesLink.route}"
-                    icon="menu_book"
+                    .svg="${MENU_BOOK_ICON_SVG}"
                     label="${guide.recipesLink.label}"
                     description="${guide.recipesLink.description}"
                   ></brew-link-card>
@@ -103,7 +112,7 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
 
           <div class="ai-tip">
             <div class="ai-tip-header">
-              <brew-icon name="auto_awesome" size="20"></brew-icon>
+              <brew-icon .svg="${AUTO_AWESOME_ICON_SVG}" size="20"></brew-icon>
               <span class="ai-tip-title">AI tip</span>
               <brew-icon-button
                 icon="refresh"

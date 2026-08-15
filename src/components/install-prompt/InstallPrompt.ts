@@ -9,6 +9,7 @@ import "../bottom-sheet/brew-bottom-sheet";
 import "../button/brew-button";
 import "../icon-button/brew-icon-button";
 import { InstallPromptStyles } from "./install-prompt.styles";
+import { CLOSE_ICON } from "../../shared/icons/close.svg";
 
 /**
  * # Install Prompt
@@ -38,7 +39,7 @@ export class InstallPrompt extends SignalWatcher(LitElement) {
       >
         <div class="header">
           <brew-icon-button
-            icon="close"
+            .svgIcon="${CLOSE_ICON}"
             aria-label="Not now"
             @icon-click="${dismissInstallPrompt}"
           ></brew-icon-button>

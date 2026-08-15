@@ -1,0 +1,3 @@
+import { svg, SVGTemplateResult } from "lit";
+
+export const AUTO_AWESOME_ICON_SVG: SVGTemplateResult = svg`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.9799999999999986 -0.9799999999999986 25.959999999999997 25.959999999999997" width="128" height="128" preserveAspectRatio="xMidYMid meet" style="display:block;margin:auto" data-optical-normalized="true"><g transform=" "><path fill="currentColor" d="m19 1l-1.26 2.75L15 5l2.74 1.26L19 9l1.25-2.74L23 5l-2.75-1.25M9 4L6.5 9.5L1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5M19 15l-1.26 2.74L15 19l2.74 1.25L19 23l1.25-2.75L23 19l-2.75-1.26"/></g></svg>`;

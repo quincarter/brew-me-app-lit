@@ -1,6 +1,6 @@
 import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
-import { PAUSE_ICON, PLAY_ICON, REFRESH_ICON } from "../../shared/icons/icons";
+import { CLOSE_ICON, PAUSE_ICON, PLAY_ICON, REFRESH_ICON } from "../../shared/icons/icons";
 import "../button/brew-button";
 import "../icon-button/brew-icon-button";
 import { TimerControlsStyles } from "./timer-controls.styles";
@@ -81,7 +81,7 @@ export class TimerControls extends LitElement {
           this.hasRecipe
             ? html`
                 <brew-icon-button
-                  icon="close"
+                  .svgIcon="${CLOSE_ICON}"
                   aria-label="Clear brew"
                   @icon-click="${this._emitClear}"
                 ></brew-icon-button>

@@ -1,6 +1,8 @@
+import { svg } from "lit";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import "../brew-list-row";
 import type { ListRow } from "../ListRow";
+import type { Icon } from "../../icon/Icon";
 
 describe("brew-list-row", () => {
   let element: ListRow;
@@ -38,6 +40,30 @@ describe("brew-list-row", () => {
     expect(starRating).not.toBeNull();
     expect(starRating?.getAttribute("value")).toBe("4");
     expect(starRating?.getAttribute("size")).toBe("14");
+  });
+
+  it("renders a Material Symbols icon by name when leadingIcon is a string", async () => {
+    element.leadingIcon = "timer";
+    await element.updateComplete;
+
+    const icon = element.shadowRoot?.querySelector(".icon-circle brew-icon");
+    expect(icon).not.toBeNull();
+    expect(icon?.getAttribute("name")).toBe("timer");
+  });
+
+  it("renders a custom SVG icon when leadingIcon is an SVGTemplateResult", async () => {
+    const testIconSvg = svg`<svg><circle /></svg>`;
+    element.leadingIcon = testIconSvg;
+    await element.updateComplete;
+
+    const icon = element.shadowRoot?.querySelector(".icon-circle brew-icon") as Icon | null;
+    expect(icon).not.toBeNull();
+    if (icon) {
+      customElements.upgrade(icon);
+      await icon.updateComplete;
+    }
+    expect(icon?.svg).toBe(testIconSvg);
+    expect(icon?.hasAttribute("name")).toBe(false);
   });
 
   it("does not render a replay button when replayable is false", () => {

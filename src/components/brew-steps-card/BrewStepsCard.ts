@@ -20,6 +20,11 @@ import "../icon-button/brew-icon-button";
 import "../icon/brew-icon";
 import "../text-field/brew-text-field";
 import { BrewStepsCardStyles } from "./brew-steps-card.styles";
+import {
+  CHECK_CIRCLE_ICON_SVG,
+  DELETE_ICON,
+  DRAG_INDICATOR_ICON_SVG,
+} from "../../shared/icons/icons";
 
 /** `<select>` value that means "let me type a new label" rather than picking an existing one. */
 const ADD_CUSTOM_LABEL_OPTION = "__add_custom__";
@@ -500,13 +505,17 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
 
     return html`
       <div
-        class="step-row ${status ? `step-${status}` : ""} ${diffState ? `step-${diffState}` : ""} ${
-          moved ? "step-moved" : ""
-        }"
+        class="step-row ${status ? `step-${status}` : ""} ${
+          diffState ? `step-${diffState}` : ""
+        } ${moved ? "step-moved" : ""}"
       >
         ${
           status === "done"
-            ? html`<brew-icon class="step-check" name="check_circle" size="18"></brew-icon>`
+            ? html`<brew-icon
+                class="step-check"
+                .svg="${CHECK_CIRCLE_ICON_SVG}"
+                size="18"
+              ></brew-icon>`
             : nothing
         }
         <div class="step-text">
@@ -585,7 +594,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
       >
         <brew-icon-button
           class="drag-handle"
-          icon="drag_indicator"
+          .svgIcon="${DRAG_INDICATOR_ICON_SVG}"
           size="18"
           aria-label="Reorder ${step.label || "step"} - use arrow keys or drag"
           @pointerdown="${(e: PointerEvent) => this._onDragHandlePointerDown(step, e)}"
@@ -701,7 +710,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
         </button>
 
         <brew-icon-button
-          icon="delete"
+          .svgIcon="${DELETE_ICON}"
           size="18"
           aria-label="Remove step"
           @icon-click="${() => this._removeRow(step.id)}"

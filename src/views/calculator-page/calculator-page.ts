@@ -14,6 +14,7 @@ import "../../components/top-bar/brew-top-bar";
 import "../../components/type-picker/brew-type-picker";
 import {
   CALCULATE_ICON_SVG,
+  CLOSE_ICON,
   REFRESH_ICON,
   REPLAY_ICON,
   SAVED_ICON_SVG,
@@ -243,7 +244,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
                       >Loaded from ${primedFromNameSignal.value}</span
                     >
                     <brew-icon-button
-                      icon="close"
+                      .svgIcon="${CLOSE_ICON}"
                       size="18"
                       aria-label="Dismiss"
                       @icon-click="${dismissPrimedBanner}"

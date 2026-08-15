@@ -17,6 +17,7 @@ import { awaitTourTarget } from "../../shared/utilities/tour-target.utility";
 import "../button/brew-button";
 import "../icon-button/brew-icon-button";
 import { TourOverlayStyles } from "./tour-overlay.styles";
+import { CLOSE_ICON } from "../../shared/icons/close.svg";
 
 /**
  * # Tour Overlay
@@ -148,7 +149,7 @@ export class TourOverlay extends SignalWatcher(LitElement) {
     return html`
       <brew-icon-button
         class="close"
-        icon="close"
+        .svgIcon="${CLOSE_ICON}"
         aria-label="Skip tour"
         @icon-click="${skipTour}"
       ></brew-icon-button>
