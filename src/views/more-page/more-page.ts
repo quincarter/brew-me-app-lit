@@ -57,7 +57,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="Settings"
             supporting="Brew types, dark mode, refresh, data"
-            .leading-icon="${SETTINGS_ICON_SVG}"
+            .leadingIcon="${SETTINGS_ICON_SVG}"
             leading-bg="var(--brew-color-surface-container-high)"
             leading-fg="var(--brew-color-on-surface)"
             href="/more/settings"
@@ -168,7 +168,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="World Barista Championship"
             supporting="2026 Panama events &amp; competition videos"
-            .leading-icon="${EMOJI_EVENTS_ICON_SVG}"
+            .leadingIcon="${EMOJI_EVENTS_ICON_SVG}"
             leading-bg="var(--brew-color-secondary-container)"
             leading-fg="var(--brew-color-on-secondary-container)"
             href="/more/wbc-videos"
