@@ -2,7 +2,7 @@ import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { property, state } from "lit/decorators.js";
 import "../icon/brew-icon";
 import { VideoCardStyles } from "./video-card.styles";
-import { OPEN_IN_NEW_ICON_SVG } from "../../shared/icons/icons";
+import { OPEN_IN_NEW_ICON_SVG, PLAY_ARROW_ICON_SVG } from "../../shared/icons/icons";
 
 /**
  * # Video Card
@@ -57,7 +57,9 @@ export class VideoCard extends LitElement {
           aria-label="Play ${this.videoTitle}"
         >
           <img src="${this._posterUrl}" alt="" loading="lazy" />
-          <span class="play-badge"><brew-icon name="play_arrow" size="28"></brew-icon></span>
+          <span class="play-badge"
+            ><brew-icon .svg="${PLAY_ARROW_ICON_SVG}" size="28"></brew-icon
+          ></span>
         </button>
       `;
     }

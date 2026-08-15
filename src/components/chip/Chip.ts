@@ -2,6 +2,7 @@ import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { property } from "lit/decorators.js";
 import "../icon/brew-icon";
 import { ChipStyles } from "./chip.styles";
+import { CHECK_ICON_SVG } from "../../shared/icons/check.svg";
 
 /**
  * # Chip
@@ -26,7 +27,7 @@ export class Chip extends LitElement {
         type="button"
         @click="${this._onClick}"
       >
-        ${this.selected ? html`<brew-icon name="check" size="16"></brew-icon>` : nothing}
+        ${this.selected ? html`<brew-icon .svg="${CHECK_ICON_SVG}" size="16"></brew-icon>` : nothing}
         <span>${this.label}</span>
       </button>
     `;

@@ -21,9 +21,13 @@ import "../icon/brew-icon";
 import "../text-field/brew-text-field";
 import { BrewStepsCardStyles } from "./brew-steps-card.styles";
 import {
+  ADD_ICON_SVG,
   CHECK_CIRCLE_ICON_SVG,
+  CHECK_ICON_SVG,
   DELETE_ICON,
   DRAG_INDICATOR_ICON_SVG,
+  EXPAND_LESS_ICON_SVG,
+  EXPAND_MORE_ICON_SVG,
 } from "../../shared/icons/icons";
 
 /** `<select>` value that means "let me type a new label" rather than picking an existing one. */
@@ -655,7 +659,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
                           <span class="item-text">${label}</span>
                           ${
                             label === step.label
-                              ? html`<brew-icon name="check" size="18"></brew-icon>`
+                              ? html`<brew-icon .svg="${CHECK_ICON_SVG}" size="18"></brew-icon>`
                               : nothing
                           }
                         </button>
@@ -666,7 +670,7 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
                       type="button"
                       @click="${() => this._selectLabelOption(step, ADD_CUSTOM_LABEL_OPTION)}"
                     >
-                      <brew-icon name="add" size="18"></brew-icon>
+                      <brew-icon .svg="${ADD_ICON_SVG}" size="18"></brew-icon>
                       <span class="item-text">Add custom…</span>
                     </button>
                   </div>
@@ -964,7 +968,9 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
             aria-label="${this._expanded ? "Collapse" : "Expand"} Brew Steps"
             @click="${this._toggleExpanded}"
           >
-            <brew-icon name="${this._expanded ? "expand_less" : "expand_more"}"></brew-icon>
+            <brew-icon
+              .svg="${this._expanded ? EXPAND_LESS_ICON_SVG : EXPAND_MORE_ICON_SVG}"
+            ></brew-icon>
           </button>
         </div>
 
@@ -1002,7 +1008,8 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
                       ? html`
                           <div class="edit-footer">
                             <brew-button variant="text" @button-click="${this._addRow}"
-                              ><brew-icon name="add" size="18"></brew-icon> Add step</brew-button
+                              ><brew-icon .svg="${ADD_ICON_SVG}" size="18"></brew-icon> Add
+                              step</brew-button
                             >
                             <brew-button variant="text" @button-click="${this._resetToPreset}"
                               >Reset to preset</brew-button

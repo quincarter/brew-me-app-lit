@@ -3,6 +3,7 @@ import { ARROW_BACK_ICON_SVG } from "./arrow-back.svg";
 import { AUTO_AWESOME_ICON_SVG } from "./auto-awesome.svg";
 import { BOOKMARK_ADDED_ICON_SVG } from "./bookmark-added.svg";
 import { CALCULATE_ICON_SVG } from "./calculate.svg";
+import { CHECK_ICON_SVG } from "./check.svg";
 import { CHECK_CIRCLE_ICON_SVG } from "./check-circle.svg";
 import { CHEMEX_ICON } from "./chemex.svg";
 import { CHEVRON_RIGHT_ICON_SVG } from "./chevron-right.svg";
@@ -40,13 +41,21 @@ import { SIPHON_ICON } from "./siphon.svg";
 import { TIMER_ICON_SVG } from "./timer.svg";
 import { TURKISH_COFFEE_ICON } from "./turkish-coffee.svg";
 import { V60_ICON } from "./v60.svg";
+import { ADD_ICON_SVG } from "./add.svg";
+import { ARROW_FORWARD_ICON_SVG } from "./arrow-forward.svg";
+import { PLAY_ARROW_ICON_SVG } from "./play-arrow.svg";
+import { EXPAND_LESS_ICON_SVG } from "./expand-less.svg";
+import { EXPAND_MORE_ICON_SVG } from "./expand-more.svg";
 
 export {
+  ADD_ICON_SVG,
   AEROPRESS_ICON,
   ARROW_BACK_ICON_SVG,
+  ARROW_FORWARD_ICON_SVG,
   AUTO_AWESOME_ICON_SVG,
   BOOKMARK_ADDED_ICON_SVG,
   CALCULATE_ICON_SVG,
+  CHECK_ICON_SVG,
   CHECK_CIRCLE_ICON_SVG,
   CHEMEX_ICON,
   CHEVRON_RIGHT_ICON_SVG,
@@ -59,6 +68,8 @@ export {
   EDIT_ICON,
   ESPRESSO_SHOT_ICON,
   EVENT_ICON_SVG,
+  EXPAND_LESS_ICON_SVG,
+  EXPAND_MORE_ICON_SVG,
   EXPLORE_ICON_SVG,
   FRENCH_PRESS_ICON,
   HARIO_SWITCH_ICON,
@@ -74,6 +85,7 @@ export {
   ORIGAMI_ICON,
   PAUSE_ICON,
   PERCOLATOR_ICON,
+  PLAY_ARROW_ICON_SVG,
   PLAY_ICON,
   REFRESH_ICON,
   REPLAY_ICON,
