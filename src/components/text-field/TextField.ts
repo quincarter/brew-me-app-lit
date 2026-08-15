@@ -23,6 +23,7 @@ export class TextField extends LitElement {
   @property({ type: String, attribute: "suffix-text" }) suffixText = "";
   @property({ type: String }) name = "";
   @property({ type: String }) min = "";
+  @property({ type: String }) placeholder = "";
 
   @query("input") private _input!: HTMLInputElement;
 
@@ -63,8 +64,9 @@ export class TextField extends LitElement {
           ${this.prefixText ? html`<span class="prefix">${this.prefixText}</span>` : nothing}
           <input
             class="input"
+            placeholder="${this.placeholder || nothing}"
             name="${this.name || nothing}"
-            type="${this.type}"
+            type="${this.type || nothing}"
             min="${this.min || nothing}"
             @input="${this._onInput}"
           />

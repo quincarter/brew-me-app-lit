@@ -105,6 +105,7 @@ export class SaveSheet extends SignalWatcher(LitElement) {
         <div class="title">${title}</div>
         <brew-text-field
           label="Brew name"
+          .placeholder="${pendingBrewNameSignal.value}"
           .value="${pendingBrewNameSignal.value}"
           @value-change="${(e: CustomEvent<string>) => setPendingBrewName(e.detail)}"
         ></brew-text-field>
