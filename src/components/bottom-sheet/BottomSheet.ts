@@ -2,6 +2,11 @@ import { type HTMLTemplateResult, html, LitElement, type PropertyValues } from "
 import { property, query, state } from "lit/decorators.js";
 import { BottomSheetStyles } from "./bottom-sheet.styles";
 
+/** Hard cap on how long `_beginClosing` will wait for the exit transition before closing anyway - comfortably above the longest transition duration in `bottom-sheet.styles.ts` (0.28s), as a safety net against a stuck/never-settling animation. */
+const MAX_CLOSE_WAIT_MS = 1000;
+/** Poll interval for `_waitForExitTransition`. `setTimeout`, not `requestAnimationFrame` - rAF can be suspended for a backgrounded/inactive tab, which would otherwise stall a close indefinitely. */
+const CLOSE_POLL_INTERVAL_MS = 30;
+
 /**
  * # Bottom Sheet
  * A generic bottom-sheet/modal shell, built on the native `<dialog>` element
@@ -34,6 +39,13 @@ export class BottomSheet extends LitElement {
    * actually finish, and only then calls the real `close()`.
    */
   @state() private _closing = false;
+  /** Bumped on disconnect so a `_waitForExitTransition` poll loop outliving the element (e.g. the consumer unmounts mid-close via router navigation) notices and stops instead of touching a detached `_dialog` once it resolves - same pattern as `TourOverlay.ts`'s `_activationToken`. */
+  private _closeToken = 0;
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._closeToken += 1;
+  }
 
   private _dispatchScrimClick(): void {
     this.dispatchEvent(new CustomEvent("sheet-scrim-click", { bubbles: true, composed: true }));
@@ -86,22 +98,47 @@ export class BottomSheet extends LitElement {
 
   /** Plays the exit transition (via the `closing` class) to completion, then performs the real `close()`. See `_closing`'s doc comment for why. */
   private async _beginClosing(): Promise<void> {
+    const token = this._closeToken;
     this._closing = true;
     await this.updateComplete;
-
-    const animations = this._dialog.getAnimations ? this._dialog.getAnimations() : [];
-    if (animations.length > 0) {
-      try {
-        await Promise.all(animations.map((animation) => animation.finished));
-      } catch {
-        // A running animation was canceled - e.g. `open` flipped back to
-        // true mid-close. Nothing to do; the check below leaves the dialog
-        // open in that case.
-      }
-    }
+    await this._waitForExitTransition();
+    if (token !== this._closeToken) return; // Disconnected mid-close - _dialog may be detached.
 
     this._closing = false;
     if (!this.open && this._dialog.open) this._dialog.close();
+  }
+
+  /**
+   * Waits for the dialog's exit-transition animations to stop running,
+   * polling `getAnimations()` on a plain timer rather than awaiting each
+   * `Animation.finished` promise - in practice those promises don't
+   * reliably settle for CSS-transition-backed animations on a top-layer
+   * `<dialog>` in every engine. A hard cap keeps a close from ever blocking
+   * indefinitely if a transition's state doesn't resolve for some other
+   * unforeseen reason.
+   */
+  private _waitForExitTransition(): Promise<void> {
+    if (!this._dialog.getAnimations) return Promise.resolve();
+
+    const stillRunning = (): boolean =>
+      this._dialog
+        .getAnimations()
+        .some((animation) => animation.playState === "running" || animation.pending);
+
+    if (!stillRunning()) return Promise.resolve();
+
+    return new Promise((resolve) => {
+      const deadline = performance.now() + MAX_CLOSE_WAIT_MS;
+      const token = this._closeToken;
+      const check = (): void => {
+        if (token !== this._closeToken || !stillRunning() || performance.now() >= deadline) {
+          resolve();
+          return;
+        }
+        setTimeout(check, CLOSE_POLL_INTERVAL_MS);
+      };
+      setTimeout(check, CLOSE_POLL_INTERVAL_MS);
+    });
   }
 
   render(): HTMLTemplateResult {

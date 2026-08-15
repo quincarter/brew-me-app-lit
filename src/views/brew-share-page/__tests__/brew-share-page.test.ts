@@ -132,13 +132,19 @@ describe("brew-share-page", () => {
       recipeSource: RECIPE_SOURCE,
     });
 
-    expect(element.shadowRoot?.querySelector("brew-bottom-sheet")).toBeNull();
+    // The sheet element is mounted (not conditionally rendered) as soon as a
+    // recipeSource exists, closed - so a later open-to-close transition can
+    // actually animate instead of the element being yanked out of the DOM.
+    expect(element.shadowRoot?.querySelector("brew-bottom-sheet")?.hasAttribute("open")).toBe(
+      false,
+    );
 
     element.shadowRoot?.querySelector<HTMLButtonElement>(".recipe-banner")?.click();
     await element.updateComplete;
 
     const sheet = element.shadowRoot?.querySelector("brew-bottom-sheet");
     expect(sheet).not.toBeNull();
+    expect(sheet?.hasAttribute("open")).toBe(true);
     expect(element.shadowRoot?.querySelector(".title")?.textContent?.trim()).toBe(
       "Original recipe",
     );

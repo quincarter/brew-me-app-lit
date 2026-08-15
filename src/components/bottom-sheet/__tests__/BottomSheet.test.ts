@@ -66,77 +66,137 @@ describe("brew-bottom-sheet", () => {
 
   /**
    * Stubs `dialog.getAnimations()` to return a single fake `Animation` whose
-   * `finished` promise is externally controllable. `happy-dom` doesn't
+   * `playState`/`pending` are externally controllable. `happy-dom` doesn't
    * implement `getAnimations()` at all, so `_beginClosing()`'s
-   * `animations.length > 0` branch (and the genuine wait it performs in a
-   * real browser) never exercises otherwise - stubbing it is the only way
-   * to deterministically pause `_beginClosing()` mid-flight and inspect the
-   * "closing but not yet closed" window the fix introduces, rather than
-   * racing happy-dom's microtask ordering.
+   * `_waitForExitTransition()` poll loop (and the genuine wait it performs
+   * in a real browser) never exercises otherwise - stubbing it is the only
+   * way to deterministically pause `_beginClosing()` mid-flight and inspect
+   * the "closing but not yet closed" window the fix introduces. Starts
+   * `"running"` (i.e. the exit transition is in flight); the returned
+   * `finishAnimation` flips it to `"finished"`, which the poll loop picks
+   * up on its next tick.
    */
-  const stubPendingAnimation = (
-    dialog: HTMLDialogElement,
-  ): { resolveFinished: () => void; rejectFinished: (reason: unknown) => void } => {
-    let resolveFinished!: () => void;
-    let rejectFinished!: (reason: unknown) => void;
-    const finished = new Promise<void>((resolve, reject) => {
-      resolveFinished = resolve;
-      rejectFinished = reject;
-    });
-    dialog.getAnimations = vi.fn().mockReturnValue([{ finished }]);
-    return { resolveFinished, rejectFinished };
+  const stubPendingAnimation = (dialog: HTMLDialogElement): { finishAnimation: () => void } => {
+    const animation: { playState: string; pending: boolean } = {
+      playState: "running",
+      pending: false,
+    };
+    dialog.getAnimations = vi.fn().mockReturnValue([animation]);
+    return {
+      finishAnimation: () => {
+        animation.playState = "finished";
+      },
+    };
   };
 
   it("applies the closing class to the dialog while the deferred close is pending, and only closes for real once the exit animation finishes", async () => {
-    element.open = true;
-    await element.updateComplete;
-    const dialog = element.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
-    expect(dialog.classList.contains("closing")).toBe(false);
+    vi.useFakeTimers();
+    try {
+      element.open = true;
+      await element.updateComplete;
+      const dialog = element.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+      expect(dialog.classList.contains("closing")).toBe(false);
 
-    const { resolveFinished } = stubPendingAnimation(dialog);
-    element.open = false;
+      const { finishAnimation } = stubPendingAnimation(dialog);
+      element.open = false;
+      await element.updateComplete;
+      // `_beginClosing()` flips `_closing` to `true` from inside `updated()`,
+      // i.e. after that same pass's `render()` already ran - it takes a
+      // follow-up update cycle for the `closing` class to actually land in
+      // the rendered DOM.
+      await element.updateComplete;
 
-    // `_beginClosing()` is now paused awaiting the stubbed animation's
-    // `finished` promise - the dialog is still open, but visually driven to
-    // its closed appearance purely via the `closing` class (see
-    // `bottom-sheet.styles.ts`).
-    await vi.waitFor(() => expect(dialog.classList.contains("closing")).toBe(true), { timeout: 1000 });
-    expect(dialog.open).toBe(true);
+      // `_beginClosing()` is now polling the stubbed animation's
+      // `playState` - the dialog is still open, but visually driven to its
+      // closed appearance purely via the `closing` class (see
+      // `bottom-sheet.styles.ts`).
+      expect(dialog.classList.contains("closing")).toBe(true);
+      expect(dialog.open).toBe(true);
 
-    resolveFinished();
-    await vi.waitFor(() => expect(dialog.open).toBe(false), { timeout: 1000 });
-    // Once the deferred close actually runs, `_closing` resets to false.
-    expect(dialog.classList.contains("closing")).toBe(false);
+      finishAnimation();
+      // One poll tick is enough for `_waitForExitTransition()` to see the
+      // animation is no longer running and resolve.
+      await vi.advanceTimersByTimeAsync(30);
+      // `_beginClosing()`'s post-wait `this._closing = false` schedules its
+      // own Lit update cycle, separate from the native `dialog.close()` call
+      // right below it - wait for it before checking the rendered class.
+      await element.updateComplete;
+      expect(dialog.open).toBe(false);
+      // Once the deferred close actually runs, `_closing` resets to false.
+      expect(dialog.classList.contains("closing")).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("leaves the dialog open if open flips back to true before the pending exit animation finishes", async () => {
-    element.open = true;
-    await element.updateComplete;
-    const dialog = element.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+    vi.useFakeTimers();
+    try {
+      element.open = true;
+      await element.updateComplete;
+      const dialog = element.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
 
-    const { rejectFinished } = stubPendingAnimation(dialog);
-    element.open = false;
-    await vi.waitFor(() => expect(dialog.classList.contains("closing")).toBe(true), { timeout: 1000 });
+      const { finishAnimation } = stubPendingAnimation(dialog);
+      element.open = false;
+      await element.updateComplete;
+      // See the previous test for why a second update cycle is needed
+      // before the `closing` class actually lands in the rendered DOM.
+      await element.updateComplete;
+      expect(dialog.classList.contains("closing")).toBe(true);
 
-    // Reopen before the pending exit animation resolves - e.g. the user taps
-    // back into the sheet mid-close. `_closing` resets to `false` inside
-    // `updated()`, i.e. after that same pass's `render()` already ran, so
-    // (as with the `closing` class being applied) it takes a follow-up
-    // update cycle to actually clear from the rendered DOM - poll for it.
-    element.open = true;
-    await vi.waitFor(() => expect(dialog.classList.contains("closing")).toBe(false), { timeout: 1000 });
-    expect(dialog.open).toBe(true);
+      // Reopen before the pending exit animation resolves - e.g. the user
+      // taps back into the sheet mid-close. `_closing` resets to `false`
+      // inside `updated()`, i.e. after that same pass's `render()` already
+      // ran, so (as with the `closing` class being applied) it takes a
+      // follow-up update cycle to actually clear from the rendered DOM.
+      element.open = true;
+      await element.updateComplete;
+      await element.updateComplete;
+      expect(dialog.classList.contains("closing")).toBe(false);
+      expect(dialog.open).toBe(true);
 
-    // A real `Animation.finished` promise rejects when the animation is
-    // canceled (which reopening synchronously does, since the `closing`
-    // class comes off and the exit transition is interrupted) -
-    // `_beginClosing()`'s `try/catch` swallows that rejection.
-    rejectFinished(new DOMException("The animation was canceled.", "AbortError"));
+      // Let the still-pending `_waitForExitTransition()` poll loop from the
+      // aborted close resolve (whether or not the animation ever
+      // "finishes") and flush `_beginClosing()`'s subsequent `!this.open`
+      // guard check - it should see `open` is back to `true` and leave the
+      // dialog alone rather than closing it out from under the reopen.
+      finishAnimation();
+      await vi.advanceTimersByTimeAsync(30);
+      expect(dialog.open).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 
-    // Flush the rejected-promise continuation through `_beginClosing()`'s
-    // catch block and its subsequent `!this.open` guard check.
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(dialog.open).toBe(true);
+  it("closes the dialog once MAX_CLOSE_WAIT_MS elapses even if the exit animation never stops reporting as running", async () => {
+    vi.useFakeTimers();
+    try {
+      element.open = true;
+      await element.updateComplete;
+      const dialog = element.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+
+      // No `finishAnimation()` call here - the stubbed animation stays
+      // `"running"` for the entirety of the test, simulating a
+      // stuck/never-settling transition. `_waitForExitTransition()`'s hard
+      // cap (`MAX_CLOSE_WAIT_MS`) is the only thing that should let the
+      // close proceed rather than hanging forever.
+      stubPendingAnimation(dialog);
+      element.open = false;
+      await element.updateComplete;
+      // See the earlier tests for why a second update cycle is needed
+      // before the `closing` class actually lands in the rendered DOM.
+      await element.updateComplete;
+      expect(dialog.classList.contains("closing")).toBe(true);
+      expect(dialog.open).toBe(true);
+
+      // Advance well past the 1000ms cap.
+      await vi.advanceTimersByTimeAsync(1100);
+      await element.updateComplete;
+      expect(dialog.open).toBe(false);
+      expect(dialog.classList.contains("closing")).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("renders slotted content inside the dialog", async () => {

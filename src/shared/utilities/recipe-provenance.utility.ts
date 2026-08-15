@@ -65,12 +65,12 @@ export const renderOriginalRecipeSheet = (
   onViewModeChange: (mode: RecipeSheetViewMode) => void,
   options?: IRenderRecipeCardOptions,
 ): HTMLTemplateResult | typeof nothing => {
-  if (!isOpen || !source) return nothing;
+  if (!source) return nothing;
 
   const modified = isRecipeModified(current, source);
 
   return html`
-    <brew-bottom-sheet open label="Original recipe" @sheet-scrim-click="${onClose}">
+    <brew-bottom-sheet ?open="${isOpen}" label="Original recipe" @sheet-scrim-click="${onClose}">
       <div class="title">Original recipe</div>
       ${modified ? renderRecipeSheetViewToggle(viewMode, onViewModeChange) : nothing}
       ${renderRecipeCard(source.recipeId, {

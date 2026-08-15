@@ -79,7 +79,7 @@ describe("recipe-provenance.utility", () => {
   });
 
   describe("renderOriginalRecipeSheet", () => {
-    it("renders nothing when isOpen is false, even with a source", () => {
+    it("renders the sheet closed (not unmounted) when isOpen is false but a source is present, so a later open-to-close transition can still animate", () => {
       render(
         renderOriginalRecipeSheet(
           RECIPE_SOURCE,
@@ -91,7 +91,9 @@ describe("recipe-provenance.utility", () => {
         ),
         container,
       );
-      expect(container.querySelector("brew-bottom-sheet")).toBeNull();
+      const sheet = container.querySelector("brew-bottom-sheet");
+      expect(sheet).not.toBeNull();
+      expect(sheet?.hasAttribute("open")).toBe(false);
     });
 
     it("renders nothing when source is missing, even when isOpen is true", () => {
@@ -148,22 +150,6 @@ describe("recipe-provenance.utility", () => {
       const card = container.querySelector("brew-recipe-card, brew-pourover-recipe-card");
       expect(card).not.toBeNull();
       expect((card as unknown as { diffAgainst: unknown }).diffAgainst).toBeNull();
-    });
-
-    it("renders no toggle when the sheet is closed", () => {
-      render(
-        renderOriginalRecipeSheet(
-          RECIPE_SOURCE,
-          false,
-          vi.fn(),
-          modifiedCurrent,
-          "original",
-          vi.fn(),
-        ),
-        container,
-      );
-
-      expect(container.querySelector(".brew-steps-view-toggle")).toBeNull();
     });
 
     it("in 'original' mode, renders the curated recipe card - not brew-steps-card", () => {
