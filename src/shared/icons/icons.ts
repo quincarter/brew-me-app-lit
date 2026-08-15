@@ -15,6 +15,7 @@ import { DELETE_ICON } from "./delete.svg";
 import { DRAG_INDICATOR_ICON_SVG } from "./drag-indicator.svg";
 import { DRIP_ICON } from "./drip.svg";
 import { EDIT_ICON } from "./edit.svg";
+import { EMOJI_EVENTS_ICON_SVG } from "./emoji-events.svg";
 import { ESPRESSO_SHOT_ICON } from "./espresso-shot.svg";
 import { EVENT_ICON_SVG } from "./event.svg";
 import { EXPLORE_ICON_SVG } from "./explore.svg";
@@ -38,6 +39,7 @@ import { PLAY_ICON } from "./play.svg";
 import { REFRESH_ICON } from "./refresh.svg";
 import { REPLAY_ICON } from "./replay.svg";
 import { SAVED_ICON_SVG } from "./saved.svg";
+import { SETTINGS_ICON_SVG } from "./settings.svg";
 import { SHARE_ICON } from "./share.svg";
 import { SIPHON_ICON } from "./siphon.svg";
 import { TIMER_ICON_SVG } from "./timer.svg";
@@ -69,6 +71,7 @@ export {
   DRAG_INDICATOR_ICON_SVG,
   DRIP_ICON,
   EDIT_ICON,
+  EMOJI_EVENTS_ICON_SVG,
   ESPRESSO_SHOT_ICON,
   EVENT_ICON_SVG,
   EXPAND_LESS_ICON_SVG,
@@ -95,6 +98,7 @@ export {
   REFRESH_ICON,
   REPLAY_ICON,
   SAVED_ICON_SVG,
+  SETTINGS_ICON_SVG,
   SHARE_ICON,
   SIPHON_ICON,
   TIMER_ICON_SVG,

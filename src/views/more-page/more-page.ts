@@ -6,16 +6,21 @@ import "../../components/list-row/brew-list-row";
 import "../../components/stat-tile/brew-stat-tile";
 import "../../components/top-bar/brew-top-bar";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
-import { streakDaysSignal, totalBrewsSignal } from "../../shared/stores/brew.store";
+import {
+  streakDaysSignal,
+  totalBrewsSignal,
+} from "../../shared/stores/brew.store";
 import { startTour } from "../../shared/stores/tour.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { MorePageStyles } from "./more-page.styles";
 import {
   BOOKMARK_ADDED_ICON_SVG,
+  EMOJI_EVENTS_ICON_SVG,
   EXPLORE_ICON_SVG,
   LOCAL_FIRE_DEPARTMENT_SVG,
   MENU_BOOK_ICON_SVG,
+  SETTINGS_ICON_SVG,
   TIMER_ICON_SVG,
 } from "../../shared/icons/icons";
 
@@ -52,7 +57,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="Settings"
             supporting="Brew types, dark mode, refresh, data"
-            leading-icon="settings"
+            .leading-icon="${SETTINGS_ICON_SVG}"
             leading-bg="var(--brew-color-surface-container-high)"
             leading-fg="var(--brew-color-on-surface)"
             href="/more/settings"
@@ -82,7 +87,9 @@ export class MorePage extends SignalWatcher(LitElement) {
           ></brew-list-row>
 
           <div class="divider"></div>
-          <div class="section-title" data-tour="more-guides-section">Brew method guide</div>
+          <div class="section-title" data-tour="more-guides-section">
+            Brew method guide
+          </div>
           ${[...BREW_GUIDE]
             .sort((a, b) => a.name.localeCompare(b.name))
             .map(
@@ -161,7 +168,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <brew-list-row
             headline="World Barista Championship"
             supporting="2026 Panama events &amp; competition videos"
-            leading-icon="emoji_events"
+            .leading-icon="${EMOJI_EVENTS_ICON_SVG}"
             leading-bg="var(--brew-color-secondary-container)"
             leading-fg="var(--brew-color-on-secondary-container)"
             href="/more/wbc-videos"
