@@ -1,5 +1,5 @@
 import { type HTMLTemplateResult, html, LitElement, type PropertyValues } from "lit";
-import { property, query } from "lit/decorators.js";
+import { property, query, state } from "lit/decorators.js";
 import { BottomSheetStyles } from "./bottom-sheet.styles";
 
 /**
@@ -21,6 +21,19 @@ export class BottomSheet extends LitElement {
   @property({ type: String }) label = "";
 
   @query("dialog") private _dialog!: HTMLDialogElement;
+  /**
+   * True while the exit transition is playing. Native `HTMLDialogElement.close()`
+   * removes a `<dialog>` from the top layer (and applies `display: none`)
+   * synchronously, which skips any CSS exit transition entirely - relying on
+   * `@starting-style`/`transition-behavior: allow-discrete` to defer that
+   * removal is a very new CSS capability with inconsistent cross-browser
+   * support (notably on Safari/iOS, which this app targets). Instead, a
+   * close request adds the `closing` class (driving the dialog to its
+   * closed *visual* styles via CSS while it's still technically open/in the
+   * top layer, see `bottom-sheet.styles.ts`), waits for that transition to
+   * actually finish, and only then calls the real `close()`.
+   */
+  @state() private _closing = false;
 
   private _dispatchScrimClick(): void {
     this.dispatchEvent(new CustomEvent("sheet-scrim-click", { bubbles: true, composed: true }));
@@ -63,14 +76,38 @@ export class BottomSheet extends LitElement {
 
   protected updated(changed: PropertyValues<this>): void {
     super.updated(changed);
-    if (this.open && !this._dialog.open) this._dialog.showModal();
-    else if (!this.open && this._dialog.open) this._dialog.close();
+    if (this.open) {
+      this._closing = false;
+      if (!this._dialog.open) this._dialog.showModal();
+    } else if (this._dialog.open && !this._closing) {
+      this._beginClosing();
+    }
+  }
+
+  /** Plays the exit transition (via the `closing` class) to completion, then performs the real `close()`. See `_closing`'s doc comment for why. */
+  private async _beginClosing(): Promise<void> {
+    this._closing = true;
+    await this.updateComplete;
+
+    const animations = this._dialog.getAnimations ? this._dialog.getAnimations() : [];
+    if (animations.length > 0) {
+      try {
+        await Promise.all(animations.map((animation) => animation.finished));
+      } catch {
+        // A running animation was canceled - e.g. `open` flipped back to
+        // true mid-close. Nothing to do; the check below leaves the dialog
+        // open in that case.
+      }
+    }
+
+    this._closing = false;
+    if (!this.open && this._dialog.open) this._dialog.close();
   }
 
   render(): HTMLTemplateResult {
     return html`
       <dialog
-        class="sheet"
+        class="sheet ${this._closing ? "closing" : ""}"
         aria-label="${this.label}"
         @cancel="${this._onCancel}"
         @close="${this._onClose}"
