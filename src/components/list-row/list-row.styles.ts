@@ -32,9 +32,24 @@ export const ListRowStyles = css`
     flex-direction: column;
   }
 
+  .headline-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
   .headline {
     font-size: 16px;
     color: var(--brew-color-on-surface);
+  }
+
+  .recipe-source-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--brew-color-on-surface-variant);
   }
 
   .supporting {

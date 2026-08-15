@@ -131,6 +131,14 @@ export class MorePage extends SignalWatcher(LitElement) {
             href="/more/clever-dripper-recipes"
           ></brew-list-row>
           <brew-list-row
+            headline="Espresso Recipes"
+            supporting="Standard shot styles &amp; named technique profiles"
+            .leadingIcon="${MENU_BOOK_ICON_SVG}"
+            leading-bg="var(--brew-color-tertiary-container)"
+            leading-fg="var(--brew-color-on-tertiary-container)"
+            href="/more/espresso-recipes"
+          ></brew-list-row>
+          <brew-list-row
             headline="Hario Switch Recipes"
             supporting="Hybrid immersion &amp; WBrC champion recipes"
             .leadingIcon="${MENU_BOOK_ICON_SVG}"

@@ -3,6 +3,8 @@ import { property } from "lit/decorators.js";
 import { AEROPRESS_RECIPES } from "../../shared/data/aeropress-recipes.data";
 import { CHEMEX_RECIPES } from "../../shared/data/chemex-recipes.data";
 import { CLEVER_DRIPPER_RECIPES } from "../../shared/data/clever-dripper-recipes.data";
+import { ESPRESSO_PROFILES } from "../../shared/data/espresso-profiles.data";
+import { ESPRESSO_SHOT_STYLES } from "../../shared/data/espresso-shot-styles.data";
 import { HARIO_SWITCH_RECIPES } from "../../shared/data/hario-switch-recipes.data";
 import { KALITA_WAVE_RECIPES } from "../../shared/data/kalita-wave-recipes.data";
 import { ORIGAMI_RECIPES } from "../../shared/data/origami-recipes.data";
@@ -11,6 +13,8 @@ import type {
   IAeropressRecipe,
   IChemexRecipe,
   ICleverDripperRecipe,
+  IEspressoProfile,
+  IEspressoShotStyle,
   IHarioSwitchRecipe,
   IKalitaWaveRecipe,
   IOrigamiRecipe,
@@ -29,12 +33,14 @@ export type AnyRecipe =
   | IKalitaWaveRecipe
   | IChemexRecipe
   | ICleverDripperRecipe
-  | IHarioSwitchRecipe;
+  | IHarioSwitchRecipe
+  | IEspressoShotStyle
+  | IEspressoProfile;
 
 /**
  * # Recipe Picker Sheet
  * Generic recipe selection sheet: a `<brew-bottom-sheet>` listing curated
- * recipes for the specified `brewType` ("Aeropress", "V60", "Origami", "Kalita Wave", "Chemex", "Clever Dripper") as tappable rows.
+ * recipes for the specified `brewType` ("Aeropress", "V60", "Origami", "Kalita Wave", "Chemex", "Clever Dripper", "Espresso Shot") as tappable rows.
  * Picking one fires `recipe-select` with the full recipe object.
  * @element brew-recipe-picker-sheet
  * @fires recipe-select - `CustomEvent<AnyRecipe>` fired with the tapped recipe. Consumers are responsible for closing the sheet.
@@ -139,6 +145,27 @@ export class RecipePickerSheet extends LitElement {
           supporting: `${recipe.setup.Dose ?? ""} coffee : ${recipe.setup.Water ?? ""} water`,
           initial: recipe.author.charAt(0),
         })),
+      };
+    }
+
+    if (this.brewType === "Espresso Shot") {
+      return {
+        title: "Load an espresso recipe",
+        hint: "Auto-fills dose, ratio, and the shot recipe from the selected style or profile.",
+        items: [
+          ...ESPRESSO_SHOT_STYLES.map((style) => ({
+            recipe: style,
+            headline: style.label,
+            supporting: `1:${style.ratio} · ${style.doseIn}g in · ${style.shotTimeSec}s`,
+            initial: style.label.charAt(0),
+          })),
+          ...ESPRESSO_PROFILES.map((profile) => ({
+            recipe: profile,
+            headline: profile.name,
+            supporting: profile.tagline,
+            initial: profile.name.charAt(0),
+          })),
+        ],
       };
     }
 

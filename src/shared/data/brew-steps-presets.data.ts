@@ -1,12 +1,23 @@
 import type { IBrewStepsConfig } from "../interfaces/brew.interface";
+import {
+  buildEspressoSteps,
+  ESPRESSO_STYLE_DEFAULT_GRIND,
+  ESPRESSO_STYLE_DEFAULT_PREINFUSION_SEC,
+  ESPRESSO_STYLE_DEFAULT_WATER_TEMP,
+} from "../utilities/espresso-recipe.utility";
 
 /**
  * Canned step sequences for brew types with a real method to walk through,
  * keyed by the same brew type string used everywhere else (`BREW_TYPES`,
  * `BREW_GUIDE`, `ISavedBrew.brewType`). Selecting a brew type on the
  * Calculator seeds `brewStepsSignal` from here; a type with no entry (Cold
- * Brew, Espresso Shot, Drip, any custom type) gets no Brew Steps
- * card at all, keeping the plain calculating flow untouched for them.
+ * Brew, Drip, any custom type) gets no Brew Steps card at all, keeping the
+ * plain calculating flow untouched for them.
+ *
+ * `"Espresso Shot"`'s steps use the shot-style defaults with a plain
+ * double's 28s shot time, built via `buildEspressoSteps` (shared with
+ * `brew-steps.store.ts`/`brew.store.ts`/`recipe-registry.utility.ts` in
+ * `espresso-recipe.utility.ts`) rather than a hand-copied literal.
  */
 export const BREW_STEPS_PRESETS: Record<string, IBrewStepsConfig> = {
   Aeropress: {
@@ -232,5 +243,13 @@ export const BREW_STEPS_PRESETS: Record<string, IBrewStepsConfig> = {
         note: "Press slowly, straight down",
       },
     ],
+  },
+  "Espresso Shot": {
+    steps: buildEspressoSteps(
+      ESPRESSO_STYLE_DEFAULT_PREINFUSION_SEC,
+      28,
+      ESPRESSO_STYLE_DEFAULT_GRIND,
+      ESPRESSO_STYLE_DEFAULT_WATER_TEMP,
+    ),
   },
 };

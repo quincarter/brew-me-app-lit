@@ -1,16 +1,25 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ESPRESSO_PROFILES } from "../../data/espresso-profiles.data";
+import { ESPRESSO_SHOT_STYLES } from "../../data/espresso-shot-styles.data";
 import type { IAeropressRecipe, IShareableBrew } from "../../interfaces/brew.interface";
 import {
   getAeropressRecipeLabel,
   getAeropressRecipeRatio,
   getAeropressRecipeSteps,
 } from "../../utilities/aeropress-recipe.utility";
+import {
+  ESPRESSO_STYLE_DEFAULT_GRIND,
+  ESPRESSO_STYLE_DEFAULT_PREINFUSION_SEC,
+  ESPRESSO_STYLE_DEFAULT_WATER_TEMP,
+  buildEspressoSteps,
+} from "../../utilities/espresso-recipe.utility";
 import { gramsToOunces } from "../../utilities/ratio.utility";
 import {
   addSavedBrew,
   brewAeropressRecipeNow,
   brewAgain,
+  brewEspressoRecipeNow,
   deleteAllSavedBrews,
   markBrewedNow,
   mostRecentlyBrewedSignal,
@@ -206,6 +215,105 @@ describe("brew.store", () => {
       brewAeropressRecipeNow(aeropressRecipe());
 
       expect(postSaveSheetAlreadyOnDetailSignal.value).toBe(false);
+    });
+  });
+
+  describe("brewEspressoRecipeNow", () => {
+    describe("with a plain IEspressoShotStyle", () => {
+      const style = ESPRESSO_SHOT_STYLES.find((item) => item.id === "double");
+      if (!style) throw new Error("expected the 'double' shot style to exist in test data");
+
+      it("adds a new saved brew with numbers/name/brewType derived from the style", () => {
+        brewEspressoRecipeNow(style);
+
+        expect(savedBrewsSignal.value).toHaveLength(1);
+        const saved = savedBrewsSignal.value[0];
+        expect(saved.brewType).toBe("Espresso Shot");
+        expect(saved.name).toBe(style.label);
+        expect(saved.ratio).toBe(style.ratio);
+        expect(saved.water).toBe(style.doseOut);
+        expect(saved.coffee).toBe(style.doseIn);
+        expect(saved.oz).toBe(gramsToOunces(style.doseOut));
+      });
+
+      it("builds brewSteps/recipeSource using the style-wide preinfusion/grind/water-temp defaults", () => {
+        const expectedSteps = buildEspressoSteps(
+          ESPRESSO_STYLE_DEFAULT_PREINFUSION_SEC,
+          style.shotTimeSec,
+          ESPRESSO_STYLE_DEFAULT_GRIND,
+          ESPRESSO_STYLE_DEFAULT_WATER_TEMP,
+        );
+
+        brewEspressoRecipeNow(style);
+
+        const saved = savedBrewsSignal.value[0];
+        expect(saved.brewSteps).toEqual({ steps: expectedSteps });
+        expect(saved.recipeSource).toEqual({
+          recipeId: style.id,
+          label: style.label,
+          ratio: style.ratio,
+          water: style.doseOut,
+          coffee: style.doseIn,
+          steps: expectedSteps,
+        });
+      });
+
+      it("opens the post-save sheet with that exact new brew", () => {
+        brewEspressoRecipeNow(style);
+
+        const saved = savedBrewsSignal.value[0];
+        expect(postSaveSheetOpenSignal.value).toBe(true);
+        expect(postSaveSheetBrewSignal.value).toEqual(saved);
+      });
+    });
+
+    describe("with an IEspressoProfile", () => {
+      const profile = ESPRESSO_PROFILES.find((item) => item.id === "blooming-espresso");
+      if (!profile)
+        throw new Error("expected the 'blooming-espresso' profile to exist in test data");
+
+      it("adds a new saved brew with numbers/name/brewType derived from the profile", () => {
+        brewEspressoRecipeNow(profile);
+
+        expect(savedBrewsSignal.value).toHaveLength(1);
+        const saved = savedBrewsSignal.value[0];
+        expect(saved.brewType).toBe("Espresso Shot");
+        expect(saved.name).toBe(profile.name);
+        expect(saved.ratio).toBe(profile.ratio);
+        expect(saved.water).toBe(profile.doseOut);
+        expect(saved.coffee).toBe(profile.doseIn);
+        expect(saved.oz).toBe(gramsToOunces(profile.doseOut));
+      });
+
+      it("builds brewSteps/recipeSource using the profile's own preinfusion/grind/water-temp", () => {
+        const expectedSteps = buildEspressoSteps(
+          profile.preinfusionSec,
+          profile.shotTimeSec,
+          profile.grind,
+          profile.waterTemp,
+        );
+
+        brewEspressoRecipeNow(profile);
+
+        const saved = savedBrewsSignal.value[0];
+        expect(saved.brewSteps).toEqual({ steps: expectedSteps });
+        expect(saved.recipeSource).toEqual({
+          recipeId: profile.id,
+          label: profile.name,
+          ratio: profile.ratio,
+          water: profile.doseOut,
+          coffee: profile.doseIn,
+          steps: expectedSteps,
+        });
+      });
+
+      it("opens the post-save sheet with that exact new brew", () => {
+        brewEspressoRecipeNow(profile);
+
+        const saved = savedBrewsSignal.value[0];
+        expect(postSaveSheetOpenSignal.value).toBe(true);
+        expect(postSaveSheetBrewSignal.value).toEqual(saved);
+      });
     });
   });
 });

@@ -9,6 +9,11 @@ import {
   selectBrewType,
   selectedBrewTypeSignal,
 } from "./brew-steps.store";
+import {
+  espressoDoseInSignal,
+  espressoDoseOutSignal,
+  espressoRatioSignal,
+} from "./espresso-calculator.store";
 
 /**
  * Ephemeral calculator state. Deliberately *not* persisted (unlike
@@ -112,6 +117,20 @@ export const primeCalculatorForRatio = (ratioDefault: number, brewType?: string)
 
 /** Primes the calculator with a shared brew's exact numbers - used by the Share screen's "Open in Calculator" action and by `brewAgain` below. */
 export const primeCalculatorForBrew = (brew: IShareableBrew): void => {
+  if (brew.brewType === "Espresso Shot") {
+    // Espresso uses its own dose-in/ratio/dose-out signals, not the shared
+    // ratio/water/oz ones the pour-over flow below writes to.
+    espressoDoseInSignal.value = brew.coffee;
+    espressoRatioSignal.value = brew.ratio;
+    espressoDoseOutSignal.value = brew.water;
+    primedBrewTypeSignal.value = brew.brewType;
+
+    selectedBrewTypeSignal.value = brew.brewType;
+    brewStepsSignal.value = brew.brewSteps ?? BREW_STEPS_PRESETS[brew.brewType] ?? null;
+    loadedRecipeSourceSignal.value = brew.recipeSource ?? null;
+    return;
+  }
+
   ratioSignal.value = String(brew.ratio);
   waterSignal.value = String(brew.water);
   ozSignal.value = String(brew.oz);

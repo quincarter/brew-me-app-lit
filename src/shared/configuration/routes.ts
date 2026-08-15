@@ -99,6 +99,13 @@ export const routes: IRouteConfig[] = [
     fileName: "hario-switch-recipes-page",
   },
   {
+    name: "Espresso Recipes",
+    path: "/more/espresso-recipes",
+    tagName: "espresso-recipes-page",
+    directory: "espresso-recipes-page",
+    fileName: "espresso-recipes-page",
+  },
+  {
     name: "World Barista Championship",
     path: "/more/wbc-videos",
     tagName: "wbc-videos-page",

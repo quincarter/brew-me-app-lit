@@ -3,6 +3,8 @@ import type {
   IAeropressRecipe,
   IChemexRecipe,
   ICleverDripperRecipe,
+  IEspressoProfile,
+  IEspressoShotStyle,
   IHarioSwitchRecipe,
   IKalitaWaveRecipe,
   IOrigamiRecipe,
@@ -15,6 +17,10 @@ import {
   getAeropressRecipeRatio,
   getAeropressRecipeSteps,
 } from "../utilities/aeropress-recipe.utility";
+import {
+  getEspressoRecipeLabel,
+  getEspressoRecipeSteps,
+} from "../utilities/espresso-recipe.utility";
 import {
   getPouroverRecipeLabel,
   getPouroverRecipeRatio,
@@ -309,6 +315,39 @@ export const brewHarioSwitchRecipeNow = (recipe: IHarioSwitchRecipe): void => {
       ratio,
       water,
       coffee: dose,
+      steps,
+    },
+  });
+
+  openPostSaveSheet(savedBrew);
+};
+
+/**
+ * The "Brew now" action on the Espresso Recipes screen: saves a curated
+ * shot style or profile as a brand-new brew, then opens the post-save
+ * sheet. Distinguishes the two by the presence of `preinfusionSec`, which
+ * only `IEspressoProfile` carries - a plain `IEspressoShotStyle` falls back
+ * to the same style-wide preinfusion/grind/water-temp defaults used by
+ * `loadEspressoShotStyleIntoCalculator`.
+ */
+export const brewEspressoRecipeNow = (recipe: IEspressoShotStyle | IEspressoProfile): void => {
+  const steps = getEspressoRecipeSteps(recipe);
+  const label = getEspressoRecipeLabel(recipe);
+
+  const savedBrew = addSavedBrew({
+    brewType: "Espresso Shot",
+    name: label,
+    ratio: recipe.ratio,
+    water: recipe.doseOut,
+    coffee: recipe.doseIn,
+    oz: gramsToOunces(recipe.doseOut),
+    brewSteps: { steps },
+    recipeSource: {
+      recipeId: recipe.id,
+      label,
+      ratio: recipe.ratio,
+      water: recipe.doseOut,
+      coffee: recipe.doseIn,
       steps,
     },
   });

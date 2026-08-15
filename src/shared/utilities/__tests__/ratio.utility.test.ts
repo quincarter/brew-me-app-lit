@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { coffeeForWater, gramsToOunces, ouncesToGrams, round2 } from "../ratio.utility";
+import { coffeeForWater, gramsToOunces, ouncesToGrams, round1, round2 } from "../ratio.utility";
 
 describe("ratio.utility", () => {
   it("rounds to two decimal places", () => {
     expect(round2(16.6666)).toBe(16.67);
     expect(round2(16.001)).toBe(16);
+  });
+
+  it("rounds to one decimal place", () => {
+    expect(round1(2.44)).toBe(2.4);
+    expect(round1(2.45)).toBe(2.5);
+    expect(round1(18 / 9)).toBe(2);
   });
 
   it("converts grams to ounces", () => {

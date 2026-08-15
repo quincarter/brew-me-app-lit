@@ -2,13 +2,23 @@ import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { AEROPRESS_RECIPES } from "../../data/aeropress-recipes.data";
 import { BREW_STEPS_PRESETS } from "../../data/brew-steps-presets.data";
+import { ESPRESSO_PROFILES } from "../../data/espresso-profiles.data";
+import { ESPRESSO_SHOT_STYLES } from "../../data/espresso-shot-styles.data";
 import type { IAeropressRecipe } from "../../interfaces/brew.interface";
+import {
+  ESPRESSO_STYLE_DEFAULT_GRIND,
+  ESPRESSO_STYLE_DEFAULT_PREINFUSION_SEC,
+  ESPRESSO_STYLE_DEFAULT_WATER_TEMP,
+  buildEspressoSteps,
+} from "../../utilities/espresso-recipe.utility";
 import { gramsToOunces, round2 } from "../../utilities/ratio.utility";
 import {
   QUICK_CALCULATOR,
   brewStepsSignal,
   clearBrewStepsState,
   loadAeropressRecipeIntoCalculator,
+  loadEspressoProfileIntoCalculator,
+  loadEspressoShotStyleIntoCalculator,
   loadedRecipeSourceSignal,
   reopenBrewTypeChooser,
   resetBrewStepsToPreset,
@@ -17,6 +27,13 @@ import {
   updateBrewStepsConfig,
 } from "../brew-steps.store";
 import { coffeeSignal, ozSignal, ratioSignal, waterSignal } from "../calculator.store";
+import {
+  espressoDoseInSignal,
+  espressoDoseOutSignal,
+  espressoRatioSignal,
+  resetEspressoCalculator,
+  setEspressoDoseIn,
+} from "../espresso-calculator.store";
 
 describe("brew-steps.store", () => {
   beforeEach(() => {
@@ -25,6 +42,7 @@ describe("brew-steps.store", () => {
     waterSignal.value = "";
     ozSignal.value = "";
     coffeeSignal.value = null;
+    resetEspressoCalculator();
   });
 
   describe("selectBrewType", () => {
@@ -57,6 +75,25 @@ describe("brew-steps.store", () => {
       selectBrewType("V60");
 
       expect(loadedRecipeSourceSignal.value).toBeNull();
+    });
+
+    it("seeds the espresso store's 18/2/36 defaults when picking Espresso Shot", () => {
+      setEspressoDoseIn("20");
+
+      selectBrewType("Espresso Shot");
+
+      expect(selectedBrewTypeSignal.value).toBe("Espresso Shot");
+      expect(espressoDoseInSignal.value).toBe(18);
+      expect(espressoRatioSignal.value).toBe(2);
+      expect(espressoDoseOutSignal.value).toBe(36);
+    });
+
+    it("does not touch the espresso store when picking a non-espresso type", () => {
+      setEspressoDoseIn("20");
+
+      selectBrewType("V60");
+
+      expect(espressoDoseInSignal.value).toBe(20);
     });
   });
 
@@ -198,6 +235,103 @@ describe("brew-steps.store", () => {
       loadAeropressRecipeIntoCalculator(second);
 
       expect(loadedRecipeSourceSignal.value?.label).toContain("2nd place");
+    });
+  });
+
+  describe("buildEspressoSteps", () => {
+    it("builds the four-row grind/temp/preinfusion/shot-time sequence", () => {
+      const steps = buildEspressoSteps(10, 30, "Fine", "200°F");
+
+      expect(steps).toEqual([
+        { id: "espresso-grind", label: "Grind", kind: "note", value: "Fine" },
+        { id: "espresso-temp", label: "Water temp", kind: "note", value: "200°F" },
+        { id: "espresso-preinfusion", label: "Preinfusion", kind: "timed", seconds: 10 },
+        { id: "espresso-shot", label: "Shot time", kind: "timed", seconds: 30 },
+      ]);
+    });
+  });
+
+  describe("loadEspressoShotStyleIntoCalculator", () => {
+    const style = ESPRESSO_SHOT_STYLES.find((item) => item.id === "double");
+    if (!style) throw new Error("expected the 'double' shot style to exist in test data");
+
+    it("populates the espresso dose-in/ratio/dose-out signals from the style", () => {
+      loadEspressoShotStyleIntoCalculator(style);
+
+      expect(selectedBrewTypeSignal.value).toBe("Espresso Shot");
+      expect(espressoDoseInSignal.value).toBe(style.doseIn);
+      expect(espressoRatioSignal.value).toBe(style.ratio);
+      expect(espressoDoseOutSignal.value).toBe(style.doseOut);
+    });
+
+    it("builds brewStepsSignal using the style-wide preinfusion/grind/water-temp defaults, since a plain style carries none of its own", () => {
+      loadEspressoShotStyleIntoCalculator(style);
+
+      expect(brewStepsSignal.value).toEqual({
+        steps: buildEspressoSteps(
+          ESPRESSO_STYLE_DEFAULT_PREINFUSION_SEC,
+          style.shotTimeSec,
+          ESPRESSO_STYLE_DEFAULT_GRIND,
+          ESPRESSO_STYLE_DEFAULT_WATER_TEMP,
+        ),
+      });
+    });
+
+    it("sets loadedRecipeSourceSignal from the style", () => {
+      loadEspressoShotStyleIntoCalculator(style);
+
+      expect(loadedRecipeSourceSignal.value).toEqual({
+        recipeId: style.id,
+        label: style.label,
+        ratio: style.ratio,
+        water: style.doseOut,
+        coffee: style.doseIn,
+        steps: brewStepsSignal.value?.steps,
+      });
+    });
+  });
+
+  describe("loadEspressoProfileIntoCalculator", () => {
+    const profile = ESPRESSO_PROFILES.find((item) => item.id === "blooming-espresso");
+    if (!profile) throw new Error("expected the 'blooming-espresso' profile to exist in test data");
+
+    it("populates the espresso dose-in/ratio/dose-out signals from the profile", () => {
+      loadEspressoProfileIntoCalculator(profile);
+
+      expect(selectedBrewTypeSignal.value).toBe("Espresso Shot");
+      expect(espressoDoseInSignal.value).toBe(profile.doseIn);
+      expect(espressoRatioSignal.value).toBe(profile.ratio);
+      expect(espressoDoseOutSignal.value).toBe(profile.doseOut);
+    });
+
+    it("builds brewStepsSignal from the profile's own preinfusion/grind/water-temp, not the style-wide defaults", () => {
+      loadEspressoProfileIntoCalculator(profile);
+
+      expect(brewStepsSignal.value).toEqual({
+        steps: buildEspressoSteps(
+          profile.preinfusionSec,
+          profile.shotTimeSec,
+          profile.grind,
+          profile.waterTemp,
+        ),
+      });
+      // Sanity-check this profile's own values genuinely differ from the
+      // style-wide defaults, so the assertion above isn't accidentally
+      // passing by coincidence.
+      expect(profile.preinfusionSec).not.toBe(ESPRESSO_STYLE_DEFAULT_PREINFUSION_SEC);
+    });
+
+    it("sets loadedRecipeSourceSignal from the profile, using its name as the label", () => {
+      loadEspressoProfileIntoCalculator(profile);
+
+      expect(loadedRecipeSourceSignal.value).toEqual({
+        recipeId: profile.id,
+        label: profile.name,
+        ratio: profile.ratio,
+        water: profile.doseOut,
+        coffee: profile.doseIn,
+        steps: brewStepsSignal.value?.steps,
+      });
     });
   });
 

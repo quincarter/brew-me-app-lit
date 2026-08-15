@@ -4,6 +4,7 @@ import { customElement, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/brew-steps-card/brew-steps-card";
 import "../../components/button/brew-button";
+import "../../components/espresso-calculator/brew-espresso-calculator";
 import "../../components/icon-button/brew-icon-button";
 import "../../components/icon/brew-icon";
 import "../../components/ratio-form/brew-ratio-form";
@@ -28,6 +29,8 @@ import type {
   IBrewStepsConfig,
   IChemexRecipe,
   ICleverDripperRecipe,
+  IEspressoProfile,
+  IEspressoShotStyle,
   IHarioSwitchRecipe,
   IKalitaWaveRecipe,
   IOrigamiRecipe,
@@ -39,6 +42,8 @@ import {
   loadAeropressRecipeIntoCalculator,
   loadChemexRecipeIntoCalculator,
   loadCleverDripperRecipeIntoCalculator,
+  loadEspressoProfileIntoCalculator,
+  loadEspressoShotStyleIntoCalculator,
   loadHarioSwitchRecipeIntoCalculator,
   loadKalitaWaveRecipeIntoCalculator,
   loadOrigamiRecipeIntoCalculator,
@@ -65,6 +70,15 @@ import {
   setWater,
   waterSignal,
 } from "../../shared/stores/calculator.store";
+import {
+  espressoDoseInSignal,
+  espressoDoseOutSignal,
+  espressoRatioSignal,
+  resetEspressoCalculator,
+  setEspressoDoseIn,
+  setEspressoDoseOut,
+  setEspressoRatio,
+} from "../../shared/stores/espresso-calculator.store";
 import { openPostSaveSheet } from "../../shared/stores/post-save-sheet.store";
 import { openSaveDialog } from "../../shared/stores/save-dialog.store";
 import { primeTimerForSavedBrew } from "../../shared/stores/timer.store";
@@ -131,6 +145,21 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
     reopenBrewTypeChooser();
   };
 
+  /**
+   * Espresso's numbers live on their own signals, so a full reset needs its
+   * own reset function too - `resetCalculator()` still runs either way so
+   * the espresso branch gets the same `primedFromNameSignal`/
+   * `primedBrewTypeSignal` clearing and chooser-reopening (via
+   * `clearBrewStepsState()`) that the pour-over branch gets, instead of
+   * hand-duplicating that logic here.
+   */
+  private _onReset = (): void => {
+    if (selectedBrewTypeSignal.value === "Espresso Shot") {
+      resetEspressoCalculator();
+    }
+    resetCalculator();
+  };
+
   private _onRecipeSelect = (
     event: CustomEvent<
       | IAeropressRecipe
@@ -140,6 +169,8 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
       | IChemexRecipe
       | ICleverDripperRecipe
       | IHarioSwitchRecipe
+      | IEspressoShotStyle
+      | IEspressoProfile
     >,
   ): void => {
     const selectedType = selectedBrewTypeSignal.value;
@@ -157,6 +188,14 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
       loadCleverDripperRecipeIntoCalculator(event.detail as ICleverDripperRecipe);
     } else if (selectedType === "Hario Switch" || selectedType === "Switch") {
       loadHarioSwitchRecipeIntoCalculator(event.detail as IHarioSwitchRecipe);
+    } else if (selectedType === "Espresso Shot") {
+      // Distinguish the two by the presence of `preinfusionSec`, which only
+      // a curated `IEspressoProfile` carries.
+      if ("preinfusionSec" in event.detail) {
+        loadEspressoProfileIntoCalculator(event.detail as IEspressoProfile);
+      } else {
+        loadEspressoShotStyleIntoCalculator(event.detail as IEspressoShotStyle);
+      }
     }
     this._recipePickerOpen = false;
   };
@@ -196,10 +235,13 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
     const regexVowels = /^[aeiou]/i;
     if (selectedType === null) return this._renderChooser();
 
+    const isEspresso = selectedType === "Espresso Shot";
     const coffee = coffeeSignal.value;
     const water = waterSignal.value;
     const oz = ozSignal.value;
-    const isValid = Boolean(water && oz && coffee);
+    const isValid = isEspresso
+      ? Boolean(espressoDoseInSignal.value && espressoDoseOutSignal.value)
+      : Boolean(water && oz && coffee);
     const recentBrews = recentSavedBrewsSignal.value;
     const isQuickCalculator = selectedType === QUICK_CALCULATOR;
     const brewSteps = isQuickCalculator ? null : brewStepsSignal.value;
@@ -213,6 +255,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
       "Clever",
       "Hario Switch",
       "Switch",
+      "Espresso Shot",
     ];
 
     const hasCuratedRecipes = curatedRecipes.includes(selectedType);
@@ -274,17 +317,30 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
                   this._originalRecipeOpen = true;
                 })
           }
-
-          <brew-ratio-form
-            ratio="${ratioSignal.value}"
-            water="${water}"
-            oz="${oz}"
-            .coffee="${coffee}"
-            @ratio-change="${(e: CustomEvent<string>) => setRatio(e.detail)}"
-            @water-change="${(e: CustomEvent<string>) => setWater(e.detail)}"
-            @oz-change="${(e: CustomEvent<string>) => setOz(e.detail)}"
-          ></brew-ratio-form>
-
+          ${
+            isEspresso
+              ? html`
+                  <brew-espresso-calculator
+                    dose-in="${espressoDoseInSignal.value}"
+                    ratio="${espressoRatioSignal.value}"
+                    dose-out="${espressoDoseOutSignal.value}"
+                    @dose-in-change="${(e: CustomEvent<string>) => setEspressoDoseIn(e.detail)}"
+                    @ratio-change="${(e: CustomEvent<string>) => setEspressoRatio(e.detail)}"
+                    @dose-out-change="${(e: CustomEvent<string>) => setEspressoDoseOut(e.detail)}"
+                  ></brew-espresso-calculator>
+                `
+              : html`
+                  <brew-ratio-form
+                    ratio="${ratioSignal.value}"
+                    water="${water}"
+                    oz="${oz}"
+                    .coffee="${coffee}"
+                    @ratio-change="${(e: CustomEvent<string>) => setRatio(e.detail)}"
+                    @water-change="${(e: CustomEvent<string>) => setWater(e.detail)}"
+                    @oz-change="${(e: CustomEvent<string>) => setOz(e.detail)}"
+                  ></brew-ratio-form>
+                `
+          }
           ${
             brewSteps
               ? html`
@@ -317,7 +373,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
           }
 
           <div class="row actions">
-            <brew-button variant="outlined" full-width @button-click="${resetCalculator}"
+            <brew-button variant="outlined" full-width @button-click="${this._onReset}"
               ><brew-icon .svg=${REFRESH_ICON} size="18"></brew-icon> Reset</brew-button
             >
             <brew-button
@@ -361,31 +417,38 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
                     ><brew-icon .svg="${MENU_BOOK_ICON_SVG}" size="18"></brew-icon> ${
                       selectedType === "Aeropress"
                         ? "Load a WAC recipe"
-                        : `Load ${regexVowels.test(selectedType.toLowerCase()) ? "an" : "a"} ${selectedType} barista recipe`
+                        : selectedType === "Espresso Shot"
+                          ? "Load an espresso recipe"
+                          : `Load ${regexVowels.test(selectedType.toLowerCase()) ? "an" : "a"} ${selectedType} barista recipe`
                     }</brew-button
                   >
                 `
               : nothing
           }
-
-          <div class="ratio-tips">
-            <div class="ratio-tips-header">
-              <brew-icon .svg="${INFO_ICON_SVG}" size="20"></brew-icon>
-              <span class="ratio-tips-title">Ratio tips</span>
-            </div>
-            <p class="ratio-tips-body">Lower ratio = stronger, more intense brew.</p>
-            <p class="ratio-tips-body">Higher ratio = weaker, lighter cup.</p>
-            <p class="ratio-tips-body">
-              As always - Adjust to taste. If it tastes good, the math and numbers are just numbers.
-            </p>
-            <span class="ratio-tips-body">Brew Examples</span>
-            <ul class="ratio-tips-body">
-              <li>Pour-over/drip: 1:15–18</li>
-              <li>Espresso: 1:2</li>
-              <li>Cold brew: 1:3–5</li>
-            </ul>
-          </div>
-
+          ${
+            isEspresso
+              ? nothing
+              : html`
+                  <div class="ratio-tips">
+                    <div class="ratio-tips-header">
+                      <brew-icon .svg="${INFO_ICON_SVG}" size="20"></brew-icon>
+                      <span class="ratio-tips-title">Ratio tips</span>
+                    </div>
+                    <p class="ratio-tips-body">Lower ratio = stronger, more intense brew.</p>
+                    <p class="ratio-tips-body">Higher ratio = weaker, lighter cup.</p>
+                    <p class="ratio-tips-body">
+                      As always - Adjust to taste. If it tastes good, the math and numbers are just
+                      numbers.
+                    </p>
+                    <span class="ratio-tips-body">Brew Examples</span>
+                    <ul class="ratio-tips-body">
+                      <li>Pour-over/drip: 1:15–18</li>
+                      <li>Espresso: 1:2</li>
+                      <li>Cold brew: 1:3–5</li>
+                    </ul>
+                  </div>
+                `
+          }
           ${
             recentBrews.length > 0
               ? html`
