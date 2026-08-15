@@ -21,6 +21,7 @@ import { EXPLORE_ICON_SVG } from "./explore.svg";
 import { FRENCH_PRESS_ICON } from "./french-press.svg";
 import { HARIO_SWITCH_ICON } from "./hario-switch.svg";
 import { HOME_ICON_SVG } from "./home.svg";
+import { INFO_ICON_SVG } from "./info.svg";
 import { KALITA_WAVE_ICON } from "./kalita-wave.svg";
 import { LIGHT_MODE_ICON_SVG } from "./light-mode.svg";
 import { LOCAL_CAFE_ICON_SVG } from "./local-cafe.svg";
@@ -76,6 +77,7 @@ export {
   FRENCH_PRESS_ICON,
   HARIO_SWITCH_ICON,
   HOME_ICON_SVG,
+  INFO_ICON_SVG,
   KALITA_WAVE_ICON,
   LIGHT_MODE_ICON_SVG,
   LOCAL_CAFE_ICON_SVG,

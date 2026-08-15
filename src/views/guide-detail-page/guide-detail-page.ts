@@ -24,6 +24,7 @@ import {
   AUTO_AWESOME_ICON_SVG,
   MENU_BOOK_ICON_SVG,
   ARROW_BACK_ICON_SVG,
+  REFRESH_ICON,
 } from "../../shared/icons/icons";
 
 @customElement("guide-detail-page")
@@ -115,7 +116,7 @@ export class GuideDetailPage extends SignalWatcher(LitElement) {
               <brew-icon .svg="${AUTO_AWESOME_ICON_SVG}" size="20"></brew-icon>
               <span class="ai-tip-title">AI tip</span>
               <brew-icon-button
-                icon="refresh"
+                .svgIcon="${REFRESH_ICON}"
                 aria-label="Another tip"
                 @icon-click="${() => this._regenerateTip(guide.aiTips.length)}"
               ></brew-icon-button>

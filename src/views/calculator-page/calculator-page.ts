@@ -15,6 +15,8 @@ import "../../components/type-picker/brew-type-picker";
 import {
   CALCULATE_ICON_SVG,
   CLOSE_ICON,
+  INFO_ICON_SVG,
+  MENU_BOOK_ICON_SVG,
   REFRESH_ICON,
   REPLAY_ICON,
   SAVED_ICON_SVG,
@@ -356,7 +358,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
                     @button-click="${() => {
                       this._recipePickerOpen = true;
                     }}"
-                    ><brew-icon name="menu_book" size="18"></brew-icon> ${
+                    ><brew-icon .svg="${MENU_BOOK_ICON_SVG}" size="18"></brew-icon> ${
                       selectedType === "Aeropress"
                         ? "Load a WAC recipe"
                         : `Load ${regexVowels.test(selectedType.toLowerCase()) ? "an" : "a"} ${selectedType} barista recipe`
@@ -368,7 +370,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
 
           <div class="ratio-tips">
             <div class="ratio-tips-header">
-              <brew-icon name="info" size="20"></brew-icon>
+              <brew-icon .svg="${INFO_ICON_SVG}" size="20"></brew-icon>
               <span class="ratio-tips-title">Ratio tips</span>
             </div>
             <p class="ratio-tips-body">Lower ratio = stronger, more intense brew.</p>
