@@ -6,6 +6,7 @@ import "../icon-button/brew-icon-button";
 import "../star-rating/brew-star-rating";
 import { ListRowStyles } from "./list-row.styles";
 import { REPLAY_ICON } from "../../shared/icons/replay.svg";
+import { CHEVRON_RIGHT_ICON_SVG } from "../../shared/icons/chevron-right.svg";
 
 /**
  * # List Row
@@ -98,7 +99,7 @@ export class ListRow extends LitElement {
               ></brew-icon-button>`
             : nothing
         }
-        <brew-icon name="chevron_right" class="chevron"></brew-icon>
+        <brew-icon .svg="${CHEVRON_RIGHT_ICON_SVG}" class="chevron"></brew-icon>
       </a>
     `;
   }

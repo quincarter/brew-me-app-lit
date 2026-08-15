@@ -2,6 +2,8 @@ import { type HTMLTemplateResult, html, LitElement, nothing, SVGTemplateResult }
 import { property } from "lit/decorators.js";
 import "../icon/brew-icon";
 import { LinkCardStyles } from "./link-card.styles";
+import { OPEN_IN_NEW_ICON_SVG } from "../../shared/icons/open-in-new.svg";
+import { CHEVRON_RIGHT_ICON_SVG } from "../../shared/icons/chevron-right.svg";
 
 /**
  * # Link Card
@@ -65,7 +67,7 @@ export class LinkCard extends LitElement {
           <span class="link-subtitle">${this.description}</span>
         </span>
         <brew-icon
-          name="${this.external ? "open_in_new" : "chevron_right"}"
+          .svg="${this.external ? OPEN_IN_NEW_ICON_SVG : CHEVRON_RIGHT_ICON_SVG}"
           size="${this.external ? 20 : 24}"
         ></brew-icon>
       </a>
