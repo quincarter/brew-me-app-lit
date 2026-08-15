@@ -1007,10 +1007,10 @@ export class BrewStepsCard extends SignalWatcher(LitElement) {
                     this.editing
                       ? html`
                           <div class="edit-footer">
-                            <brew-button variant="text" @button-click="${this._addRow}"
-                              ><brew-icon .svg="${ADD_ICON_SVG}" size="18"></brew-icon> Add
-                              step</brew-button
-                            >
+                            <brew-button variant="text" @button-click="${this._addRow}">
+                              <brew-icon .svg="${ADD_ICON_SVG}" size="18"></brew-icon>
+                              Add step
+                            </brew-button>
                             <brew-button variant="text" @button-click="${this._resetToPreset}"
                               >Reset to preset</brew-button
                             >
