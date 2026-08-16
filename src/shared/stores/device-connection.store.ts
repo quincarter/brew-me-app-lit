@@ -15,6 +15,15 @@ export const monitorConnectedSignal = computed(
   () => monitorConnectionStateSignal.value === "connected",
 );
 
+/**
+ * True once either device has connected at least once this tab session -
+ * unlike `scaleConnectedSignal`/`monitorConnectedSignal`, this never flips
+ * back to false on disconnect, so UI gated on it (e.g. the extraction chart)
+ * stays visible showing the frozen final curve after a mid-/post-session
+ * disconnect instead of disappearing. Only a full reload clears it.
+ */
+export const anyDeviceConnectedThisSessionSignal = signal(false);
+
 const DEVICES_BANNER_DISMISSED_KEY = "brewme-devices-banner-dismissed-forever";
 
 const readBannerPermanentlyDismissed = (): boolean =>
@@ -67,6 +76,7 @@ const getScaleConnection = (): BookooScaleConnection => {
         return;
       }
       scaleConnectionStateSignal.value = state;
+      if (state === "connected") anyDeviceConnectedThisSessionSignal.value = true;
     });
     scaleConnection.onReading(recordScaleReading);
   }
@@ -83,6 +93,7 @@ const getMonitorConnection = (): BookooMonitorConnection => {
         return;
       }
       monitorConnectionStateSignal.value = state;
+      if (state === "connected") anyDeviceConnectedThisSessionSignal.value = true;
     });
     monitorConnection.onReading(recordMonitorReading);
   }

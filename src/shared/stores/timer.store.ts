@@ -5,7 +5,15 @@ import type { ISavedBrew } from "../interfaces/brew.interface";
 import type { IPrimedRecipe } from "../interfaces/timer.interface";
 import { computeTotalStepSeconds } from "../utilities/brew-step-progress.utility";
 import { getBrewDisplayName } from "../utilities/brew-display.utility";
-import { clearTelemetry } from "./telemetry.store";
+import { markBrewedNow } from "./brew.store";
+import { addShot } from "./shot.store";
+import {
+  clearTelemetry,
+  monitorSamplesSignal,
+  scaleSamplesSignal,
+  sealTelemetry,
+  telemetrySealedSignal,
+} from "./telemetry.store";
 
 /**
  * Module-level (not component-level) timer state, so the pour-over countdown
@@ -40,6 +48,11 @@ export const toggleTimer = (): void => {
     return;
   }
 
+  // A sealed session (via `stopSession`) is done - only `resetTimer`/`clearPrimedRecipe`
+  // (both of which clear the seal) can start counting again, so a stray resume can't
+  // silently keep ticking on top of an already-recorded shot.
+  if (telemetrySealedSignal.value) return;
+
   intervalHandle = setInterval(() => {
     timerSecondsSignal.value += 1;
   }, 1000);
@@ -52,6 +65,34 @@ export const resetTimer = (): void => {
   timerRunningSignal.value = false;
   timerSecondsSignal.value = 0;
   clearTelemetry();
+};
+
+/**
+ * Freezes the timer WITHOUT zeroing elapsed time (unlike `resetTimer`), seals
+ * the telemetry buffers so a late BLE notification can't keep appending, and
+ * - when the running session was primed from a saved brew - records a sealed
+ * `IBrewShot` against it and stamps the brew as brewed. The counterpart to
+ * `resetTimer` for "I'm done pulling this shot" rather than "start over".
+ * A no-op once already sealed, so it can't be re-invoked (e.g. via a stray
+ * `toggleTimer` + second seal) into recording a duplicate, stale shot.
+ */
+export const stopSession = (): void => {
+  if (telemetrySealedSignal.value) return;
+
+  clearInterval(intervalHandle);
+  timerRunningSignal.value = false;
+  sealTelemetry();
+
+  const recipe = primedRecipeSignal.value;
+  if (recipe?.savedBrewId !== undefined) {
+    addShot({
+      savedBrewId: recipe.savedBrewId,
+      elapsedSeconds: timerSecondsSignal.value,
+      scaleSamples: scaleSamplesSignal.value,
+      monitorSamples: monitorSamplesSignal.value,
+    });
+    markBrewedNow(recipe.savedBrewId);
+  }
 };
 
 /** Unprimes the timer, dropping it back to the plain base stopwatch (and its "start now or choose a saved brew" idle state) - the counterpart to `resetTimer` deliberately keeping the recipe, for when the person wants to leave the guided brew entirely rather than just restart its clock. */
@@ -85,6 +126,7 @@ export const primeTimerForSavedBrew = (brew: ISavedBrew): void => {
     ratio: brew.ratio,
     targetSeconds,
     steps,
+    savedBrewId: brew.id,
   });
 };
 

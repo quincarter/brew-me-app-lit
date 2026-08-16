@@ -5,6 +5,7 @@ import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
 import "../../components/collapsible-banner/brew-collapsible-banner";
 import "../../components/device-connect-action/brew-device-connect-action";
+import "../../components/extraction-chart/brew-extraction-chart";
 import "../../components/icon-button/brew-icon-button";
 import "../../components/icon/brew-icon";
 import "../../components/saved-brew-picker-sheet/brew-saved-brew-picker-sheet";
@@ -22,6 +23,7 @@ import {
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
 import {
+  anyDeviceConnectedThisSessionSignal,
   connectMonitor,
   connectScale,
   devicesBannerDismissedSignal,
@@ -41,6 +43,7 @@ import {
   resetTimer,
   setGuidedMode,
   setGuidedTargetSeconds,
+  stopSession,
   timerRunningSignal,
   timerSecondsSignal,
   toggleTimer,
@@ -248,6 +251,13 @@ export class TimerPage extends SignalWatcher(LitElement) {
     `;
   }
 
+  /** Only once ≥1 device has connected this session - stays up afterwards (frozen final curve) even through a mid-/post-session disconnect, per `anyDeviceConnectedThisSessionSignal`. */
+  private _renderExtractionChart(): HTMLTemplateResult | typeof nothing {
+    if (!anyDeviceConnectedThisSessionSignal.value) return nothing;
+
+    return html`<brew-extraction-chart></brew-extraction-chart>`;
+  }
+
   render(): HTMLTemplateResult {
     const running = timerRunningSignal.value;
     const recipe = primedRecipeSignal.value;
@@ -293,18 +303,23 @@ export class TimerPage extends SignalWatcher(LitElement) {
                 `
               : nothing
           }
-          ${this._renderTelemetryRow()}
+          ${this._renderTelemetryRow()} ${this._renderExtractionChart()}
 
           <brew-timer-controls
             ?idle="${isIdle}"
             ?running="${running}"
             ?has-saved-brews="${hasSavedBrews}"
             ?has-recipe="${recipe !== null}"
+            ?device-connected="${
+              scaleConnectionStateSignal.value === "connected" ||
+              monitorConnectionStateSignal.value === "connected"
+            }"
             @start-click="${toggleTimer}"
             @choose-saved-click="${this._openPicker}"
             @reset-click="${resetTimer}"
             @toggle-click="${toggleTimer}"
             @clear-click="${clearPrimedRecipe}"
+            @seal-click="${stopSession}"
           ></brew-timer-controls>
         </div>
 

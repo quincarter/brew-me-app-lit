@@ -43,6 +43,7 @@ import { SAVED_ICON_SVG } from "./saved.svg";
 import { SETTINGS_ICON_SVG } from "./settings.svg";
 import { SHARE_ICON } from "./share.svg";
 import { SIPHON_ICON } from "./siphon.svg";
+import { STOP_ICON } from "./stop.svg";
 import { TIMER_ICON_SVG } from "./timer.svg";
 import { TURKISH_COFFEE_ICON } from "./turkish-coffee.svg";
 import { V60_ICON } from "./v60.svg";
@@ -105,6 +106,7 @@ export {
   SETTINGS_ICON_SVG,
   SHARE_ICON,
   SIPHON_ICON,
+  STOP_ICON,
   TIMER_ICON_SVG,
   TURKISH_COFFEE_ICON,
   V60_ICON,

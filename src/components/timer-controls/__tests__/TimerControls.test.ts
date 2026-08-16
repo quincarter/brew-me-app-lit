@@ -173,5 +173,60 @@ describe("brew-timer-controls", () => {
         ?.dispatchEvent(new CustomEvent("icon-click", { bubbles: true, composed: true }));
       await clearClick;
     });
+
+    it("swaps to a Stop/Seal fab with the recording hint when running and deviceConnected", async () => {
+      element.idle = false;
+      element.running = true;
+      element.deviceConnected = true;
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector('brew-icon-button[aria-label="Pause"]')).toBeNull();
+      const sealButton = element.shadowRoot?.querySelector(
+        'brew-icon-button[aria-label="Stop and seal"]',
+      );
+      expect(sealButton).not.toBeNull();
+      expect(element.shadowRoot?.querySelector(".hint")?.textContent?.trim()).toBe(
+        "Recording · Stop/Seal ends & saves this shot.",
+      );
+    });
+
+    it("fires seal-click (not toggle-click) from the Stop/Seal fab when running and deviceConnected", async () => {
+      element.idle = false;
+      element.running = true;
+      element.deviceConnected = true;
+      await element.updateComplete;
+
+      const toggleClick = () => {
+        throw new Error("toggle-click should not fire when sealing");
+      };
+      element.addEventListener("toggle-click", toggleClick);
+
+      const sealClick = new Promise<void>((resolve) => {
+        element.addEventListener("seal-click", () => resolve());
+      });
+      element.shadowRoot
+        ?.querySelector('brew-icon-button[aria-label="Stop and seal"]')
+        ?.dispatchEvent(new CustomEvent("icon-click", { bubbles: true, composed: true }));
+      await sealClick;
+
+      element.removeEventListener("toggle-click", toggleClick);
+    });
+
+    it("still shows Pause (not Stop/Seal) when running but no device is connected", async () => {
+      element.idle = false;
+      element.running = true;
+      element.deviceConnected = false;
+      await element.updateComplete;
+
+      expect(
+        element.shadowRoot?.querySelector('brew-icon-button[aria-label="Stop and seal"]'),
+      ).toBeNull();
+      expect(
+        element.shadowRoot?.querySelector('brew-icon-button[aria-label="Pause"]'),
+      ).not.toBeNull();
+      expect(element.shadowRoot?.querySelector(".hint")?.textContent?.trim()).toBe(
+        "Brewing in progress…",
+      );
+    });
   });
 });

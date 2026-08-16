@@ -116,6 +116,7 @@ vi.mock("../../ble/bookoo-monitor", () => ({
 }));
 
 const {
+  anyDeviceConnectedThisSessionSignal,
   connectMonitor,
   connectScale,
   devicesBannerDismissedSignal,
@@ -199,6 +200,43 @@ describe("device-connection.store", () => {
       expect(monitorConnectionStateSignal.value).toBe("disconnected");
       expect(monitorConnectedSignal.value).toBe(false);
       expect(fakeMonitorInstances).toHaveLength(0);
+    });
+  });
+
+  // Runs before any test that connects a device, deliberately: like
+  // `anyDeviceConnectedThisSessionSignal` itself, this file never resets the signal back to
+  // false once it flips true (that's the whole point - it survives disconnects for the rest
+  // of the tab session), so asserting the "never connected yet" starting state only holds
+  // before that first connect happens anywhere in this file.
+  describe("anyDeviceConnectedThisSessionSignal", () => {
+    beforeEach(() => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+    });
+
+    it("starts false before any device has ever connected", () => {
+      expect(anyDeviceConnectedThisSessionSignal.value).toBe(false);
+    });
+
+    it("flips true the first time the scale connection reaches connected", async () => {
+      await connectScale();
+
+      expect(anyDeviceConnectedThisSessionSignal.value).toBe(true);
+    });
+
+    it("flips true the first time the monitor connection reaches connected", async () => {
+      await connectMonitor();
+
+      expect(anyDeviceConnectedThisSessionSignal.value).toBe(true);
+    });
+
+    it("stays true after the connected device disconnects", async () => {
+      await connectScale();
+      expect(anyDeviceConnectedThisSessionSignal.value).toBe(true);
+
+      await disconnectScale();
+
+      expect(scaleConnectionStateSignal.value).toBe("disconnected");
+      expect(anyDeviceConnectedThisSessionSignal.value).toBe(true);
     });
   });
 

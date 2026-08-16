@@ -12,6 +12,8 @@ import {
   recordMonitorReading,
   recordScaleReading,
   scaleSamplesSignal,
+  sealTelemetry,
+  telemetrySealedSignal,
 } from "../telemetry.store";
 
 const scaleReading = (weightGrams: number): IBookooScaleReading => ({
@@ -112,6 +114,45 @@ describe("telemetry.store", () => {
       expect(monitorSamplesSignal.value).toEqual([]);
       expect(latestScaleReadingSignal.value).toBeNull();
       expect(latestMonitorReadingSignal.value).toBeNull();
+    });
+
+    it("un-seals telemetry, so recording resumes after a previous sealTelemetry()", () => {
+      sealTelemetry();
+      expect(telemetrySealedSignal.value).toBe(true);
+
+      clearTelemetry();
+
+      expect(telemetrySealedSignal.value).toBe(false);
+    });
+  });
+
+  describe("sealTelemetry", () => {
+    it("sets telemetrySealedSignal to true", () => {
+      expect(telemetrySealedSignal.value).toBe(false);
+
+      sealTelemetry();
+
+      expect(telemetrySealedSignal.value).toBe(true);
+    });
+
+    it("makes recordScaleReading a no-op once sealed", () => {
+      recordScaleReading(scaleReading(1));
+      sealTelemetry();
+
+      recordScaleReading(scaleReading(2));
+
+      expect(scaleSamplesSignal.value).toHaveLength(1);
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading(1));
+    });
+
+    it("makes recordMonitorReading a no-op once sealed", () => {
+      recordMonitorReading(monitorReading(1));
+      sealTelemetry();
+
+      recordMonitorReading(monitorReading(2));
+
+      expect(monitorSamplesSignal.value).toHaveLength(1);
+      expect(latestMonitorReadingSignal.value).toEqual(monitorReading(1));
     });
   });
 });
