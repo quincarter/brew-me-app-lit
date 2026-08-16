@@ -5,16 +5,18 @@ import type { IExtractionGhostPoint } from "../../shared/interfaces/extraction-c
 import { monitorSamplesSignal, scaleSamplesSignal } from "../../shared/stores/telemetry.store";
 import {
   buildExtractionChartPath,
-  type IChartDomain,
   type IChartPoint,
 } from "../../shared/utilities/extraction-chart-path.utility";
+import {
+  buildExtractionSeries,
+  FLOW_MAX_GRAMS_PER_SECOND,
+  MIN_WEIGHT_MAX_GRAMS,
+  PRESSURE_MAX_BAR,
+} from "../../shared/utilities/extraction-chart-series.utility";
 import { ExtractionChartStyles } from "./extraction-chart.styles";
 
 const VIEW_BOX_WIDTH = 320;
 const VIEW_BOX_HEIGHT = 110;
-const PRESSURE_MAX_BAR = 10;
-const FLOW_MAX_GRAMS_PER_SECOND = 6;
-const MIN_WEIGHT_MAX_GRAMS = 20;
 
 /** Extracts the metric's points from a ghost curve, dropping samples where that metric wasn't recorded. */
 const ghostSeries = (
@@ -54,48 +56,8 @@ export class ExtractionChart extends SignalWatcher(LitElement) {
       `;
     }
 
-    const startTimestampMs = Math.min(
-      ...scaleSamples.map((sample) => sample.timestampMs),
-      ...monitorSamples.map((sample) => sample.timestampMs),
-    );
-    const elapsedSecondsOf = (timestampMs: number): number =>
-      (timestampMs - startTimestampMs) / 1000;
-    const maxElapsedSeconds = Math.max(
-      0,
-      ...scaleSamples.map((sample) => elapsedSecondsOf(sample.timestampMs)),
-      ...monitorSamples.map((sample) => elapsedSecondsOf(sample.timestampMs)),
-    );
-
-    const pressurePoints: IChartPoint[] = monitorSamples.map((sample) => ({
-      elapsedSeconds: elapsedSecondsOf(sample.timestampMs),
-      value: sample.reading.pressureBar,
-    }));
-    const flowPoints: IChartPoint[] = scaleSamples.map((sample) => ({
-      elapsedSeconds: elapsedSecondsOf(sample.timestampMs),
-      value: sample.reading.flowRateGramsPerSecond,
-    }));
-    const weightPoints: IChartPoint[] = scaleSamples.map((sample) => ({
-      elapsedSeconds: elapsedSecondsOf(sample.timestampMs),
-      value: sample.reading.weightGrams,
-    }));
-    const observedMaxWeight = Math.max(0, ...weightPoints.map((point) => point.value));
-
-    const timeDomain = { minElapsedSeconds: 0, maxElapsedSeconds };
-    const pressureDomain: IChartDomain = {
-      ...timeDomain,
-      minValue: 0,
-      maxValue: PRESSURE_MAX_BAR,
-    };
-    const flowDomain: IChartDomain = {
-      ...timeDomain,
-      minValue: 0,
-      maxValue: FLOW_MAX_GRAMS_PER_SECOND,
-    };
-    const weightDomain: IChartDomain = {
-      ...timeDomain,
-      minValue: 0,
-      maxValue: Math.max(MIN_WEIGHT_MAX_GRAMS, observedMaxWeight),
-    };
+    const { pressurePoints, pressureDomain, flowPoints, flowDomain, weightPoints, weightDomain } =
+      buildExtractionSeries(scaleSamples, monitorSamples);
 
     const pressurePath = buildExtractionChartPath(
       pressurePoints,

@@ -12,6 +12,7 @@ import {
   monitorSamplesSignal,
   scaleSamplesSignal,
   sealTelemetry,
+  startTelemetryRecording,
   telemetrySealedSignal,
 } from "./telemetry.store";
 
@@ -53,6 +54,7 @@ export const toggleTimer = (): void => {
   // silently keep ticking on top of an already-recorded shot.
   if (telemetrySealedSignal.value) return;
 
+  startTelemetryRecording();
   intervalHandle = setInterval(() => {
     timerSecondsSignal.value += 1;
   }, 1000);

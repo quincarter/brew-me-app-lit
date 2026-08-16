@@ -131,8 +131,12 @@ const {
 } = await import("../device-connection.store");
 
 const DEVICES_BANNER_DISMISSED_KEY = "brewme-devices-banner-dismissed-forever";
-const { clearTelemetry, latestMonitorReadingSignal, latestScaleReadingSignal } =
-  await import("../telemetry.store");
+const {
+  clearTelemetry,
+  latestMonitorReadingSignal,
+  latestScaleReadingSignal,
+  startTelemetryRecording,
+} = await import("../telemetry.store");
 
 const scaleReading: IBookooScaleReading = {
   timeMs: 500,
@@ -245,7 +249,7 @@ describe("device-connection.store", () => {
       Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
     });
 
-    it("transitions scaleConnectionStateSignal/scaleConnectedSignal to connected and records a reading via telemetry.store", async () => {
+    it("transitions scaleConnectionStateSignal/scaleConnectedSignal to connected, but does NOT record a reading until telemetry recording has actually started", async () => {
       expect(latestScaleReadingSignal.value).toBeNull();
 
       await connectScale();
@@ -254,15 +258,24 @@ describe("device-connection.store", () => {
       expect(scaleConnectedSignal.value).toBe(true);
       expect(fakeScaleInstances).toHaveLength(1);
 
-      // Fires the same way a real `characteristicvaluechanged` notification would once
-      // decoded by the wrapper class - verifies the store wires `onReading` through to
-      // telemetry.store, not just its own connection-state signal.
+      // A connected device streams notifications continuously regardless of the timer - a
+      // reading arriving before anyone's actually brewing (`startTelemetryRecording()` hasn't
+      // been called) must not get recorded, or the extraction chart would start filling the
+      // instant a device pairs and never stop on its own.
+      fakeScaleInstances[0]?.emitReading(scaleReading);
+
+      expect(latestScaleReadingSignal.value).toBeNull();
+
+      // Once a brewing session actually starts, the same wiring records readings as before -
+      // verifies the store wires `onReading` through to telemetry.store, not just its own
+      // connection-state signal.
+      startTelemetryRecording();
       fakeScaleInstances[0]?.emitReading(scaleReading);
 
       expect(latestScaleReadingSignal.value).toEqual(scaleReading);
     });
 
-    it("transitions monitorConnectionStateSignal/monitorConnectedSignal to connected and records a reading via telemetry.store", async () => {
+    it("transitions monitorConnectionStateSignal/monitorConnectedSignal to connected, but does NOT record a reading until telemetry recording has actually started", async () => {
       expect(latestMonitorReadingSignal.value).toBeNull();
 
       await connectMonitor();
@@ -271,6 +284,11 @@ describe("device-connection.store", () => {
       expect(monitorConnectedSignal.value).toBe(true);
       expect(fakeMonitorInstances).toHaveLength(1);
 
+      fakeMonitorInstances[0]?.emitReading(monitorReading);
+
+      expect(latestMonitorReadingSignal.value).toBeNull();
+
+      startTelemetryRecording();
       fakeMonitorInstances[0]?.emitReading(monitorReading);
 
       expect(latestMonitorReadingSignal.value).toEqual(monitorReading);

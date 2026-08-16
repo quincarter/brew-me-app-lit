@@ -8,6 +8,7 @@ import {
   clearTelemetry,
   recordMonitorReading,
   recordScaleReading,
+  startTelemetryRecording,
 } from "../../../shared/stores/telemetry.store";
 import "../brew-extraction-chart";
 import type { ExtractionChart } from "../ExtractionChart";
@@ -31,6 +32,7 @@ describe("brew-extraction-chart", () => {
 
   beforeEach(async () => {
     clearTelemetry();
+    startTelemetryRecording();
     element = document.createElement("brew-extraction-chart") as ExtractionChart;
     document.body.appendChild(element);
     await element.updateComplete;

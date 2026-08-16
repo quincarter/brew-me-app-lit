@@ -86,6 +86,18 @@ export const TimerPageStyles = css`
     gap: 6px;
   }
 
+  /* brew-theme-toggle floats fixed at top:16px/right:16px (40px) above every screen. On a
+   * narrow/phone-width top bar its right edge sits directly over this slot's content unless
+   * something reserves the space - only scoped here (not the shared TopBarStyles) since this
+   * is the one screen that actually puts content in the top bar's trailing slot. Not needed
+   * past EXPANDED_BREAKPOINT_PX (see responsive.styles.ts), where the top bar is already
+   * centered well clear of the toggle's corner. */
+  @media (max-width: 839px) {
+    .device-status-icons {
+      margin-right: 64px;
+    }
+  }
+
   .device-status-icon {
     display: inline-flex;
     align-items: center;

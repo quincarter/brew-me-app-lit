@@ -13,6 +13,8 @@ import {
   recordScaleReading,
   scaleSamplesSignal,
   sealTelemetry,
+  startTelemetryRecording,
+  telemetryRecordingSignal,
   telemetrySealedSignal,
 } from "../telemetry.store";
 
@@ -31,6 +33,42 @@ const monitorReading = (pressureBar: number): IBookooMonitorReading => ({
 describe("telemetry.store", () => {
   beforeEach(() => {
     clearTelemetry();
+    // Recording is off by default (see the dedicated `telemetryRecordingSignal` block below) -
+    // every other describe block here is about append/cap/seal behavior once a session is
+    // already running, so start it up front rather than repeating this in every test.
+    startTelemetryRecording();
+  });
+
+  describe("telemetryRecordingSignal", () => {
+    it("is false until startTelemetryRecording() is called, so a connected-but-idle device isn't recorded", () => {
+      clearTelemetry();
+      expect(telemetryRecordingSignal.value).toBe(false);
+
+      recordScaleReading(scaleReading(1));
+      recordMonitorReading(monitorReading(1));
+
+      expect(scaleSamplesSignal.value).toEqual([]);
+      expect(monitorSamplesSignal.value).toEqual([]);
+    });
+
+    it("lets readings through once started", () => {
+      clearTelemetry();
+      startTelemetryRecording();
+
+      recordScaleReading(scaleReading(1));
+
+      expect(telemetryRecordingSignal.value).toBe(true);
+      expect(scaleSamplesSignal.value).toHaveLength(1);
+    });
+
+    it("is reset to false by clearTelemetry(), so the next session needs its own start", () => {
+      startTelemetryRecording();
+      expect(telemetryRecordingSignal.value).toBe(true);
+
+      clearTelemetry();
+
+      expect(telemetryRecordingSignal.value).toBe(false);
+    });
   });
 
   describe("recordScaleReading", () => {

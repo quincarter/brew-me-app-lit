@@ -8,6 +8,7 @@ import "../../components/icon/brew-icon";
 import "../../components/link-card/brew-link-card";
 import "../../components/ratio-form/brew-ratio-form";
 import "../../components/ratio-summary/brew-ratio-summary";
+import "../../components/shot-list/brew-shot-list";
 import "../../components/star-rating/brew-star-rating";
 import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
@@ -32,6 +33,7 @@ import {
   updateSavedBrew,
 } from "../../shared/stores/brew.store";
 import { editBeforeBrewingIdSignal } from "../../shared/stores/post-save-sheet.store";
+import { getShotsForBrew } from "../../shared/stores/shot.store";
 import { BrewStepsViewToggleStyles } from "../../shared/styles/brew-steps-view-toggle.styles";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
@@ -407,6 +409,9 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                   ${renderRecipeProvenanceBanner(brew.recipeSource, recipeCurrent, () => {
                     this._originalRecipeOpen = true;
                   })}
+
+                  <div class="section-title">Shots</div>
+                  <brew-shot-list .shots="${getShotsForBrew(brew.id)}"></brew-shot-list>
 
                   <div class="section-title">Brew guide</div>
                   ${

@@ -1,5 +1,5 @@
 import "fake-indexeddb/auto";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { BREW_STEPS_PRESETS } from "../../data/brew-steps-presets.data";
 import type { IBookooScaleReading } from "../../interfaces/bookoo-ble.interface";
 import type { IBrewStep, ISavedBrew } from "../../interfaces/brew.interface";
@@ -11,6 +11,8 @@ import {
   latestScaleReadingSignal,
   recordMonitorReading,
   recordScaleReading,
+  startTelemetryRecording,
+  telemetryRecordingSignal,
   telemetrySealedSignal,
 } from "../telemetry.store";
 import {
@@ -276,6 +278,7 @@ describe("timer.store", () => {
     });
 
     it("clears recorded telemetry, resetting latest scale/monitor readings to null", () => {
+      startTelemetryRecording();
       const scaleReading: IBookooScaleReading = {
         timeMs: 100,
         weightGrams: 12,
@@ -311,6 +314,33 @@ describe("timer.store", () => {
       clearPrimedRecipe();
 
       expect(primedRecipeSignal.value).toBeNull();
+    });
+  });
+
+  describe("toggleTimer", () => {
+    afterEach(() => {
+      // toggleTimer's start branch schedules a real setInterval - stop it so it doesn't
+      // keep ticking (and leaking across tests) past this test's own cleanup.
+      if (timerRunningSignal.value) toggleTimer();
+    });
+
+    it("starts telemetry recording when starting from idle", () => {
+      expect(telemetryRecordingSignal.value).toBe(false);
+
+      toggleTimer();
+
+      expect(timerRunningSignal.value).toBe(true);
+      expect(telemetryRecordingSignal.value).toBe(true);
+    });
+
+    it("leaves telemetry recording alone when pausing", () => {
+      toggleTimer();
+      expect(telemetryRecordingSignal.value).toBe(true);
+
+      toggleTimer();
+
+      expect(timerRunningSignal.value).toBe(false);
+      expect(telemetryRecordingSignal.value).toBe(true);
     });
   });
 
@@ -373,6 +403,7 @@ describe("timer.store", () => {
       primeTimerForSavedBrew(brew);
       timerRunningSignal.value = true;
       timerSecondsSignal.value = 125;
+      startTelemetryRecording();
 
       const scaleReading: IBookooScaleReading = {
         timeMs: 1000,
