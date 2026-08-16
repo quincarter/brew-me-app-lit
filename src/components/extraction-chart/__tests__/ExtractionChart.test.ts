@@ -55,7 +55,7 @@ describe("brew-extraction-chart", () => {
       await element.updateComplete;
 
       expect(element.shadowRoot?.querySelector(".placeholder")?.textContent?.trim()).toBe(
-        "Connect a scale or espresso monitor to get live feedback about your shots",
+        "Connect a scale or espresso monitor to get live feedback about your shots/brews",
       );
       expect(element.shadowRoot?.querySelector(".chart-svg")).toBeNull();
     });
@@ -67,7 +67,7 @@ describe("brew-extraction-chart", () => {
       await element.updateComplete;
 
       expect(element.shadowRoot?.querySelector(".placeholder")?.textContent?.trim()).toBe(
-        "Connect a scale or espresso monitor to get live feedback about your shots",
+        "Connect a scale or espresso monitor to get live feedback about your shots/brews",
       );
       expect(element.shadowRoot?.querySelector(".chart-svg")).toBeNull();
     });

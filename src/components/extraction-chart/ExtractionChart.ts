@@ -53,7 +53,7 @@ export class ExtractionChart extends SignalWatcher(LitElement) {
       return html`
         <div class="chart-card">
           <p class="placeholder">
-            Connect a scale or espresso monitor to get live feedback about your shots
+            Connect a scale or espresso monitor to get live feedback about your shots/brews
           </p>
         </div>
       `;
