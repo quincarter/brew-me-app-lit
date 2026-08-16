@@ -55,6 +55,7 @@ import {
   latestMonitorReadingSignal,
   latestScaleReadingSignal,
 } from "../../shared/stores/telemetry.store";
+import { showActiveStepBannerSignal } from "../../shared/stores/timer-settings.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { isWebBluetoothSupported } from "../../shared/utilities/web-bluetooth.utility";
 import { TimerPageStyles } from "./timer-page.styles";
@@ -352,7 +353,8 @@ export class TimerPage extends SignalWatcher(LitElement) {
     const hasSavedBrews = savedBrewsSignal.value.length > 0;
     // Reflects the guided timer's own progress, not device-connection state - shown whether or not a scale/monitor is connected.
     const guidedSteps = recipe?.steps ?? null;
-    const showActiveStepBanner = guidedSteps !== null && guidedSteps.length > 0 && running;
+    const showActiveStepBanner =
+      guidedSteps !== null && guidedSteps.length > 0 && running && showActiveStepBannerSignal.value;
 
     return html`
       <div class="screen">

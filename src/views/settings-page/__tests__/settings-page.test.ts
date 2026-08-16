@@ -10,6 +10,10 @@ import {
   deleteAllCustomBrewTypes,
 } from "../../../shared/stores/brew-types.store";
 import { deleteAllSavedBrews } from "../../../shared/stores/brew.store";
+import {
+  showActiveStepBannerSignal,
+  timerCountStyleSignal,
+} from "../../../shared/stores/timer-settings.store";
 import { exportAppData, importAppData } from "../../../shared/utilities/export-data.utility";
 import "../settings-page";
 import type { SettingsPage } from "../settings-page";
@@ -28,6 +32,8 @@ describe("settings-page", () => {
     deleteAllSavedBrews();
     deleteAllCustomBrewTypes();
     brewTypeFeaturesSignal.value = {};
+    timerCountStyleSignal.value = "countdown";
+    showActiveStepBannerSignal.value = true;
     vi.mocked(exportAppData).mockReset();
     vi.mocked(importAppData).mockReset();
 
@@ -45,6 +51,8 @@ describe("settings-page", () => {
   afterEach(() => {
     element.remove();
     vi.useRealTimers();
+    timerCountStyleSignal.value = "countdown";
+    showActiveStepBannerSignal.value = true;
     Object.defineProperty(window, "location", {
       configurable: true,
       value: originalLocation,
@@ -266,6 +274,16 @@ describe("settings-page", () => {
   });
 
   describe("Brew type features section", () => {
+    beforeEach(async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      element.requestUpdate();
+      await element.updateComplete;
+    });
+
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+    });
+
     const featureRowFor = (name: string): Element | undefined =>
       Array.from(element.shadowRoot?.querySelectorAll(".feature-row") ?? []).find(
         (row) => row.querySelector(".row-label")?.textContent?.trim() === name,
@@ -346,6 +364,113 @@ describe("settings-page", () => {
       const row = featureRowFor("V60");
 
       expect(row?.querySelector(".section-hint")).toBeNull();
+    });
+
+    it("is absent when Web Bluetooth is unsupported", async () => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+      element.requestUpdate();
+      await element.updateComplete;
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent === "Brew type features")).toBe(false);
+      expect(element.shadowRoot?.querySelectorAll(".feature-row").length).toBe(0);
+    });
+  });
+
+  describe("Timer section", () => {
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+    });
+
+    const rowFor = (label: string): Element | undefined =>
+      Array.from(element.shadowRoot?.querySelectorAll(".row") ?? []).find(
+        (row) => row.querySelector(".row-label")?.textContent?.trim() === label,
+      );
+
+    const countStyleRow = (): Element | undefined => rowFor("Default count style");
+
+    const bannerRow = (): Element | undefined => rowFor("Show large step banner");
+
+    const switchIn = (row: Element | undefined): (Element & { checked: boolean }) | null =>
+      (row?.querySelector("brew-switch") as (Element & { checked: boolean }) | null) ?? null;
+
+    const chipIn = (
+      row: Element | undefined,
+      label: string,
+    ): (Element & { selected: boolean }) | undefined =>
+      Array.from(row?.querySelectorAll("brew-chip") ?? []).find(
+        (chip) => chip.getAttribute("label") === label,
+      ) as (Element & { selected: boolean }) | undefined;
+
+    it("renders the Timer section title", () => {
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent === "Timer")).toBe(true);
+    });
+
+    it("reflects the default timerCountStyleSignal value: Count down selected, Count up not", () => {
+      const row = countStyleRow();
+
+      expect(chipIn(row, "Count down")?.selected).toBe(true);
+      expect(chipIn(row, "Count up")?.selected).toBe(false);
+    });
+
+    it("reflects the default showActiveStepBannerSignal value: switch checked", () => {
+      expect(switchIn(bannerRow())?.checked).toBe(true);
+    });
+
+    it("calls setTimerCountStyle('countup') and re-renders the selected chip when Count up is clicked", async () => {
+      chipIn(countStyleRow(), "Count up")?.dispatchEvent(
+        new CustomEvent("chip-click", { bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(timerCountStyleSignal.value).toBe("countup");
+      const updatedRow = countStyleRow();
+      expect(chipIn(updatedRow, "Count up")?.selected).toBe(true);
+      expect(chipIn(updatedRow, "Count down")?.selected).toBe(false);
+    });
+
+    it("calls setTimerCountStyle('countdown') and re-renders the selected chip when Count down is clicked", async () => {
+      timerCountStyleSignal.value = "countup";
+      element.requestUpdate();
+      await element.updateComplete;
+
+      chipIn(countStyleRow(), "Count down")?.dispatchEvent(
+        new CustomEvent("chip-click", { bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(timerCountStyleSignal.value).toBe("countdown");
+      const updatedRow = countStyleRow();
+      expect(chipIn(updatedRow, "Count down")?.selected).toBe(true);
+      expect(chipIn(updatedRow, "Count up")?.selected).toBe(false);
+    });
+
+    it("calls setShowActiveStepBanner and re-renders the switch checked when its change event fires", async () => {
+      switchIn(bannerRow())?.dispatchEvent(
+        new CustomEvent<boolean>("change", { detail: false, bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(showActiveStepBannerSignal.value).toBe(false);
+      expect(switchIn(bannerRow())?.checked).toBe(false);
+    });
+
+    it("is present even when Web Bluetooth is unsupported, unlike the Brew type features / Connected devices sections", async () => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+      element.requestUpdate();
+      await element.updateComplete;
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent === "Timer")).toBe(true);
+      expect(countStyleRow()).not.toBeUndefined();
+      expect(bannerRow()).not.toBeUndefined();
     });
   });
 

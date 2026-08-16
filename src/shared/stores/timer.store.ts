@@ -8,6 +8,7 @@ import { getBrewDisplayName } from "../utilities/brew-display.utility";
 import { markBrewedNow } from "./brew.store";
 import { getBrewTypeFeatures } from "./brew-type-features.store";
 import { addShot } from "./shot.store";
+import { timerCountStyleSignal } from "./timer-settings.store";
 import {
   clearTelemetry,
   monitorSamplesSignal,
@@ -119,7 +120,10 @@ export const primeTimerForRecipe = (recipe: IPrimedRecipe): void => {
   const targetSeconds = stepTotal ?? recipe.targetSeconds;
   const primed = { ...recipe, targetSeconds };
   primedRecipeSignal.value = primed;
-  guidedModeSignal.value = targetSeconds !== null ? "countdown" : "countup";
+  // The persisted "count style" setting is only meaningful when there's something to
+  // count down to - with no target, "countdown" would have nothing to count down from,
+  // so this always forces "countup" regardless of the stored preference.
+  guidedModeSignal.value = targetSeconds !== null ? timerCountStyleSignal.value : "countup";
 };
 
 /** Primes the timer from an already-saved brew - looks up its guide entry (if any) for the guided target duration and title, same lookup the Calculator's guided-timer flow used to do inline. */

@@ -145,6 +145,14 @@ describe("saved-detail-page", () => {
   });
 
   describe("Shots/Brews section title", () => {
+    beforeEach(() => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+    });
+
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+    });
+
     it("reads 'Shots' and forwards brew-type='Espresso Shot' to brew-shot-list for that brew type", async () => {
       const brew = addSavedBrew({
         brewType: "Espresso Shot",
@@ -188,6 +196,14 @@ describe("saved-detail-page", () => {
   });
 
   describe("showShotsSection gating", () => {
+    beforeEach(() => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+    });
+
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+    });
+
     it("renders no Brews/Shots section title or brew-shot-list for Aeropress (locked off)", async () => {
       const brew = addSavedBrew({
         brewType: "Aeropress",
@@ -222,6 +238,24 @@ describe("saved-detail-page", () => {
       brewTypeFeaturesSignal.value = {
         Chemex: { showShotsSection: false, telemetryMode: "full" },
       };
+      const brew = addSavedBrew({
+        brewType: "Chemex",
+        ratio: 16,
+        water: 480,
+        coffee: 30,
+        oz: 16.2,
+      });
+      await mount(brew);
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent?.trim() === "Brews")).toBe(false);
+      expect(element.shadowRoot?.querySelector("brew-shot-list")).toBeNull();
+    });
+
+    it("hides the Brews/Shots section when Web Bluetooth is unsupported, even for an unlocked brew type with the feature on", async () => {
+      Reflect.deleteProperty(navigator, "bluetooth");
       const brew = addSavedBrew({
         brewType: "Chemex",
         ratio: 16,

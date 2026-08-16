@@ -26,6 +26,12 @@ import {
 } from "../../shared/stores/brew-types.store";
 import { deleteAllSavedBrews } from "../../shared/stores/brew.store";
 import { isDarkThemeSignal, setDarkTheme } from "../../shared/stores/theme.store";
+import {
+  setShowActiveStepBanner,
+  setTimerCountStyle,
+  showActiveStepBannerSignal,
+  timerCountStyleSignal,
+} from "../../shared/stores/timer-settings.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { exportAppData, importAppData } from "../../shared/utilities/export-data.utility";
 import { refreshApp } from "../../shared/utilities/register-service-worker.utility";
@@ -177,7 +183,9 @@ export class SettingsPage extends SignalWatcher(LitElement) {
     `;
   }
 
-  private _renderBrewTypeFeaturesSection(): HTMLTemplateResult {
+  private _renderBrewTypeFeaturesSection(): HTMLTemplateResult | typeof nothing {
+    if (!isWebBluetoothSupported()) return nothing;
+
     const allTypes = [...BREW_TYPES, ...customBrewTypesSignal.value];
 
     return html`
@@ -189,6 +197,44 @@ export class SettingsPage extends SignalWatcher(LitElement) {
       </p>
       <div class="feature-rows">
         ${allTypes.map((name) => this._renderBrewTypeFeaturesRow(name))}
+      </div>
+    `;
+  }
+
+  /** "Timer" section - the default guided-timer count direction and whether the large step banner shows. Not Bluetooth-gated, unlike the sections above/below it. */
+  private _renderTimerSection(): HTMLTemplateResult {
+    const countStyle = timerCountStyleSignal.value;
+
+    return html`
+      <div class="divider"></div>
+      <div class="section-title">Timer</div>
+      <div class="row">
+        <span class="row-label">Default count style</span>
+        <div class="feature-row-chips">
+          <brew-chip
+            label="Count down"
+            ?selected="${countStyle === "countdown"}"
+            @chip-click="${() => setTimerCountStyle("countdown")}"
+          ></brew-chip>
+          <brew-chip
+            label="Count up"
+            ?selected="${countStyle === "countup"}"
+            @chip-click="${() => setTimerCountStyle("countup")}"
+          ></brew-chip>
+        </div>
+      </div>
+      <p class="section-hint">
+        Applied when a new recipe is primed on the Timer screen - you can still switch modes for
+        that session from the Timer screen itself.
+      </p>
+
+      <div class="row">
+        <span class="row-label">Show large step banner</span>
+        <brew-switch
+          ?checked="${showActiveStepBannerSignal.value}"
+          aria-label="Show large step banner"
+          @change="${(e: CustomEvent<boolean>) => setShowActiveStepBanner(e.detail)}"
+        ></brew-switch>
       </div>
     `;
   }
@@ -277,6 +323,7 @@ export class SettingsPage extends SignalWatcher(LitElement) {
               @change="${(e: CustomEvent<boolean>) => setDarkTheme(e.detail)}"
             ></brew-switch>
           </div>
+          ${this._renderTimerSection()}
 
           <div class="divider"></div>
           <div class="section-title">App</div>

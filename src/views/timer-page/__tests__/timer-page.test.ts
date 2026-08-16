@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ISavedBrew } from "../../../shared/interfaces/brew.interface";
+import type { IBrewStep, ISavedBrew } from "../../../shared/interfaces/brew.interface";
 import type { IPrimedRecipe } from "../../../shared/interfaces/timer.interface";
 import { brewTypeFeaturesSignal } from "../../../shared/stores/brew-type-features.store";
 import { savedBrewsSignal } from "../../../shared/stores/brew.store";
@@ -10,6 +10,7 @@ import {
   scaleConnectionStateSignal,
 } from "../../../shared/stores/device-connection.store";
 import { clearTelemetry, telemetrySealedSignal } from "../../../shared/stores/telemetry.store";
+import { showActiveStepBannerSignal } from "../../../shared/stores/timer-settings.store";
 import {
   guidedModeSignal,
   primedRecipeSignal,
@@ -384,6 +385,34 @@ describe("timer-page", () => {
       await element.updateComplete;
 
       expect(primedRecipeSignal.value?.targetSeconds).toBe(210);
+    });
+  });
+
+  describe("active step banner", () => {
+    const steps: IBrewStep[] = [{ id: "bloom", label: "Bloom", kind: "timed", seconds: 30 }];
+
+    const banner = (): Element | null =>
+      element.shadowRoot?.querySelector("brew-active-step-banner") ?? null;
+
+    afterEach(() => {
+      showActiveStepBannerSignal.value = true;
+    });
+
+    it("renders when a recipe with steps is primed and the timer is running", async () => {
+      primedRecipeSignal.value = primedRecipe({ steps });
+      timerRunningSignal.value = true;
+      await mount();
+
+      expect(banner()).not.toBeNull();
+    });
+
+    it("is absent when showActiveStepBannerSignal is false, even with a primed recipe with steps and a running timer", async () => {
+      primedRecipeSignal.value = primedRecipe({ steps });
+      timerRunningSignal.value = true;
+      showActiveStepBannerSignal.value = false;
+      await mount();
+
+      expect(banner()).toBeNull();
     });
   });
 

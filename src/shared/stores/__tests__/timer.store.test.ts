@@ -6,6 +6,7 @@ import type { IBrewStep, ISavedBrew } from "../../interfaces/brew.interface";
 import type { IPrimedRecipe } from "../../interfaces/timer.interface";
 import { deleteAllSavedBrews, savedBrewsSignal } from "../brew.store";
 import { getShotsForBrew, savedShotsSignal } from "../shot.store";
+import { timerCountStyleSignal } from "../timer-settings.store";
 import {
   latestMonitorReadingSignal,
   latestScaleReadingSignal,
@@ -57,8 +58,13 @@ describe("timer.store", () => {
     resetTimer();
     primedRecipeSignal.value = null;
     guidedModeSignal.value = "countdown";
+    timerCountStyleSignal.value = "countdown";
     deleteAllSavedBrews();
     savedShotsSignal.value = [];
+  });
+
+  afterEach(() => {
+    timerCountStyleSignal.value = "countdown";
   });
 
   describe("primeTimerForRecipe", () => {
@@ -79,13 +85,29 @@ describe("timer.store", () => {
       expect(primedRecipeSignal.value).toEqual(recipe);
     });
 
-    it("defaults to countdown mode when the recipe has a target", () => {
+    it("defaults to countdown mode when the recipe has a target and timerCountStyleSignal is left at its default", () => {
       primeTimerForRecipe(recipe);
 
       expect(guidedModeSignal.value).toBe("countdown");
     });
 
+    it("respects timerCountStyleSignal set to countup when the recipe has a target", () => {
+      timerCountStyleSignal.value = "countup";
+
+      primeTimerForRecipe(recipe);
+
+      expect(guidedModeSignal.value).toBe("countup");
+    });
+
     it("defaults to countup mode when the recipe has no target (e.g. Cold Brew)", () => {
+      primeTimerForRecipe(recipeWithoutTarget);
+
+      expect(guidedModeSignal.value).toBe("countup");
+    });
+
+    it("still forces countup when the recipe has no target even if timerCountStyleSignal is countdown", () => {
+      timerCountStyleSignal.value = "countdown";
+
       primeTimerForRecipe(recipeWithoutTarget);
 
       expect(guidedModeSignal.value).toBe("countup");

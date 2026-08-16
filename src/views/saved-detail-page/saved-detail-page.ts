@@ -56,6 +56,7 @@ import {
   renderRecipeProvenanceBanner,
 } from "../../shared/utilities/recipe-provenance.utility";
 import { SHARE_OUTCOME_MESSAGES, shareBrew } from "../../shared/utilities/share.utility";
+import { isWebBluetoothSupported } from "../../shared/utilities/web-bluetooth.utility";
 import { SavedDetailPageStyles } from "./saved-detail-page.styles";
 
 @customElement("saved-detail-page")
@@ -411,7 +412,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                     this._originalRecipeOpen = true;
                   })}
                   ${
-                    getBrewTypeFeatures(brew.brewType).showShotsSection
+                    isWebBluetoothSupported() && getBrewTypeFeatures(brew.brewType).showShotsSection
                       ? html`
                           <div class="section-title">
                             ${brew.brewType === "Espresso Shot" ? "Shots" : "Brews"}
