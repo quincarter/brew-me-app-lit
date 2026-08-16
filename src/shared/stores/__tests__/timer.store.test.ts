@@ -9,8 +9,10 @@ import { getShotsForBrew, savedShotsSignal } from "../shot.store";
 import {
   latestMonitorReadingSignal,
   latestScaleReadingSignal,
+  monitorSamplesSignal,
   recordMonitorReading,
   recordScaleReading,
+  scaleSamplesSignal,
   startTelemetryRecording,
   telemetryRecordingSignal,
   telemetrySealedSignal,
@@ -277,7 +279,7 @@ describe("timer.store", () => {
       expect(primedRecipeSignal.value).toBeNull();
     });
 
-    it("clears recorded telemetry, resetting latest scale/monitor readings to null", () => {
+    it("clears the recorded telemetry buffers, but leaves the latest live reading alone - a connected device's stat-tile readout shouldn't go blank on Reset", () => {
       startTelemetryRecording();
       const scaleReading: IBookooScaleReading = {
         timeMs: 100,
@@ -287,13 +289,15 @@ describe("timer.store", () => {
       };
       recordScaleReading(scaleReading);
       recordMonitorReading({ pressureBar: 9, batteryPercent: 90 });
-      expect(latestScaleReadingSignal.value).toEqual(scaleReading);
-      expect(latestMonitorReadingSignal.value).not.toBeNull();
+      expect(scaleSamplesSignal.value).toHaveLength(1);
+      expect(monitorSamplesSignal.value).toHaveLength(1);
 
       resetTimer();
 
-      expect(latestScaleReadingSignal.value).toBeNull();
-      expect(latestMonitorReadingSignal.value).toBeNull();
+      expect(scaleSamplesSignal.value).toEqual([]);
+      expect(monitorSamplesSignal.value).toEqual([]);
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading);
+      expect(latestMonitorReadingSignal.value).not.toBeNull();
     });
   });
 
@@ -356,7 +360,7 @@ describe("timer.store", () => {
       expect(timerSecondsSignal.value).toBe(42);
     });
 
-    it("seals telemetry so a late reading no longer gets recorded", () => {
+    it("seals telemetry so a late reading no longer gets appended to the recorded buffer, but still updates the live stat-tile reading", () => {
       primeTimerForRecipe(recipe);
       expect(telemetrySealedSignal.value).toBe(false);
 
@@ -371,7 +375,11 @@ describe("timer.store", () => {
         batteryPercent: 90,
       };
       recordScaleReading(scaleReading);
-      expect(latestScaleReadingSignal.value).toBeNull();
+
+      // A connected scale still reports its real, current weight after Stop/Seal (e.g. as the
+      // cup is removed) - only the sealed dataset feeding the chart/shot must stop growing.
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading);
+      expect(scaleSamplesSignal.value).toEqual([]);
     });
 
     it("does not throw and does not create a shot when there's no primed recipe", () => {

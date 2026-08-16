@@ -85,6 +85,11 @@ export const HomePageStyles = css`
     padding: 20px 20px 8px;
   }
 
+  .device-action {
+    display: flex;
+    padding: 0 20px 8px;
+  }
+
   .stats {
     display: flex;
     gap: 12px;

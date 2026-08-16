@@ -135,6 +135,8 @@ const {
   clearTelemetry,
   latestMonitorReadingSignal,
   latestScaleReadingSignal,
+  monitorSamplesSignal,
+  scaleSamplesSignal,
   startTelemetryRecording,
 } = await import("../telemetry.store");
 
@@ -165,6 +167,11 @@ describe("device-connection.store", () => {
     devicesBannerDismissedSignal.value = false;
     localStorage.removeItem(DEVICES_BANNER_DISMISSED_KEY);
     clearTelemetry();
+    // clearTelemetry() deliberately leaves the live "latest reading" signals alone (they
+    // reflect a still-connected device's current state, not per-session recorded data) - reset
+    // them here directly so each test in this file starts from a clean slate.
+    latestScaleReadingSignal.value = null;
+    latestMonitorReadingSignal.value = null;
     vi.restoreAllMocks();
   });
 
@@ -249,7 +256,7 @@ describe("device-connection.store", () => {
       Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
     });
 
-    it("transitions scaleConnectionStateSignal/scaleConnectedSignal to connected, but does NOT record a reading until telemetry recording has actually started", async () => {
+    it("transitions scaleConnectionStateSignal/scaleConnectedSignal to connected and updates the live reading immediately, but does NOT append to the recorded buffer until telemetry recording has actually started", async () => {
       expect(latestScaleReadingSignal.value).toBeNull();
 
       await connectScale();
@@ -258,24 +265,27 @@ describe("device-connection.store", () => {
       expect(scaleConnectedSignal.value).toBe(true);
       expect(fakeScaleInstances).toHaveLength(1);
 
-      // A connected device streams notifications continuously regardless of the timer - a
-      // reading arriving before anyone's actually brewing (`startTelemetryRecording()` hasn't
-      // been called) must not get recorded, or the extraction chart would start filling the
+      // A connected device streams notifications continuously regardless of the timer. The
+      // live "latest reading" (drives the stat tile) updates immediately - a connected scale
+      // should show its current weight right away - but a reading arriving before anyone's
+      // actually brewing (`startTelemetryRecording()` hasn't been called) must not get
+      // appended to the recorded buffer, or the extraction chart would start filling the
       // instant a device pairs and never stop on its own.
       fakeScaleInstances[0]?.emitReading(scaleReading);
 
-      expect(latestScaleReadingSignal.value).toBeNull();
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading);
+      expect(scaleSamplesSignal.value).toEqual([]);
 
-      // Once a brewing session actually starts, the same wiring records readings as before -
+      // Once a brewing session actually starts, the same wiring also records into the buffer -
       // verifies the store wires `onReading` through to telemetry.store, not just its own
       // connection-state signal.
       startTelemetryRecording();
       fakeScaleInstances[0]?.emitReading(scaleReading);
 
-      expect(latestScaleReadingSignal.value).toEqual(scaleReading);
+      expect(scaleSamplesSignal.value).toHaveLength(1);
     });
 
-    it("transitions monitorConnectionStateSignal/monitorConnectedSignal to connected, but does NOT record a reading until telemetry recording has actually started", async () => {
+    it("transitions monitorConnectionStateSignal/monitorConnectedSignal to connected and updates the live reading immediately, but does NOT append to the recorded buffer until telemetry recording has actually started", async () => {
       expect(latestMonitorReadingSignal.value).toBeNull();
 
       await connectMonitor();
@@ -286,12 +296,13 @@ describe("device-connection.store", () => {
 
       fakeMonitorInstances[0]?.emitReading(monitorReading);
 
-      expect(latestMonitorReadingSignal.value).toBeNull();
+      expect(latestMonitorReadingSignal.value).toEqual(monitorReading);
+      expect(monitorSamplesSignal.value).toEqual([]);
 
       startTelemetryRecording();
       fakeMonitorInstances[0]?.emitReading(monitorReading);
 
-      expect(latestMonitorReadingSignal.value).toEqual(monitorReading);
+      expect(monitorSamplesSignal.value).toHaveLength(1);
     });
 
     it("only constructs one BookooScaleConnection across multiple connect calls (lazy singleton)", async () => {

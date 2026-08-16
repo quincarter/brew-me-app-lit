@@ -121,12 +121,6 @@ export const SettingsPageStyles = css`
     color: var(--brew-color-on-surface);
   }
 
-  .device-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
   .status-text {
     margin: -6px 0 0;
     font-size: 13px;

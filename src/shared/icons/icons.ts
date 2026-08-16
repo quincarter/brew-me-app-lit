@@ -1,6 +1,7 @@
 import { AEROPRESS_ICON } from "./aeropress.svg";
 import { ARROW_BACK_ICON_SVG } from "./arrow-back.svg";
 import { AUTO_AWESOME_ICON_SVG } from "./auto-awesome.svg";
+import { BLUETOOTH_ICON_SVG } from "./bluetooth.svg";
 import { BOOKMARK_ADDED_ICON_SVG } from "./bookmark-added.svg";
 import { CALCULATE_ICON_SVG } from "./calculate.svg";
 import { CHECK_ICON_SVG } from "./check.svg";
@@ -60,6 +61,7 @@ export {
   ARROW_BACK_ICON_SVG,
   ARROW_FORWARD_ICON_SVG,
   AUTO_AWESOME_ICON_SVG,
+  BLUETOOTH_ICON_SVG,
   BOOKMARK_ADDED_ICON_SVG,
   CALCULATE_ICON_SVG,
   CHECK_ICON_SVG,

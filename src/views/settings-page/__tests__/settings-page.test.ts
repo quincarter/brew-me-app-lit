@@ -270,10 +270,10 @@ describe("settings-page", () => {
         element.shadowRoot?.querySelectorAll(".section-title") ?? [],
       );
       expect(sectionTitles.some((title) => title.textContent === "Connected devices")).toBe(false);
-      expect(element.shadowRoot?.querySelector("brew-connection-status-pill")).toBeNull();
+      expect(element.shadowRoot?.querySelector("brew-device-connect-rows")).toBeNull();
     });
 
-    it("shows a scale row and a monitor row when Web Bluetooth is supported", async () => {
+    it("shows the device connect rows when Web Bluetooth is supported", async () => {
       Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
       element.requestUpdate();
       await element.updateComplete;
@@ -282,13 +282,7 @@ describe("settings-page", () => {
         element.shadowRoot?.querySelectorAll(".section-title") ?? [],
       );
       expect(sectionTitles.some((title) => title.textContent === "Connected devices")).toBe(true);
-
-      const rowLabels = Array.from(element.shadowRoot?.querySelectorAll(".row-label") ?? []).map(
-        (label) => label.textContent,
-      );
-      expect(rowLabels).toContain("Bookoo Scale");
-      expect(rowLabels).toContain("Espresso Monitor");
-      expect(element.shadowRoot?.querySelectorAll("brew-connection-status-pill")).toHaveLength(2);
+      expect(element.shadowRoot?.querySelector("brew-device-connect-rows")).not.toBeNull();
     });
   });
 });

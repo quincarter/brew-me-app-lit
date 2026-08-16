@@ -18,16 +18,16 @@ The project evolved across three iterations:
 
 ## 📸 Screenshots
 
-|              Home               |               Brew Calculator               |               Saved Brews               |
-| :-----------------------------: | :-----------------------------------------: | :-------------------------------------: |
+|                  Home                  |                  Brew Calculator                   |                  Saved Brews                   |
+| :------------------------------------: | :------------------------------------------------: | :--------------------------------------------: |
 | ![Home](./public/screenshots/home.png) | ![Calculator](./public/screenshots/calculator.png) | ![Saved Brews](./public/screenshots/saved.png) |
 
-|          Pour-over Timer          |                   Brew Guide                    |                        WAC Recipes                        |
-| :-------------------------------: | :---------------------------------------------: | :-------------------------------------------------------: |
+|             Pour-over Timer              |                       Brew Guide                       |                           WAC Recipes                            |
+| :--------------------------------------: | :----------------------------------------------------: | :--------------------------------------------------------------: |
 | ![Timer](./public/screenshots/timer.png) | ![Guide Detail](./public/screenshots/guide-detail.png) | ![AeroPress Recipes](./public/screenshots/aeropress-recipes.png) |
 
-|          More Options           |                  V60 Recipes                  |                Settings                 |
-| :-----------------------------: | :-------------------------------------------: | :-------------------------------------: |
+|              More Options              |                     V60 Recipes                      |                    Settings                    |
+| :------------------------------------: | :--------------------------------------------------: | :--------------------------------------------: |
 | ![More](./public/screenshots/more.png) | ![V60 Recipes](./public/screenshots/v60-recipes.png) | ![Settings](./public/screenshots/settings.png) |
 
 ---

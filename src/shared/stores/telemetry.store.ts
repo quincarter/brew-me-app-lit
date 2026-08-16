@@ -1,4 +1,4 @@
-import { computed, signal } from "@lit-labs/preact-signals";
+import { signal } from "@lit-labs/preact-signals";
 import type {
   IBookooMonitorReading,
   IBookooScaleReading,
@@ -37,16 +37,19 @@ export const sealTelemetry = (): void => {
   telemetrySealedSignal.value = true;
 };
 
-export const latestScaleReadingSignal = computed(() => {
-  const samples = scaleSamplesSignal.value;
-  return samples[samples.length - 1]?.reading ?? null;
-});
-export const latestMonitorReadingSignal = computed(() => {
-  const samples = monitorSamplesSignal.value;
-  return samples[samples.length - 1]?.reading ?? null;
-});
+/**
+ * The most recent reading from a connected device, updated on every BLE notification
+ * regardless of whether a brewing session is actively recording - a connected scale/monitor
+ * should always drive the stat-tile readout (e.g. resting weight, ambient pressure), not just
+ * during the Play-to-Stop/Seal recording window that gates `scaleSamplesSignal`/
+ * `monitorSamplesSignal` below. Deliberately NOT reset by `clearTelemetry()` - it reflects the
+ * device's current live state, not "this session's recorded data".
+ */
+export const latestScaleReadingSignal = signal<IBookooScaleReading | null>(null);
+export const latestMonitorReadingSignal = signal<IBookooMonitorReading | null>(null);
 
 export const recordScaleReading = (reading: IBookooScaleReading): void => {
+  latestScaleReadingSignal.value = reading;
   if (!telemetryRecordingSignal.value || telemetrySealedSignal.value) return;
   scaleSamplesSignal.value = [
     ...scaleSamplesSignal.value,
@@ -55,6 +58,7 @@ export const recordScaleReading = (reading: IBookooScaleReading): void => {
 };
 
 export const recordMonitorReading = (reading: IBookooMonitorReading): void => {
+  latestMonitorReadingSignal.value = reading;
   if (!telemetryRecordingSignal.value || telemetrySealedSignal.value) return;
   monitorSamplesSignal.value = [
     ...monitorSamplesSignal.value,
@@ -62,7 +66,11 @@ export const recordMonitorReading = (reading: IBookooMonitorReading): void => {
   ].slice(-MAX_SAMPLES_PER_DEVICE);
 };
 
-/** Per-session reset hook - clears both buffers, un-seals, and stops recording (so the next session only starts once Play is tapped again), e.g. when the timer clock resets to 0. */
+/**
+ * Per-session reset hook - clears the recorded buffers, un-seals, and stops recording (so the
+ * next session only starts once Play is tapped again), e.g. when the timer clock resets to 0.
+ * Leaves `latestScaleReadingSignal`/`latestMonitorReadingSignal` alone (see their doc comment).
+ */
 export const clearTelemetry = (): void => {
   scaleSamplesSignal.value = [];
   monitorSamplesSignal.value = [];

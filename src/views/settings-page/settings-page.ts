@@ -3,8 +3,7 @@ import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, query, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
-import "../../components/connection-status-pill/brew-connection-status-pill";
-import "../../components/device-connect-action/brew-device-connect-action";
+import "../../components/device-connect-rows/brew-device-connect-rows";
 import "../../components/icon/brew-icon";
 import "../../components/list-row/brew-list-row";
 import "../../components/switch/brew-switch";
@@ -19,14 +18,6 @@ import {
   deleteCustomBrewType,
 } from "../../shared/stores/brew-types.store";
 import { deleteAllSavedBrews } from "../../shared/stores/brew.store";
-import {
-  connectMonitor,
-  connectScale,
-  disconnectMonitor,
-  disconnectScale,
-  monitorConnectionStateSignal,
-  scaleConnectionStateSignal,
-} from "../../shared/stores/device-connection.store";
 import { isDarkThemeSignal, setDarkTheme } from "../../shared/stores/theme.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { exportAppData, importAppData } from "../../shared/utilities/export-data.utility";
@@ -133,32 +124,7 @@ export class SettingsPage extends SignalWatcher(LitElement) {
     return html`
       <div class="divider"></div>
       <div class="section-title">Connected devices</div>
-      <div class="row">
-        <span class="row-label">Bookoo Scale</span>
-        <div class="device-controls">
-          <brew-connection-status-pill
-            state="${scaleConnectionStateSignal.value}"
-          ></brew-connection-status-pill>
-          <brew-device-connect-action
-            state="${scaleConnectionStateSignal.value}"
-            @connect-click="${connectScale}"
-            @disconnect-click="${disconnectScale}"
-          ></brew-device-connect-action>
-        </div>
-      </div>
-      <div class="row">
-        <span class="row-label">Espresso Monitor</span>
-        <div class="device-controls">
-          <brew-connection-status-pill
-            state="${monitorConnectionStateSignal.value}"
-          ></brew-connection-status-pill>
-          <brew-device-connect-action
-            state="${monitorConnectionStateSignal.value}"
-            @connect-click="${connectMonitor}"
-            @disconnect-click="${disconnectMonitor}"
-          ></brew-device-connect-action>
-        </div>
-      </div>
+      <brew-device-connect-rows></brew-device-connect-rows>
     `;
   }
 

@@ -33,6 +33,10 @@ const monitorReading = (pressureBar: number): IBookooMonitorReading => ({
 describe("telemetry.store", () => {
   beforeEach(() => {
     clearTelemetry();
+    // clearTelemetry() deliberately leaves the live "latest reading" signals alone (see their
+    // doc comment) - reset them here directly so tests in this file don't leak into each other.
+    latestScaleReadingSignal.value = null;
+    latestMonitorReadingSignal.value = null;
     // Recording is off by default (see the dedicated `telemetryRecordingSignal` block below) -
     // every other describe block here is about append/cap/seal behavior once a session is
     // already running, so start it up front rather than repeating this in every test.
@@ -47,6 +51,20 @@ describe("telemetry.store", () => {
       recordScaleReading(scaleReading(1));
       recordMonitorReading(monitorReading(1));
 
+      expect(scaleSamplesSignal.value).toEqual([]);
+      expect(monitorSamplesSignal.value).toEqual([]);
+    });
+
+    it("still updates the latest live reading (for stat-tile display) even while not recording", () => {
+      clearTelemetry();
+      expect(telemetryRecordingSignal.value).toBe(false);
+
+      recordScaleReading(scaleReading(7));
+      recordMonitorReading(monitorReading(4));
+
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading(7));
+      expect(latestMonitorReadingSignal.value).toEqual(monitorReading(4));
+      // ...but still hasn't touched the recorded buffers the chart/shot data reads from.
       expect(scaleSamplesSignal.value).toEqual([]);
       expect(monitorSamplesSignal.value).toEqual([]);
     });
@@ -142,7 +160,7 @@ describe("telemetry.store", () => {
   });
 
   describe("clearTelemetry", () => {
-    it("empties both buffers and resets latest-reading computeds to null", () => {
+    it("empties both recorded buffers, but leaves the latest live reading alone (it reflects the device's current state, not this session's recorded data)", () => {
       recordScaleReading(scaleReading(1));
       recordMonitorReading(monitorReading(1));
 
@@ -150,8 +168,8 @@ describe("telemetry.store", () => {
 
       expect(scaleSamplesSignal.value).toEqual([]);
       expect(monitorSamplesSignal.value).toEqual([]);
-      expect(latestScaleReadingSignal.value).toBeNull();
-      expect(latestMonitorReadingSignal.value).toBeNull();
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading(1));
+      expect(latestMonitorReadingSignal.value).toEqual(monitorReading(1));
     });
 
     it("un-seals telemetry, so recording resumes after a previous sealTelemetry()", () => {
@@ -173,24 +191,26 @@ describe("telemetry.store", () => {
       expect(telemetrySealedSignal.value).toBe(true);
     });
 
-    it("makes recordScaleReading a no-op once sealed", () => {
+    it("stops recordScaleReading from appending to the recorded buffer once sealed, but still updates the live reading", () => {
       recordScaleReading(scaleReading(1));
       sealTelemetry();
 
       recordScaleReading(scaleReading(2));
 
       expect(scaleSamplesSignal.value).toHaveLength(1);
-      expect(latestScaleReadingSignal.value).toEqual(scaleReading(1));
+      // The recorded/sealed dataset stays frozen at what it had - but a still-connected scale
+      // keeps reporting its real weight, so the live stat-tile reading keeps moving.
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading(2));
     });
 
-    it("makes recordMonitorReading a no-op once sealed", () => {
+    it("stops recordMonitorReading from appending to the recorded buffer once sealed, but still updates the live reading", () => {
       recordMonitorReading(monitorReading(1));
       sealTelemetry();
 
       recordMonitorReading(monitorReading(2));
 
       expect(monitorSamplesSignal.value).toHaveLength(1);
-      expect(latestMonitorReadingSignal.value).toEqual(monitorReading(1));
+      expect(latestMonitorReadingSignal.value).toEqual(monitorReading(2));
     });
   });
 });

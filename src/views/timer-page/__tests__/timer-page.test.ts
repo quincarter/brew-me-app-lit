@@ -502,48 +502,4 @@ describe("timer-page", () => {
       expect(settingsNoticeWrapper()?.open).toBe(false);
     });
   });
-
-  describe("device status icons (top bar trailing slot)", () => {
-    afterEach(() => {
-      Reflect.deleteProperty(navigator, "bluetooth");
-      scaleConnectionStateSignal.value = "disconnected";
-      monitorConnectionStateSignal.value = "disconnected";
-    });
-
-    it("renders no status icons when nothing is connected", async () => {
-      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
-      await mount();
-
-      expect(element.shadowRoot?.querySelector(".device-status-icons")).toBeNull();
-    });
-
-    it("shows a titled scale icon once the scale is connected", async () => {
-      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
-      scaleConnectionStateSignal.value = "connected";
-      await mount();
-
-      const icons = element.shadowRoot?.querySelectorAll(".device-status-icon");
-      expect(icons).toHaveLength(1);
-      expect(icons?.[0].getAttribute("title")).toBe("Bookoo Scale connected");
-      expect(icons?.[0].getAttribute("aria-label")).toBe("Bookoo Scale connected");
-    });
-
-    it("shows a titled monitor icon once the monitor is connected", async () => {
-      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
-      monitorConnectionStateSignal.value = "connected";
-      await mount();
-
-      const icons = element.shadowRoot?.querySelectorAll(".device-status-icon");
-      expect(icons).toHaveLength(1);
-      expect(icons?.[0].getAttribute("title")).toBe("Espresso Monitor connected");
-    });
-
-    it("is absent when Web Bluetooth is unsupported even if state claims connected", async () => {
-      Reflect.deleteProperty(navigator, "bluetooth");
-      scaleConnectionStateSignal.value = "connected";
-      await mount();
-
-      expect(element.shadowRoot?.querySelector(".device-status-icons")).toBeNull();
-    });
-  });
 });

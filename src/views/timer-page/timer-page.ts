@@ -7,19 +7,13 @@ import "../../components/collapsible-banner/brew-collapsible-banner";
 import "../../components/device-connect-action/brew-device-connect-action";
 import "../../components/extraction-chart/brew-extraction-chart";
 import "../../components/icon-button/brew-icon-button";
-import "../../components/icon/brew-icon";
 import "../../components/saved-brew-picker-sheet/brew-saved-brew-picker-sheet";
 import "../../components/stat-tile/brew-stat-tile";
 import "../../components/timer-controls/brew-timer-controls";
 import "../../components/timer-dial/brew-timer-dial";
 import "../../components/timer-recipe-panel/brew-timer-recipe-panel";
 import "../../components/top-bar/brew-top-bar";
-import {
-  ARROW_BACK_ICON_SVG,
-  CLOSE_ICON,
-  MONITOR_WEIGHT_ICON_SVG,
-  PRESSURE_MONITOR_ICON_SVG,
-} from "../../shared/icons/icons";
+import { ARROW_BACK_ICON_SVG, CLOSE_ICON } from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
 import {
@@ -104,11 +98,11 @@ export class TimerPage extends SignalWatcher(LitElement) {
 
   /**
    * A compact, dismissible offer to pair whichever devices aren't connected yet - a device
-   * already connected shows its icon in the top bar instead (see `_renderDeviceStatusIcons`)
-   * rather than staying listed here, and once both are connected there's nothing left to
-   * offer so the banner disappears on its own. Devices are optional, so someone who doesn't
-   * own either can dismiss this for the rest of the session instead of it permanently pushing
-   * the dial/controls down.
+   * already connected shows its icon in the top bar instead (every screen's `brew-top-bar`
+   * now owns this globally) rather than staying listed here, and once both are connected
+   * there's nothing left to offer so the banner disappears on its own. Devices are optional,
+   * so someone who doesn't own either can dismiss this for the rest of the session instead of
+   * it permanently pushing the dial/controls down.
    */
   private _renderDevicesBanner(): HTMLTemplateResult | typeof nothing {
     if (!isWebBluetoothSupported()) return nothing;
@@ -195,48 +189,6 @@ export class TimerPage extends SignalWatcher(LitElement) {
     `;
   }
 
-  /** Connected-device indicators for the top bar's trailing slot - out of the way once paired, unlike the banner above. */
-  private _renderDeviceStatusIcons(): HTMLTemplateResult | typeof nothing {
-    if (!isWebBluetoothSupported()) return nothing;
-
-    const scaleConnected = scaleConnectionStateSignal.value === "connected";
-    const monitorConnected = monitorConnectionStateSignal.value === "connected";
-    if (!scaleConnected && !monitorConnected) return nothing;
-
-    return html`
-      <span slot="trailing" class="device-status-icons">
-        ${
-          scaleConnected
-            ? html`
-                <span
-                  class="device-status-icon"
-                  role="img"
-                  aria-label="Bookoo Scale connected"
-                  title="Bookoo Scale connected"
-                >
-                  <brew-icon .svg="${MONITOR_WEIGHT_ICON_SVG}" size="20"></brew-icon>
-                </span>
-              `
-            : nothing
-        }
-        ${
-          monitorConnected
-            ? html`
-                <span
-                  class="device-status-icon"
-                  role="img"
-                  aria-label="Espresso Monitor connected"
-                  title="Espresso Monitor connected"
-                >
-                  <brew-icon .svg="${PRESSURE_MONITOR_ICON_SVG}" size="20"></brew-icon>
-                </span>
-              `
-            : nothing
-        }
-      </span>
-    `;
-  }
-
   private _renderTelemetryRow(): HTMLTemplateResult | typeof nothing {
     if (!isWebBluetoothSupported()) return nothing;
 
@@ -275,9 +227,7 @@ export class TimerPage extends SignalWatcher(LitElement) {
 
     return html`
       <div class="screen">
-        <brew-top-bar title="${title}" .icon="${ARROW_BACK_ICON_SVG}" href="/more"
-          >${this._renderDeviceStatusIcons()}</brew-top-bar
-        >
+        <brew-top-bar title="${title}" .icon="${ARROW_BACK_ICON_SVG}" href="/more"></brew-top-bar>
 
         <div class="content">
           ${this._renderDevicesBanner()} ${this._renderSettingsNotice()}
