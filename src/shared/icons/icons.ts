@@ -54,6 +54,7 @@ import { PLAY_ARROW_ICON_SVG } from "./play-arrow.svg";
 import { EXPAND_LESS_ICON_SVG } from "./expand-less.svg";
 import { EXPAND_MORE_ICON_SVG } from "./expand-more.svg";
 import { PRESSURE_MONITOR_ICON_SVG } from "./pressure-monitor.svg";
+import { LIBRARY_BOOKS_ICON_SVG } from "./library-books.svg";
 
 export {
   ADD_ICON_SVG,
@@ -87,6 +88,7 @@ export {
   HOME_ICON_SVG,
   INFO_ICON_SVG,
   KALITA_WAVE_ICON,
+  LIBRARY_BOOKS_ICON_SVG,
   LIGHT_MODE_ICON_SVG,
   LOCAL_CAFE_ICON_SVG,
   LOCAL_FIRE_DEPARTMENT_SVG,
