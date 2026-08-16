@@ -15,7 +15,8 @@ export const TimerPageStyles = css`
   .content {
     flex: 1;
     min-height: 0;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -29,32 +30,66 @@ export const TimerPageStyles = css`
     padding: 20px;
   }
 
-  .devices-row {
+  .devices-banner {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
-  }
-
-  .device {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    border-radius: 12px;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    border-radius: 16px;
     background: var(--brew-color-surface-container-low);
   }
 
-  .device-name {
+  .devices-banner-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  .devices-banner-title {
     flex: 1;
-    font-size: 14px;
-    font-weight: 500;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 600;
     color: var(--brew-color-on-surface);
+  }
+
+  .devices-banner-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 0;
+  }
+
+  .devices-banner-row-label {
+    font-size: 13px;
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .devices-banner-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -4px;
   }
 
   .telemetry-row {
     display: flex;
     gap: 12px;
     width: 100%;
+  }
+
+  .device-status-icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .device-status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brew-color-tertiary);
   }
 `;

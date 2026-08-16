@@ -12,8 +12,13 @@ import { LOCAL_CAFE_ICON_SVG } from "../../shared/icons/icons";
  * ```html
  * <brew-top-bar title="Calculator"></brew-top-bar>
  * <brew-top-bar title="Saved Brews" icon="arrow_back" href="/saved"></brew-top-bar>
+ * <!-- trailing slot: small status content after the title, e.g. connected-device icons -->
+ * <brew-top-bar title="Pour-over Timer">
+ *   <span slot="trailing">...</span>
+ * </brew-top-bar>
  * ```
  * @element brew-top-bar
+ * @slot trailing - Optional compact content placed after the title (status icons, badges).
  */
 export class TopBar extends LitElement {
   static styles = [TopBarStyles];
@@ -32,6 +37,7 @@ export class TopBar extends LitElement {
           aria-label="${this.ariaLabelText}"
         ></brew-icon-button>
         <span class="title">${this.title}</span>
+        <div class="trailing"><slot name="trailing"></slot></div>
       </div>
     `;
   }

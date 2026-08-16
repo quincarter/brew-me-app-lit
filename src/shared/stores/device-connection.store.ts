@@ -15,6 +15,32 @@ export const monitorConnectedSignal = computed(
   () => monitorConnectionStateSignal.value === "connected",
 );
 
+const DEVICES_BANNER_DISMISSED_KEY = "brewme-devices-banner-dismissed-forever";
+
+const readBannerPermanentlyDismissed = (): boolean =>
+  localStorage.getItem(DEVICES_BANNER_DISMISSED_KEY) === "true";
+
+/**
+ * Whether the Timer page's "connect your devices" banner is hidden - devices are optional, so
+ * once someone dismisses it we shouldn't keep pushing the dial/controls down on every visit.
+ * Seeded from `localStorage` so a "Never show again" dismissal survives reload; the banner's
+ * own quick-dismiss (X) only flips this in memory for the rest of the tab session and doesn't
+ * touch storage, since pairing itself is per-session anyway (this app doesn't persist/
+ * auto-reconnect a previously paired device).
+ */
+export const devicesBannerDismissedSignal = signal(readBannerPermanentlyDismissed());
+
+/** Session-only dismiss (the banner's close button) - hides it for this tab, returns on reload. */
+export const dismissDevicesBanner = (): void => {
+  devicesBannerDismissedSignal.value = true;
+};
+
+/** Permanent dismiss ("Never show again") - persists across reloads via localStorage. */
+export const neverShowDevicesBannerAgain = (): void => {
+  localStorage.setItem(DEVICES_BANNER_DISMISSED_KEY, "true");
+  devicesBannerDismissedSignal.value = true;
+};
+
 let scaleConnection: BookooScaleConnection | null = null;
 let monitorConnection: BookooMonitorConnection | null = null;
 

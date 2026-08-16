@@ -29,6 +29,7 @@ import { LOCAL_CAFE_ICON_SVG } from "./local-cafe.svg";
 import { LOCAL_FIRE_DEPARTMENT_SVG } from "./localFireDepartment.svg";
 import { MENU_BOOK_ICON_SVG } from "./menu-book.svg";
 import { MOKA_POT_ICON } from "./moka-pot.svg";
+import { MONITOR_WEIGHT_ICON_SVG } from "./monitor-weight.svg";
 import { MORE_ICON_SVG } from "./more.svg";
 import { NITRO_COLD_BREW_ICON } from "./nitro-cold-brew.svg";
 import { OPEN_IN_NEW_ICON_SVG } from "./open-in-new.svg";
@@ -50,6 +51,7 @@ import { ARROW_FORWARD_ICON_SVG } from "./arrow-forward.svg";
 import { PLAY_ARROW_ICON_SVG } from "./play-arrow.svg";
 import { EXPAND_LESS_ICON_SVG } from "./expand-less.svg";
 import { EXPAND_MORE_ICON_SVG } from "./expand-more.svg";
+import { PRESSURE_MONITOR_ICON_SVG } from "./pressure-monitor.svg";
 
 export {
   ADD_ICON_SVG,
@@ -87,6 +89,7 @@ export {
   LOCAL_FIRE_DEPARTMENT_SVG,
   MENU_BOOK_ICON_SVG,
   MOKA_POT_ICON,
+  MONITOR_WEIGHT_ICON_SVG,
   MORE_ICON_SVG,
   NITRO_COLD_BREW_ICON,
   OPEN_IN_NEW_ICON_SVG,
@@ -95,6 +98,7 @@ export {
   PERCOLATOR_ICON,
   PLAY_ARROW_ICON_SVG,
   PLAY_ICON,
+  PRESSURE_MONITOR_ICON_SVG,
   REFRESH_ICON,
   REPLAY_ICON,
   SAVED_ICON_SVG,

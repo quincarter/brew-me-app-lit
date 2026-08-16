@@ -11,13 +11,25 @@ export const TopBarStyles = css`
     align-items: center;
     gap: 4px;
     padding: 12px 8px;
+    min-width: 0;
   }
 
   .title {
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 22px;
     font-weight: 500;
     color: var(--brew-color-on-surface);
+  }
+
+  .trailing {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   /* Keep in sync with CONTENT_MAX_WIDTH_PX in shared/styles/responsive.styles.ts so the title lines up with the content column beneath it. */

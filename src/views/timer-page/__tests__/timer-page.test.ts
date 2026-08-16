@@ -1,8 +1,13 @@
 import "fake-indexeddb/auto";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ISavedBrew } from "../../../shared/interfaces/brew.interface";
 import type { IPrimedRecipe } from "../../../shared/interfaces/timer.interface";
 import { savedBrewsSignal } from "../../../shared/stores/brew.store";
+import {
+  devicesBannerDismissedSignal,
+  monitorConnectionStateSignal,
+  scaleConnectionStateSignal,
+} from "../../../shared/stores/device-connection.store";
 import {
   guidedModeSignal,
   primedRecipeSignal,
@@ -70,6 +75,29 @@ describe("timer-page", () => {
     element.shadowRoot?.querySelector("brew-timer-recipe-panel") as
       | (HTMLElement & { recipe: IPrimedRecipe | null })
       | null;
+
+  /**
+   * `brew-collapsible-banner` stays mounted whether open or closed (so its exit animation can
+   * play), so presence in the DOM no longer indicates visibility - these look up the wrapper by
+   * its content and assert on its `open` property instead. There are two such wrappers once Web
+   * Bluetooth is supported (the devices banner and the "go to Settings" notice), told apart by
+   * their `.devices-banner-title` text.
+   */
+  const collapsibleBannerByTitle = (title: string): (HTMLElement & { open: boolean }) | null => {
+    const titleEl = Array.from(
+      element.shadowRoot?.querySelectorAll(".devices-banner-title") ?? [],
+    ).find((el) => el.textContent === title);
+    return (
+      (titleEl?.closest("brew-collapsible-banner") as (HTMLElement & { open: boolean }) | null) ??
+      null
+    );
+  };
+
+  const devicesBannerWrapper = (): (HTMLElement & { open: boolean }) | null =>
+    collapsibleBannerByTitle("Connect your devices");
+
+  const settingsNoticeWrapper = (): (HTMLElement & { open: boolean }) | null =>
+    collapsibleBannerByTitle("To access connected devices, go to Settings");
 
   beforeEach(() => {
     resetTimer();
@@ -321,29 +349,201 @@ describe("timer-page", () => {
     });
   });
 
-  describe("devices row", () => {
+  describe("devices banner", () => {
     afterEach(() => {
       Reflect.deleteProperty(navigator, "bluetooth");
+      scaleConnectionStateSignal.value = "disconnected";
+      monitorConnectionStateSignal.value = "disconnected";
+      devicesBannerDismissedSignal.value = false;
+      localStorage.removeItem("brewme-devices-banner-dismissed-forever");
     });
 
     it("is absent when Web Bluetooth is unsupported", async () => {
       Reflect.deleteProperty(navigator, "bluetooth");
       await mount();
 
-      expect(element.shadowRoot?.querySelector(".devices-row")).toBeNull();
-      expect(element.shadowRoot?.querySelector("brew-connection-status-pill")).toBeNull();
+      expect(element.shadowRoot?.querySelector(".devices-banner")).toBeNull();
     });
 
-    it("shows a scale device and a monitor device when Web Bluetooth is supported", async () => {
+    it("lists both devices when neither is connected", async () => {
       Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
       await mount();
 
-      const deviceNames = Array.from(
-        element.shadowRoot?.querySelectorAll(".device-name") ?? [],
-      ).map((name) => name.textContent);
-      expect(deviceNames).toContain("Bookoo Scale");
-      expect(deviceNames).toContain("Espresso Monitor");
-      expect(element.shadowRoot?.querySelectorAll("brew-connection-status-pill")).toHaveLength(2);
+      const rowLabels = Array.from(
+        element.shadowRoot?.querySelectorAll(".devices-banner-row-label") ?? [],
+      ).map((label) => label.textContent);
+      expect(rowLabels).toContain("Bookoo Scale");
+      expect(rowLabels).toContain("Espresso Monitor");
+    });
+
+    it("drops a device's row once it's connected, but keeps offering the other", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      scaleConnectionStateSignal.value = "connected";
+      await mount();
+
+      const rowLabels = Array.from(
+        element.shadowRoot?.querySelectorAll(".devices-banner-row-label") ?? [],
+      ).map((label) => label.textContent);
+      expect(rowLabels).not.toContain("Bookoo Scale");
+      expect(rowLabels).toContain("Espresso Monitor");
+    });
+
+    it("closes (but stays mounted, for the exit animation) once both devices are connected", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      scaleConnectionStateSignal.value = "connected";
+      monitorConnectionStateSignal.value = "connected";
+      await mount();
+
+      expect(devicesBannerWrapper()).not.toBeNull();
+      expect(devicesBannerWrapper()?.open).toBe(false);
+    });
+
+    it("dismisses on close and stays hidden even with devices still disconnected", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      await mount();
+      expect(devicesBannerWrapper()?.open).toBe(true);
+
+      const dismissButton = element.shadowRoot?.querySelector(
+        ".devices-banner-header brew-icon-button",
+      );
+      dismissButton?.dispatchEvent(
+        new CustomEvent("icon-click", { bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(devicesBannerWrapper()?.open).toBe(false);
+      expect(devicesBannerDismissedSignal.value).toBe(true);
+    });
+
+    it('"Never show again" persists the dismissal to localStorage', async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      await mount();
+
+      const neverShowButton = Array.from(
+        element.shadowRoot?.querySelectorAll(".devices-banner-footer brew-button") ?? [],
+      ).find((button) => button.textContent?.trim() === "Never show again");
+      neverShowButton?.dispatchEvent(
+        new CustomEvent("button-click", { bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(devicesBannerWrapper()?.open).toBe(false);
+      expect(devicesBannerDismissedSignal.value).toBe(true);
+      expect(localStorage.getItem("brewme-devices-banner-dismissed-forever")).toBe("true");
+    });
+  });
+
+  describe('"go to Settings" notice after Never show again', () => {
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+      scaleConnectionStateSignal.value = "disconnected";
+      monitorConnectionStateSignal.value = "disconnected";
+      devicesBannerDismissedSignal.value = false;
+      localStorage.removeItem("brewme-devices-banner-dismissed-forever");
+      vi.useRealTimers();
+    });
+
+    const clickNeverShowAgain = async (): Promise<void> => {
+      const neverShowButton = Array.from(
+        element.shadowRoot?.querySelectorAll(".devices-banner-footer brew-button") ?? [],
+      ).find((button) => button.textContent?.trim() === "Never show again");
+      neverShowButton?.dispatchEvent(
+        new CustomEvent("button-click", { bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+    };
+
+    it("shows a notice pointing to Settings once devices are permanently dismissed", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      await mount();
+
+      await clickNeverShowAgain();
+
+      expect(settingsNoticeWrapper()?.open).toBe(true);
+
+      const settingsLink = Array.from(
+        element.shadowRoot?.querySelectorAll("brew-button[href]") ?? [],
+      ).find((button) => button.textContent?.trim() === "Go to Settings");
+      expect(settingsLink?.getAttribute("href")).toBe("/more/settings");
+    });
+
+    it("auto-hides the notice after 5 seconds", async () => {
+      vi.useFakeTimers();
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      await mount();
+
+      await clickNeverShowAgain();
+      expect(settingsNoticeWrapper()?.open).toBe(true);
+
+      vi.advanceTimersByTime(5000);
+      await element.updateComplete;
+
+      expect(settingsNoticeWrapper()?.open).toBe(false);
+    });
+
+    it("dismisses early when its own close button is tapped", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      await mount();
+
+      await clickNeverShowAgain();
+      expect(settingsNoticeWrapper()?.open).toBe(true);
+
+      const noticeHeader = Array.from(
+        element.shadowRoot?.querySelectorAll(".devices-banner-header") ?? [],
+      ).find((header) =>
+        header.querySelector(".devices-banner-title")?.textContent?.includes("Settings"),
+      );
+      const dismissButton = noticeHeader?.querySelector("brew-icon-button");
+      dismissButton?.dispatchEvent(
+        new CustomEvent("icon-click", { bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(settingsNoticeWrapper()?.open).toBe(false);
+    });
+  });
+
+  describe("device status icons (top bar trailing slot)", () => {
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+      scaleConnectionStateSignal.value = "disconnected";
+      monitorConnectionStateSignal.value = "disconnected";
+    });
+
+    it("renders no status icons when nothing is connected", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      await mount();
+
+      expect(element.shadowRoot?.querySelector(".device-status-icons")).toBeNull();
+    });
+
+    it("shows a titled scale icon once the scale is connected", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      scaleConnectionStateSignal.value = "connected";
+      await mount();
+
+      const icons = element.shadowRoot?.querySelectorAll(".device-status-icon");
+      expect(icons).toHaveLength(1);
+      expect(icons?.[0].getAttribute("title")).toBe("Bookoo Scale connected");
+      expect(icons?.[0].getAttribute("aria-label")).toBe("Bookoo Scale connected");
+    });
+
+    it("shows a titled monitor icon once the monitor is connected", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      monitorConnectionStateSignal.value = "connected";
+      await mount();
+
+      const icons = element.shadowRoot?.querySelectorAll(".device-status-icon");
+      expect(icons).toHaveLength(1);
+      expect(icons?.[0].getAttribute("title")).toBe("Espresso Monitor connected");
+    });
+
+    it("is absent when Web Bluetooth is unsupported even if state claims connected", async () => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+      scaleConnectionStateSignal.value = "connected";
+      await mount();
+
+      expect(element.shadowRoot?.querySelector(".device-status-icons")).toBeNull();
     });
   });
 });

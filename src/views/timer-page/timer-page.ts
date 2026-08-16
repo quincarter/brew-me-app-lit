@@ -3,23 +3,33 @@ import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
-import "../../components/connection-status-pill/brew-connection-status-pill";
+import "../../components/collapsible-banner/brew-collapsible-banner";
 import "../../components/device-connect-action/brew-device-connect-action";
+import "../../components/icon-button/brew-icon-button";
+import "../../components/icon/brew-icon";
 import "../../components/saved-brew-picker-sheet/brew-saved-brew-picker-sheet";
 import "../../components/stat-tile/brew-stat-tile";
 import "../../components/timer-controls/brew-timer-controls";
 import "../../components/timer-dial/brew-timer-dial";
 import "../../components/timer-recipe-panel/brew-timer-recipe-panel";
 import "../../components/top-bar/brew-top-bar";
-import { ARROW_BACK_ICON_SVG } from "../../shared/icons/icons";
+import {
+  ARROW_BACK_ICON_SVG,
+  CLOSE_ICON,
+  MONITOR_WEIGHT_ICON_SVG,
+  PRESSURE_MONITOR_ICON_SVG,
+} from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
 import {
   connectMonitor,
   connectScale,
+  devicesBannerDismissedSignal,
   disconnectMonitor,
   disconnectScale,
+  dismissDevicesBanner,
   monitorConnectionStateSignal,
+  neverShowDevicesBannerAgain,
   scaleConnectionStateSignal,
 } from "../../shared/stores/device-connection.store";
 import {
@@ -43,11 +53,22 @@ import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { isWebBluetoothSupported } from "../../shared/utilities/web-bluetooth.utility";
 import { TimerPageStyles } from "./timer-page.styles";
 
+/** How long the "go to Settings to connect devices" notice stays up after "Never show again". */
+const SETTINGS_NOTICE_DURATION_MS = 5000;
+
 @customElement("timer-page")
 export class TimerPage extends SignalWatcher(LitElement) {
   static styles = [TimerPageStyles, responsiveScreenStyles];
 
   @state() private _pickerOpen = false;
+  @state() private _showSettingsNotice = false;
+
+  private _settingsNoticeTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    clearTimeout(this._settingsNoticeTimeout);
+  }
 
   private _onTargetMinutesChange(value: string): void {
     const minutes = Number.parseFloat(value);
@@ -64,34 +85,152 @@ export class TimerPage extends SignalWatcher(LitElement) {
     this._pickerOpen = false;
   }
 
-  private _renderDevicesRow(): HTMLTemplateResult | typeof nothing {
+  private _onNeverShowBanner = (): void => {
+    neverShowDevicesBannerAgain();
+    this._showSettingsNotice = true;
+    clearTimeout(this._settingsNoticeTimeout);
+    this._settingsNoticeTimeout = setTimeout(() => {
+      this._showSettingsNotice = false;
+    }, SETTINGS_NOTICE_DURATION_MS);
+  };
+
+  private _dismissSettingsNotice = (): void => {
+    clearTimeout(this._settingsNoticeTimeout);
+    this._showSettingsNotice = false;
+  };
+
+  /**
+   * A compact, dismissible offer to pair whichever devices aren't connected yet - a device
+   * already connected shows its icon in the top bar instead (see `_renderDeviceStatusIcons`)
+   * rather than staying listed here, and once both are connected there's nothing left to
+   * offer so the banner disappears on its own. Devices are optional, so someone who doesn't
+   * own either can dismiss this for the rest of the session instead of it permanently pushing
+   * the dial/controls down.
+   */
+  private _renderDevicesBanner(): HTMLTemplateResult | typeof nothing {
+    if (!isWebBluetoothSupported()) return nothing;
+
+    const scaleState = scaleConnectionStateSignal.value;
+    const monitorState = monitorConnectionStateSignal.value;
+    const bothConnected = scaleState === "connected" && monitorState === "connected";
+    // Rendered (via `brew-collapsible-banner`'s `open`) rather than removed outright even
+    // while closed, so dismissing it - or both devices finishing connecting - plays the exit
+    // animation instead of the banner just vanishing mid-render.
+    const bannerOpen = !devicesBannerDismissedSignal.value && !bothConnected;
+
+    return html`
+      <brew-collapsible-banner ?open="${bannerOpen}">
+        <div class="devices-banner">
+          <div class="devices-banner-header">
+            <span class="devices-banner-title">Connect your devices</span>
+            <brew-icon-button
+              .svgIcon="${CLOSE_ICON}"
+              size="14"
+              style="--icon-button-size: 24px"
+              aria-label="Dismiss"
+              @icon-click="${dismissDevicesBanner}"
+            ></brew-icon-button>
+          </div>
+          ${
+            scaleState !== "connected"
+              ? html`
+                  <div class="devices-banner-row">
+                    <span class="devices-banner-row-label">Bookoo Scale</span>
+                    <brew-device-connect-action
+                      state="${scaleState}"
+                      @connect-click="${connectScale}"
+                      @disconnect-click="${disconnectScale}"
+                    ></brew-device-connect-action>
+                  </div>
+                `
+              : nothing
+          }
+          ${
+            monitorState !== "connected"
+              ? html`
+                  <div class="devices-banner-row">
+                    <span class="devices-banner-row-label">Espresso Monitor</span>
+                    <brew-device-connect-action
+                      state="${monitorState}"
+                      @connect-click="${connectMonitor}"
+                      @disconnect-click="${disconnectMonitor}"
+                    ></brew-device-connect-action>
+                  </div>
+                `
+              : nothing
+          }
+          <div class="devices-banner-footer">
+            <brew-button variant="text" @button-click="${this._onNeverShowBanner}"
+              >Never show again</brew-button
+            >
+          </div>
+        </div>
+      </brew-collapsible-banner>
+    `;
+  }
+
+  /** Brief, dismissable pointer to Settings once someone picks "Never show again" above - the banner's connect affordance is gone, so this is the one-time hint for where it moved. */
+  private _renderSettingsNotice(): HTMLTemplateResult | typeof nothing {
     if (!isWebBluetoothSupported()) return nothing;
 
     return html`
-      <div class="devices-row">
-        <div class="device">
-          <span class="device-name">Bookoo Scale</span>
-          <brew-connection-status-pill
-            state="${scaleConnectionStateSignal.value}"
-          ></brew-connection-status-pill>
-          <brew-device-connect-action
-            state="${scaleConnectionStateSignal.value}"
-            @connect-click="${connectScale}"
-            @disconnect-click="${disconnectScale}"
-          ></brew-device-connect-action>
+      <brew-collapsible-banner ?open="${this._showSettingsNotice}">
+        <div class="devices-banner">
+          <div class="devices-banner-header">
+            <span class="devices-banner-title">To access connected devices, go to Settings</span>
+            <brew-icon-button
+              .svgIcon="${CLOSE_ICON}"
+              size="14"
+              style="--icon-button-size: 24px"
+              aria-label="Dismiss"
+              @icon-click="${this._dismissSettingsNotice}"
+            ></brew-icon-button>
+          </div>
+          <brew-button variant="text" href="/more/settings">Go to Settings</brew-button>
         </div>
-        <div class="device">
-          <span class="device-name">Espresso Monitor</span>
-          <brew-connection-status-pill
-            state="${monitorConnectionStateSignal.value}"
-          ></brew-connection-status-pill>
-          <brew-device-connect-action
-            state="${monitorConnectionStateSignal.value}"
-            @connect-click="${connectMonitor}"
-            @disconnect-click="${disconnectMonitor}"
-          ></brew-device-connect-action>
-        </div>
-      </div>
+      </brew-collapsible-banner>
+    `;
+  }
+
+  /** Connected-device indicators for the top bar's trailing slot - out of the way once paired, unlike the banner above. */
+  private _renderDeviceStatusIcons(): HTMLTemplateResult | typeof nothing {
+    if (!isWebBluetoothSupported()) return nothing;
+
+    const scaleConnected = scaleConnectionStateSignal.value === "connected";
+    const monitorConnected = monitorConnectionStateSignal.value === "connected";
+    if (!scaleConnected && !monitorConnected) return nothing;
+
+    return html`
+      <span slot="trailing" class="device-status-icons">
+        ${
+          scaleConnected
+            ? html`
+                <span
+                  class="device-status-icon"
+                  role="img"
+                  aria-label="Bookoo Scale connected"
+                  title="Bookoo Scale connected"
+                >
+                  <brew-icon .svg="${MONITOR_WEIGHT_ICON_SVG}" size="20"></brew-icon>
+                </span>
+              `
+            : nothing
+        }
+        ${
+          monitorConnected
+            ? html`
+                <span
+                  class="device-status-icon"
+                  role="img"
+                  aria-label="Espresso Monitor connected"
+                  title="Espresso Monitor connected"
+                >
+                  <brew-icon .svg="${PRESSURE_MONITOR_ICON_SVG}" size="20"></brew-icon>
+                </span>
+              `
+            : nothing
+        }
+      </span>
     `;
   }
 
@@ -126,10 +265,12 @@ export class TimerPage extends SignalWatcher(LitElement) {
 
     return html`
       <div class="screen">
-        <brew-top-bar title="${title}" .icon="${ARROW_BACK_ICON_SVG}" href="/more"></brew-top-bar>
+        <brew-top-bar title="${title}" .icon="${ARROW_BACK_ICON_SVG}" href="/more"
+          >${this._renderDeviceStatusIcons()}</brew-top-bar
+        >
 
         <div class="content">
-          ${this._renderDevicesRow()}
+          ${this._renderDevicesBanner()} ${this._renderSettingsNotice()}
 
           <brew-timer-dial
             ?guided="${recipe !== null}"

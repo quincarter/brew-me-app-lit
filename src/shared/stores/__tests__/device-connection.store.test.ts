@@ -118,13 +118,18 @@ vi.mock("../../ble/bookoo-monitor", () => ({
 const {
   connectMonitor,
   connectScale,
+  devicesBannerDismissedSignal,
   disconnectMonitor,
   disconnectScale,
+  dismissDevicesBanner,
   monitorConnectedSignal,
   monitorConnectionStateSignal,
+  neverShowDevicesBannerAgain,
   scaleConnectedSignal,
   scaleConnectionStateSignal,
 } = await import("../device-connection.store");
+
+const DEVICES_BANNER_DISMISSED_KEY = "brewme-devices-banner-dismissed-forever";
 const { clearTelemetry, latestMonitorReadingSignal, latestScaleReadingSignal } =
   await import("../telemetry.store");
 
@@ -152,6 +157,8 @@ describe("device-connection.store", () => {
     Reflect.deleteProperty(navigator, "bluetooth");
     scaleConnectionStateSignal.value = "disconnected";
     monitorConnectionStateSignal.value = "disconnected";
+    devicesBannerDismissedSignal.value = false;
+    localStorage.removeItem(DEVICES_BANNER_DISMISSED_KEY);
     clearTelemetry();
     vi.restoreAllMocks();
   });
@@ -396,6 +403,58 @@ describe("device-connection.store", () => {
 
       expect(scaleConnectionStateSignal.value).toBe("disconnected");
       expect(scaleConnectedSignal.value).toBe(false);
+    });
+  });
+
+  describe("devicesBannerDismissedSignal / dismissDevicesBanner", () => {
+    it("defaults to not dismissed", () => {
+      expect(devicesBannerDismissedSignal.value).toBe(false);
+    });
+
+    it("flips to dismissed and stays there until reset", () => {
+      dismissDevicesBanner();
+      expect(devicesBannerDismissedSignal.value).toBe(true);
+
+      dismissDevicesBanner();
+      expect(devicesBannerDismissedSignal.value).toBe(true);
+    });
+
+    it("dismissDevicesBanner() does not touch localStorage - a session-only dismiss", () => {
+      dismissDevicesBanner();
+
+      expect(localStorage.getItem(DEVICES_BANNER_DISMISSED_KEY)).toBeNull();
+    });
+  });
+
+  describe("neverShowDevicesBannerAgain", () => {
+    it("dismisses the banner and persists the flag to localStorage", () => {
+      expect(devicesBannerDismissedSignal.value).toBe(false);
+
+      neverShowDevicesBannerAgain();
+
+      expect(devicesBannerDismissedSignal.value).toBe(true);
+      expect(localStorage.getItem(DEVICES_BANNER_DISMISSED_KEY)).toBe("true");
+    });
+  });
+
+  describe("devicesBannerDismissedSignal seeding on module load", () => {
+    beforeEach(() => {
+      localStorage.removeItem(DEVICES_BANNER_DISMISSED_KEY);
+      vi.resetModules();
+    });
+
+    it("seeds as dismissed when localStorage already has the persisted flag", async () => {
+      localStorage.setItem(DEVICES_BANNER_DISMISSED_KEY, "true");
+
+      const freshStore = await import("../device-connection.store");
+
+      expect(freshStore.devicesBannerDismissedSignal.value).toBe(true);
+    });
+
+    it("seeds as not dismissed when localStorage has no flag", async () => {
+      const freshStore = await import("../device-connection.store");
+
+      expect(freshStore.devicesBannerDismissedSignal.value).toBe(false);
     });
   });
 });
