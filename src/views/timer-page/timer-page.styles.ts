@@ -30,6 +30,17 @@ export const TimerPageStyles = css`
     padding: 20px;
   }
 
+  /* .content centers its children by default (align-items: center above),
+   * but the sticky active-step banner needs to span the full row - and to
+   * stay pinned via "top: 0" against .content's own scrollport rather than
+   * sliding along with everything else - so it's stretched full width here
+   * rather than in the component's own :host (which only knows its own
+   * box, not this flex row's alignment). */
+  brew-active-step-banner {
+    align-self: stretch;
+    width: 100%;
+  }
+
   .devices-banner {
     display: flex;
     flex-direction: column;

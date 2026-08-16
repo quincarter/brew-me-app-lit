@@ -1,6 +1,7 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
+import "../../components/active-step-banner/brew-active-step-banner";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
 import "../../components/collapsible-banner/brew-collapsible-banner";
@@ -228,12 +229,23 @@ export class TimerPage extends SignalWatcher(LitElement) {
     // Never primed and never started - the base screen's "start now or pick a brew" choice. Once either happens (running, or a recipe is primed) this stays false for the rest of this stopwatch/brew.
     const isIdle = recipe === null && !running && timerSecondsSignal.value === 0;
     const hasSavedBrews = savedBrewsSignal.value.length > 0;
+    // Reflects the guided timer's own progress, not device-connection state - shown whether or not a scale/monitor is connected.
+    const guidedSteps = recipe?.steps ?? null;
+    const showActiveStepBanner = guidedSteps !== null && guidedSteps.length > 0 && running;
 
     return html`
       <div class="screen">
         <brew-top-bar title="${title}" .icon="${ARROW_BACK_ICON_SVG}" href="/more"></brew-top-bar>
 
         <div class="content">
+          ${
+            showActiveStepBanner
+              ? html`<brew-active-step-banner
+                  .steps="${guidedSteps}"
+                  elapsed-seconds="${timerSecondsSignal.value}"
+                ></brew-active-step-banner>`
+              : nothing
+          }
           ${this._renderDevicesBanner()} ${this._renderSettingsNotice()}
 
           <brew-timer-dial
