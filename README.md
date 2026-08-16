@@ -20,15 +20,15 @@ The project evolved across three iterations:
 
 |              Home               |               Brew Calculator               |               Saved Brews               |
 | :-----------------------------: | :-----------------------------------------: | :-------------------------------------: |
-| ![Home](./screenshots/home.png) | ![Calculator](./screenshots/calculator.png) | ![Saved Brews](./screenshots/saved.png) |
+| ![Home](./public/screenshots/home.png) | ![Calculator](./public/screenshots/calculator.png) | ![Saved Brews](./public/screenshots/saved.png) |
 
 |          Pour-over Timer          |                   Brew Guide                    |                        WAC Recipes                        |
 | :-------------------------------: | :---------------------------------------------: | :-------------------------------------------------------: |
-| ![Timer](./screenshots/timer.png) | ![Guide Detail](./screenshots/guide-detail.png) | ![AeroPress Recipes](./screenshots/aeropress-recipes.png) |
+| ![Timer](./public/screenshots/timer.png) | ![Guide Detail](./public/screenshots/guide-detail.png) | ![AeroPress Recipes](./public/screenshots/aeropress-recipes.png) |
 
 |          More Options           |                  V60 Recipes                  |                Settings                 |
 | :-----------------------------: | :-------------------------------------------: | :-------------------------------------: |
-| ![More](./screenshots/more.png) | ![V60 Recipes](./screenshots/v60-recipes.png) | ![Settings](./screenshots/settings.png) |
+| ![More](./public/screenshots/more.png) | ![V60 Recipes](./public/screenshots/v60-recipes.png) | ![Settings](./public/screenshots/settings.png) |
 
 ---
 
