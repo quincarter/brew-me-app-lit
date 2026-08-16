@@ -8,6 +8,7 @@ import {
   monitorConnectionStateSignal,
   scaleConnectionStateSignal,
 } from "../../../shared/stores/device-connection.store";
+import { clearTelemetry, telemetrySealedSignal } from "../../../shared/stores/telemetry.store";
 import {
   guidedModeSignal,
   primedRecipeSignal,
@@ -49,27 +50,29 @@ describe("timer-page", () => {
     await element.updateComplete;
   };
 
-  const dial = (): (HTMLElement & { guided: boolean; countdown: boolean; idle: boolean }) | null =>
+  const dial = (): (HTMLElement & { countdown: boolean; idle: boolean }) | null =>
     element.shadowRoot?.querySelector("brew-timer-dial") as
-      | (HTMLElement & { guided: boolean; countdown: boolean; idle: boolean })
+      | (HTMLElement & { countdown: boolean; idle: boolean })
       | null;
 
-  const controls = ():
-    | (HTMLElement & {
-        idle: boolean;
-        running: boolean;
-        hasSavedBrews: boolean;
-        hasRecipe: boolean;
-      })
-    | null =>
+  const controls = (): (HTMLElement & { hasSavedBrews: boolean }) | null =>
     element.shadowRoot?.querySelector("brew-timer-controls") as
-      | (HTMLElement & {
-          idle: boolean;
-          running: boolean;
-          hasSavedBrews: boolean;
-          hasRecipe: boolean;
-        })
+      | (HTMLElement & { hasSavedBrews: boolean })
       | null;
+
+  const resetButton = (): Element | null =>
+    element.shadowRoot?.querySelector('brew-icon-button[aria-label="Reset"]') ?? null;
+
+  const clearButton = (): Element | null =>
+    element.shadowRoot?.querySelector('brew-icon-button[aria-label="Clear brew"]') ?? null;
+
+  const fab = (): Element | null => element.shadowRoot?.querySelector(".dial-fab") ?? null;
+
+  const dialHint = (): Element | null => element.shadowRoot?.querySelector(".dial-hint") ?? null;
+
+  const fireIconClick = (el: Element | null): void => {
+    el?.dispatchEvent(new CustomEvent("icon-click", { bubbles: true, composed: true }));
+  };
 
   const recipePanel = (): (HTMLElement & { recipe: IPrimedRecipe | null }) | null =>
     element.shadowRoot?.querySelector("brew-timer-recipe-panel") as
@@ -108,6 +111,7 @@ describe("timer-page", () => {
 
   afterEach(() => {
     resetTimer();
+    clearTelemetry();
     element.remove();
   });
 
@@ -143,10 +147,14 @@ describe("timer-page", () => {
   });
 
   describe("idle state", () => {
-    it("passes idle down to brew-timer-controls when nothing is primed, running, or elapsed", async () => {
+    it("renders brew-timer-controls and no dial-cluster controls when nothing is primed, running, or elapsed", async () => {
       await mount();
 
-      expect(controls()?.idle).toBe(true);
+      expect(controls()).not.toBeNull();
+      expect(resetButton()).toBeNull();
+      expect(clearButton()).toBeNull();
+      expect(fab()).toBeNull();
+      expect(dialHint()).toBeNull();
     });
 
     it("does not tell brew-timer-controls there are saved brews when there are none", async () => {
@@ -172,49 +180,155 @@ describe("timer-page", () => {
       expect(timerRunningSignal.value).toBe(true);
     });
 
-    it("passes idle=false to brew-timer-controls once the timer is running", async () => {
+    it("swaps brew-timer-controls for the dial-cluster controls once the timer is running", async () => {
       await mount();
 
       controls()?.dispatchEvent(new CustomEvent("start-click", { bubbles: true, composed: true }));
       await element.updateComplete;
 
-      expect(controls()?.idle).toBe(false);
+      expect(controls()).toBeNull();
+      expect(resetButton()).not.toBeNull();
+      expect(fab()).not.toBeNull();
     });
 
-    it("passes idle=false once a recipe is primed, even while not running", async () => {
+    it("swaps brew-timer-controls for the dial-cluster controls once a recipe is primed, even while not running", async () => {
       await mount();
-      expect(controls()?.idle).toBe(true);
+      expect(controls()).not.toBeNull();
 
       primedRecipeSignal.value = primedRecipe();
       await element.updateComplete;
 
-      expect(controls()?.idle).toBe(false);
+      expect(controls()).toBeNull();
+      expect(resetButton()).not.toBeNull();
+    });
+  });
+
+  describe("dial-cluster controls", () => {
+    it("fires resetTimer (resetting elapsed seconds) when the reset button is activated", async () => {
+      primedRecipeSignal.value = primedRecipe();
+      timerSecondsSignal.value = 42;
+      await mount();
+
+      fireIconClick(resetButton());
+      await element.updateComplete;
+
+      expect(timerSecondsSignal.value).toBe(0);
+      // resetTimer deliberately leaves the primed recipe alone.
+      expect(primedRecipeSignal.value).not.toBeNull();
+    });
+
+    it("hides the clear (X) button when no recipe is primed, leaving a same-size spacer so the dial stays centered", async () => {
+      await mount();
+      controls()?.dispatchEvent(new CustomEvent("start-click", { bubbles: true, composed: true }));
+      await element.updateComplete;
+
+      expect(clearButton()).toBeNull();
+      expect(element.shadowRoot?.querySelector(".dial-side-spacer")).not.toBeNull();
+    });
+
+    it("shows the clear (X) button and unprimes the recipe when activated once a recipe is primed", async () => {
+      primedRecipeSignal.value = primedRecipe();
+      timerSecondsSignal.value = 30;
+      await mount();
+
+      expect(clearButton()).not.toBeNull();
+
+      fireIconClick(clearButton());
+      await element.updateComplete;
+
+      expect(primedRecipeSignal.value).toBeNull();
+      expect(timerSecondsSignal.value).toBe(0);
+      // Back to the idle base stopwatch, so brew-timer-controls returns.
+      expect(controls()).not.toBeNull();
+    });
+
+    it("shows a Play fab and 'Tap play to start...' hint while paused", async () => {
+      primedRecipeSignal.value = primedRecipe();
+      await mount();
+
+      expect(fab()?.getAttribute("aria-label")).toBe("Start");
+      expect(dialHint()?.textContent?.trim()).toBe("Tap play to start your pour-over timer.");
+    });
+
+    it("toggles the timer running and shows a Pause fab and 'Brewing in progress' hint once running", async () => {
+      primedRecipeSignal.value = primedRecipe();
+      await mount();
+
+      fireIconClick(fab());
+      await element.updateComplete;
+
+      expect(timerRunningSignal.value).toBe(true);
+      expect(fab()?.getAttribute("aria-label")).toBe("Pause");
+      expect(dialHint()?.textContent?.trim()).toBe("Brewing in progress…");
+    });
+
+    it("swaps to a Stop/Seal fab with the recording hint when running and a device is connected", async () => {
+      primedRecipeSignal.value = primedRecipe();
+      await mount();
+      fireIconClick(fab());
+      await element.updateComplete;
+      scaleConnectionStateSignal.value = "connected";
+      await element.updateComplete;
+
+      expect(fab()?.getAttribute("aria-label")).toBe("Stop and seal");
+      expect(dialHint()?.textContent?.trim()).toBe("Recording · Stop/Seal ends & saves this shot.");
+
+      scaleConnectionStateSignal.value = "disconnected";
+    });
+
+    it("fires stopSession (not toggleTimer) from the Stop/Seal fab", async () => {
+      primedRecipeSignal.value = primedRecipe();
+      await mount();
+      fireIconClick(fab());
+      await element.updateComplete;
+      scaleConnectionStateSignal.value = "connected";
+      await element.updateComplete;
+      timerSecondsSignal.value = 12;
+
+      fireIconClick(fab());
+      await element.updateComplete;
+
+      // stopSession pauses and seals telemetry, unlike toggleTimer's plain pause (which
+      // wouldn't seal) - and, unlike resetTimer, leaves the elapsed time as-is.
+      expect(timerRunningSignal.value).toBe(false);
+      expect(telemetrySealedSignal.value).toBe(true);
+      expect(timerSecondsSignal.value).toBe(12);
+
+      scaleConnectionStateSignal.value = "disconnected";
+    });
+
+    it("still shows a Pause fab (not Stop/Seal) when running but no device is connected", async () => {
+      primedRecipeSignal.value = primedRecipe();
+      await mount();
+
+      fireIconClick(fab());
+      await element.updateComplete;
+
+      expect(fab()?.getAttribute("aria-label")).toBe("Pause");
+      expect(dialHint()?.textContent?.trim()).toBe("Brewing in progress…");
     });
   });
 
   describe("dial", () => {
-    it("is not guided and not counting down for a plain, unprimed stopwatch", async () => {
+    it("is not counting down for a plain, unprimed stopwatch", async () => {
       await mount();
 
-      expect(dial()?.guided).toBe(false);
       expect(dial()?.countdown).toBe(false);
     });
 
-    it("is guided and counting down once a recipe with a target is primed in countdown mode", async () => {
+    it("is counting down once a recipe with a target is primed in countdown mode", async () => {
       primedRecipeSignal.value = primedRecipe({ targetSeconds: 210 });
       guidedModeSignal.value = "countdown";
       await mount();
 
-      expect(dial()?.guided).toBe(true);
       expect(dial()?.countdown).toBe(true);
     });
 
-    it("is guided but not counting down once switched to count-up mode", async () => {
+    it("is not counting down once switched to count-up mode", async () => {
       primedRecipeSignal.value = primedRecipe({ targetSeconds: 210 });
       guidedModeSignal.value = "countup";
       await mount();
 
-      expect(dial()?.guided).toBe(true);
       expect(dial()?.countdown).toBe(false);
     });
   });
@@ -316,36 +430,6 @@ describe("timer-page", () => {
       expect(primedRecipeSignal.value?.name).toBe("Trip brew");
       expect(primedRecipeSignal.value?.brewType).toBe("Aeropress");
       expect(sheet?.open).toBe(false);
-    });
-  });
-
-  describe("clearing a primed recipe", () => {
-    it("does not tell brew-timer-controls there's a recipe on the plain, unprimed stopwatch", async () => {
-      await mount();
-      controls()?.dispatchEvent(new CustomEvent("start-click", { bubbles: true, composed: true }));
-      await element.updateComplete;
-
-      expect(controls()?.hasRecipe).toBe(false);
-    });
-
-    it("tells brew-timer-controls there's a recipe once one is primed", async () => {
-      primedRecipeSignal.value = primedRecipe();
-      await mount();
-
-      expect(controls()?.hasRecipe).toBe(true);
-    });
-
-    it("unprimes the recipe and drops back to the idle base stopwatch on clear-click", async () => {
-      primedRecipeSignal.value = primedRecipe();
-      timerSecondsSignal.value = 30;
-      await mount();
-
-      controls()?.dispatchEvent(new CustomEvent("clear-click", { bubbles: true, composed: true }));
-      await element.updateComplete;
-
-      expect(primedRecipeSignal.value).toBeNull();
-      expect(timerSecondsSignal.value).toBe(0);
-      expect(controls()?.idle).toBe(true);
     });
   });
 

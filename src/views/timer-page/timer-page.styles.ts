@@ -90,4 +90,51 @@ export const TimerPageStyles = css`
     gap: 12px;
     width: 100%;
   }
+
+  /* The dial plus its baked-in reset/clear/play-pause-or-seal controls -
+   * see brew-timer-dial's own :host for why it can't shrink below 220px.
+   * The side buttons float in the open space either side of the dial and
+   * the fab overlaps its bottom rim (see .dial-fab below), so this reads
+   * as one control cluster rather than a dial with a separate row beneath
+   * it. */
+  .dial-cluster {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .dial-side-btn {
+    flex-shrink: 0;
+  }
+
+  /* Keeps the dial itself centered when only the reset button (left) is
+   * showing and there's no "clear brew" button (right) yet to balance it -
+   * an invisible stand-in the same size as a standard icon button. */
+  .dial-side-spacer {
+    flex-shrink: 0;
+    width: var(--icon-button-size, 40px);
+    height: var(--icon-button-size, 40px);
+  }
+
+  .dial-fab {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translate(-50%, 35%);
+    z-index: 1;
+  }
+
+  .dial-hint {
+    font-size: 13px;
+    color: var(--brew-color-on-surface-variant);
+    text-align: center;
+    margin: 0;
+    /* The fab hangs ~25px below the dial's own bottom edge (see .dial-fab) -
+     * a little extra clearance on top of .content's usual 28px gap so the
+     * hint text doesn't read as crowded underneath it. */
+    margin-top: 14px;
+  }
 `;

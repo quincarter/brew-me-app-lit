@@ -22,17 +22,14 @@ describe("brew-timer-controls", () => {
   };
 
   describe("idle", () => {
-    it("renders idle-actions with a 'Start timer now' button, no controls, and the empty-state hint", async () => {
-      element.idle = true;
+    it("renders idle-actions with a 'Start timer now' button and the empty-state hint", async () => {
       await element.updateComplete;
 
       expect(element.shadowRoot?.querySelector(".idle-actions")).not.toBeNull();
-      expect(element.shadowRoot?.querySelector(".controls")).toBeNull();
       expect(element.shadowRoot?.querySelector(".hint")).not.toBeNull();
     });
 
     it("fires start-click when 'Start timer now' is activated", async () => {
-      element.idle = true;
       await element.updateComplete;
 
       const startClick = new Promise<void>((resolve) => {
@@ -44,7 +41,6 @@ describe("brew-timer-controls", () => {
     });
 
     it("hides 'Choose from saved brews' when hasSavedBrews is false", async () => {
-      element.idle = true;
       element.hasSavedBrews = false;
       await element.updateComplete;
 
@@ -55,7 +51,6 @@ describe("brew-timer-controls", () => {
     });
 
     it("shows an empty-state hint with a link to the calculator when hasSavedBrews is false", async () => {
-      element.idle = true;
       element.hasSavedBrews = false;
       await element.updateComplete;
 
@@ -69,7 +64,6 @@ describe("brew-timer-controls", () => {
     });
 
     it("shows 'Choose from saved brews' and fires choose-saved-click when hasSavedBrews is true", async () => {
-      element.idle = true;
       element.hasSavedBrews = true;
       await element.updateComplete;
 
@@ -89,144 +83,6 @@ describe("brew-timer-controls", () => {
       clickInner(chooseButton);
 
       await chooseClick;
-    });
-  });
-
-  describe("active", () => {
-    it("renders controls and a hint, not idle-actions", async () => {
-      element.idle = false;
-      await element.updateComplete;
-
-      expect(element.shadowRoot?.querySelector(".idle-actions")).toBeNull();
-      expect(element.shadowRoot?.querySelector(".controls")).not.toBeNull();
-      expect(element.shadowRoot?.querySelector(".hint")).not.toBeNull();
-    });
-
-    it("shows a 'Pause' aria-label and 'Brewing in progress' hint while running", async () => {
-      element.idle = false;
-      element.running = true;
-      await element.updateComplete;
-
-      const playPause = element.shadowRoot?.querySelectorAll("brew-icon-button")[1];
-      expect(playPause?.getAttribute("aria-label")).toBe("Pause");
-      expect(element.shadowRoot?.querySelector(".hint")?.textContent?.trim()).toBe(
-        "Brewing in progress…",
-      );
-    });
-
-    it("shows a 'Start' aria-label and 'Tap play' hint while paused", async () => {
-      element.idle = false;
-      element.running = false;
-      await element.updateComplete;
-
-      const playPause = element.shadowRoot?.querySelectorAll("brew-icon-button")[1];
-      expect(playPause?.getAttribute("aria-label")).toBe("Start");
-      expect(element.shadowRoot?.querySelector(".hint")?.textContent?.trim()).toBe(
-        "Tap play to start your pour-over timer.",
-      );
-    });
-
-    it("fires reset-click and toggle-click from their respective icon buttons", async () => {
-      element.idle = false;
-      await element.updateComplete;
-
-      const resetClick = new Promise<void>((resolve) => {
-        element.addEventListener("reset-click", () => resolve());
-      });
-      element.shadowRoot
-        ?.querySelector('brew-icon-button[aria-label="Reset"]')
-        ?.dispatchEvent(new CustomEvent("icon-click", { bubbles: true, composed: true }));
-      await resetClick;
-
-      const toggleClick = new Promise<void>((resolve) => {
-        element.addEventListener("toggle-click", () => resolve());
-      });
-      element.shadowRoot
-        ?.querySelector('brew-icon-button[aria-label="Start"]')
-        ?.dispatchEvent(new CustomEvent("icon-click", { bubbles: true, composed: true }));
-      await toggleClick;
-    });
-
-    it("shows a spacer (no 'Clear brew' control) when hasRecipe is false", async () => {
-      element.idle = false;
-      element.hasRecipe = false;
-      await element.updateComplete;
-
-      expect(
-        element.shadowRoot?.querySelector('brew-icon-button[aria-label="Clear brew"]'),
-      ).toBeNull();
-      expect(element.shadowRoot?.querySelector(".controls .spacer")).not.toBeNull();
-    });
-
-    it("shows 'Clear brew' (no spacer) and fires clear-click when hasRecipe is true", async () => {
-      element.idle = false;
-      element.hasRecipe = true;
-      await element.updateComplete;
-
-      expect(element.shadowRoot?.querySelector(".controls .spacer")).toBeNull();
-
-      const clearClick = new Promise<void>((resolve) => {
-        element.addEventListener("clear-click", () => resolve());
-      });
-      element.shadowRoot
-        ?.querySelector('brew-icon-button[aria-label="Clear brew"]')
-        ?.dispatchEvent(new CustomEvent("icon-click", { bubbles: true, composed: true }));
-      await clearClick;
-    });
-
-    it("swaps to a Stop/Seal fab with the recording hint when running and deviceConnected", async () => {
-      element.idle = false;
-      element.running = true;
-      element.deviceConnected = true;
-      await element.updateComplete;
-
-      expect(element.shadowRoot?.querySelector('brew-icon-button[aria-label="Pause"]')).toBeNull();
-      const sealButton = element.shadowRoot?.querySelector(
-        'brew-icon-button[aria-label="Stop and seal"]',
-      );
-      expect(sealButton).not.toBeNull();
-      expect(element.shadowRoot?.querySelector(".hint")?.textContent?.trim()).toBe(
-        "Recording · Stop/Seal ends & saves this shot.",
-      );
-    });
-
-    it("fires seal-click (not toggle-click) from the Stop/Seal fab when running and deviceConnected", async () => {
-      element.idle = false;
-      element.running = true;
-      element.deviceConnected = true;
-      await element.updateComplete;
-
-      const toggleClick = () => {
-        throw new Error("toggle-click should not fire when sealing");
-      };
-      element.addEventListener("toggle-click", toggleClick);
-
-      const sealClick = new Promise<void>((resolve) => {
-        element.addEventListener("seal-click", () => resolve());
-      });
-      element.shadowRoot
-        ?.querySelector('brew-icon-button[aria-label="Stop and seal"]')
-        ?.dispatchEvent(new CustomEvent("icon-click", { bubbles: true, composed: true }));
-      await sealClick;
-
-      element.removeEventListener("toggle-click", toggleClick);
-    });
-
-    it("still shows Pause (not Stop/Seal) when running but no device is connected", async () => {
-      element.idle = false;
-      element.running = true;
-      element.deviceConnected = false;
-      await element.updateComplete;
-
-      expect(
-        element.shadowRoot?.querySelector('brew-icon-button[aria-label="Stop and seal"]'),
-      ).toBeNull();
-      expect(
-        element.shadowRoot?.querySelector('brew-icon-button[aria-label="Pause"]'),
-      ).not.toBeNull();
-      expect(element.shadowRoot?.querySelector(".hint")?.textContent?.trim()).toBe(
-        "Brewing in progress…",
-      );
     });
   });
 });

@@ -14,8 +14,16 @@ import "../../components/timer-controls/brew-timer-controls";
 import "../../components/timer-dial/brew-timer-dial";
 import "../../components/timer-recipe-panel/brew-timer-recipe-panel";
 import "../../components/top-bar/brew-top-bar";
-import { ARROW_BACK_ICON_SVG, CLOSE_ICON } from "../../shared/icons/icons";
+import {
+  ARROW_BACK_ICON_SVG,
+  CLOSE_ICON,
+  PAUSE_ICON,
+  PLAY_ICON,
+  REFRESH_ICON,
+  STOP_ICON,
+} from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
+import type { IPrimedRecipe } from "../../shared/interfaces/timer.interface";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
 import {
   connectMonitor,
@@ -215,6 +223,100 @@ export class TimerPage extends SignalWatcher(LitElement) {
     return html`<brew-extraction-chart></brew-extraction-chart>`;
   }
 
+  /**
+   * The dial plus its baked-in controls: a reset button floating to the
+   * dial's left, an optional "clear brew" button floating to its right (only
+   * once a recipe is primed), and a play/pause-or-stop/seal fab overlapping
+   * the dial's bottom rim - all absent while `isIdle`, when
+   * `brew-timer-controls` owns the "start now / choose a saved brew" prompt
+   * instead. `sealing` mirrors the old `TimerControls` "active" branch: a
+   * running timer with a scale or monitor connected swaps the fab to
+   * Stop/Seal (ends and saves the shot) instead of Play/Pause.
+   */
+  private _renderDialCluster(
+    isIdle: boolean,
+    running: boolean,
+    recipe: IPrimedRecipe | null,
+    dialTemplate: HTMLTemplateResult,
+  ): HTMLTemplateResult {
+    const sealing =
+      running &&
+      (scaleConnectionStateSignal.value === "connected" ||
+        monitorConnectionStateSignal.value === "connected");
+
+    return html`
+      <div class="dial-cluster">
+        ${
+          !isIdle
+            ? html`
+                <brew-icon-button
+                  class="dial-side-btn dial-reset-btn"
+                  .svgIcon="${REFRESH_ICON}"
+                  aria-label="Reset"
+                  @icon-click="${resetTimer}"
+                ></brew-icon-button>
+              `
+            : nothing
+        }
+        ${dialTemplate}
+        ${
+          !isIdle
+            ? recipe !== null
+              ? html`
+                  <brew-icon-button
+                    class="dial-side-btn dial-clear-btn"
+                    .svgIcon="${CLOSE_ICON}"
+                    aria-label="Clear brew"
+                    @icon-click="${clearPrimedRecipe}"
+                  ></brew-icon-button>
+                `
+              : html`<span class="dial-side-spacer"></span>`
+            : nothing
+        }
+        ${
+          !isIdle
+            ? sealing
+              ? html`
+                  <brew-icon-button
+                    class="dial-fab"
+                    variant="fab"
+                    size="28"
+                    .svgIcon="${STOP_ICON}"
+                    aria-label="Stop and seal"
+                    @icon-click="${stopSession}"
+                  ></brew-icon-button>
+                `
+              : html`
+                  <brew-icon-button
+                    class="dial-fab"
+                    variant="fab"
+                    size="28"
+                    .svgIcon="${running ? PAUSE_ICON : PLAY_ICON}"
+                    aria-label="${running ? "Pause" : "Start"}"
+                    @icon-click="${toggleTimer}"
+                  ></brew-icon-button>
+                `
+            : nothing
+        }
+      </div>
+      ${
+        !isIdle
+          ? html`
+              <p class="dial-hint">
+                ${
+                  sealing
+                    ? "Recording · Stop/Seal ends & saves this shot."
+                    : running
+                      ? "Brewing in progress…"
+                      : "Tap play to start your pour-over timer."
+                }
+              </p>
+            `
+          : nothing
+      }
+    `;
+  }
+
   render(): HTMLTemplateResult {
     const running = timerRunningSignal.value;
     const recipe = primedRecipeSignal.value;
@@ -247,14 +349,18 @@ export class TimerPage extends SignalWatcher(LitElement) {
               : nothing
           }
           ${this._renderDevicesBanner()} ${this._renderSettingsNotice()}
-
-          <brew-timer-dial
-            ?guided="${recipe !== null}"
-            ?countdown="${isCountdown}"
-            ?idle="${isIdle}"
-            seconds="${dialSeconds}"
-          ></brew-timer-dial>
-
+          ${this._renderDialCluster(
+            isIdle,
+            running,
+            recipe,
+            html`
+              <brew-timer-dial
+                ?countdown="${isCountdown}"
+                ?idle="${isIdle}"
+                seconds="${dialSeconds}"
+              ></brew-timer-dial>
+            `,
+          )}
           ${
             recipe
               ? html`
@@ -270,23 +376,17 @@ export class TimerPage extends SignalWatcher(LitElement) {
               : nothing
           }
           ${this._renderTelemetryRow()} ${this._renderExtractionChart()}
-
-          <brew-timer-controls
-            ?idle="${isIdle}"
-            ?running="${running}"
-            ?has-saved-brews="${hasSavedBrews}"
-            ?has-recipe="${recipe !== null}"
-            ?device-connected="${
-              scaleConnectionStateSignal.value === "connected" ||
-              monitorConnectionStateSignal.value === "connected"
-            }"
-            @start-click="${toggleTimer}"
-            @choose-saved-click="${this._openPicker}"
-            @reset-click="${resetTimer}"
-            @toggle-click="${toggleTimer}"
-            @clear-click="${clearPrimedRecipe}"
-            @seal-click="${stopSession}"
-          ></brew-timer-controls>
+          ${
+            isIdle
+              ? html`
+                  <brew-timer-controls
+                    ?has-saved-brews="${hasSavedBrews}"
+                    @start-click="${toggleTimer}"
+                    @choose-saved-click="${this._openPicker}"
+                  ></brew-timer-controls>
+                `
+              : nothing
+          }
         </div>
 
         <brew-bottom-nav active="more"></brew-bottom-nav>

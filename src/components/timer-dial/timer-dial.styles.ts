@@ -10,12 +10,16 @@ export const TimerDialStyles = css`
     flex-shrink: 0;
   }
 
+  /* Bordered-ring treatment, used for every timer state (plain stopwatch or
+   * a guided/recipe-primed brew alike) so the dial reads the same regardless
+   * of which one is running. */
   .dial {
     box-sizing: border-box;
     width: 220px;
     height: 220px;
     border-radius: 50%;
-    background: var(--brew-color-primary-container);
+    border: 10px solid var(--brew-color-primary-container);
+    background: var(--brew-color-surface);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -23,30 +27,14 @@ export const TimerDialStyles = css`
     gap: 6px;
   }
 
-  /* The bordered-ring treatment is specific to a guided (recipe-primed) brew - the plain, unprimed stopwatch keeps its original filled-circle look. */
-  .dial.guided {
-    border: 10px solid var(--brew-color-primary-container);
-    background: var(--brew-color-surface);
-  }
-
   .dial-label {
     font-size: 12px;
-    color: var(--brew-color-on-primary-container);
+    color: var(--brew-color-on-surface-variant);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
 
-  .dial.guided .dial-label {
-    color: var(--brew-color-on-surface-variant);
-  }
-
   .dial-value {
-    font-size: 48px;
-    font-weight: 600;
-    color: var(--brew-color-on-primary-container);
-  }
-
-  .dial.guided .dial-value {
     font-size: 34px;
     font-weight: 700;
     color: var(--brew-color-on-surface);

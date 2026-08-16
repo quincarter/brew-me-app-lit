@@ -5,9 +5,9 @@ import { TimerDialStyles } from "./timer-dial.styles";
 
 /**
  * # Timer Dial
- * The Timer screen's circular time readout. Renders as a filled circle with
- * a "Ready"/"Brewing" label above the elapsed value for a plain stopwatch;
- * once `guided`, it renders as a bordered ring instead. `countdown`
+ * The Timer screen's circular time readout - a bordered ring with a
+ * "Ready"/"Brewing" label above the elapsed value, the same look whether
+ * it's a plain stopwatch or a guided/recipe-primed brew. `countdown`
  * additionally swaps the label to "total brew time" under the value, for a
  * guided brew that's counting down to its target rather than counting up
  * from zero.
@@ -16,14 +16,13 @@ import { TimerDialStyles } from "./timer-dial.styles";
 export class TimerDial extends LitElement {
   static styles = [TimerDialStyles];
 
-  @property({ type: Boolean }) guided = false;
   @property({ type: Boolean }) countdown = false;
   @property({ type: Boolean }) idle = false;
   @property({ type: Number }) seconds = 0;
 
   render(): HTMLTemplateResult {
     return html`
-      <div class="dial ${this.guided ? "guided" : ""}">
+      <div class="dial">
         ${
           this.countdown
             ? html`
