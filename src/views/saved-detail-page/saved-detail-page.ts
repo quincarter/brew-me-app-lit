@@ -410,8 +410,13 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                     this._originalRecipeOpen = true;
                   })}
 
-                  <div class="section-title">Shots</div>
-                  <brew-shot-list .shots="${getShotsForBrew(brew.id)}"></brew-shot-list>
+                  <div class="section-title">
+                    ${brew.brewType === "Espresso Shot" ? "Shots" : "Brews"}
+                  </div>
+                  <brew-shot-list
+                    .shots="${getShotsForBrew(brew.id)}"
+                    brew-type="${brew.brewType}"
+                  ></brew-shot-list>
 
                   <div class="section-title">Brew guide</div>
                   ${

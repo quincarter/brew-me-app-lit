@@ -82,23 +82,28 @@ const renderShot = (shot: IBrewShot): HTMLTemplateResult => {
 
 /**
  * # Shot List
- * A saved brew's recorded shots (from Timer's Stop/Seal), newest first -
+ * A saved brew's recorded shots/brews (from Timer's Stop/Seal), newest first -
  * each a compact card with the recorded date, elapsed time, and (when the
- * shot has >= 2 combined telemetry samples) a small static replay of its
+ * entry has >= 2 combined telemetry samples) a small static replay of its
  * pressure/flow/weight curve, color-coded to match `brew-extraction-chart`.
- * Renders `brew-empty-state` when there are no shots yet.
+ * Renders `brew-empty-state` when there are none yet, worded for "shots" vs.
+ * "brews" per `brewType` - same underlying `IBrewShot` data either way, only
+ * "Espresso Shot" (the sole shot-pulled brew type, see `saved-detail-page.ts`)
+ * gets shot wording.
  * @element brew-shot-list
  */
 export class ShotList extends LitElement {
   static styles = [ShotListStyles];
 
   @property({ type: Array }) shots: IBrewShot[] = [];
+  @property({ type: String, attribute: "brew-type" }) brewType = "";
 
   render(): HTMLTemplateResult {
     if (this.shots.length === 0) {
+      const noun = this.brewType === "Espresso Shot" ? "shots" : "brews";
       return html`
         <brew-empty-state
-          message="No shots recorded yet — connect a device on the Timer screen and use Stop/Seal while brewing this ratio to save one here."
+          message="No ${noun} recorded yet — connect a device on the Timer screen and use Stop/Seal while brewing this ratio to save one here."
           cta-label="Go to Timer"
           cta-href="/timer"
         ></brew-empty-state>

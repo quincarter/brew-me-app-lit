@@ -142,6 +142,46 @@ describe("saved-detail-page", () => {
     });
   });
 
+  describe("Shots/Brews section title", () => {
+    it("reads 'Shots' and forwards brew-type='Espresso Shot' to brew-shot-list for that brew type", async () => {
+      const brew = addSavedBrew({
+        brewType: "Espresso Shot",
+        ratio: 2,
+        water: 36,
+        coffee: 18,
+        oz: 1.2,
+      });
+      await mount(brew);
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent?.trim() === "Shots")).toBe(true);
+      expect(element.shadowRoot?.querySelector("brew-shot-list")?.getAttribute("brew-type")).toBe(
+        "Espresso Shot",
+      );
+    });
+
+    it("reads 'Brews' and forwards the pour-over brew-type to brew-shot-list for a non-espresso brew type", async () => {
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 16,
+        water: 480,
+        coffee: 30,
+        oz: 16.2,
+      });
+      await mount(brew);
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent?.trim() === "Brews")).toBe(true);
+      expect(element.shadowRoot?.querySelector("brew-shot-list")?.getAttribute("brew-type")).toBe(
+        "Aeropress",
+      );
+    });
+  });
+
   describe("brew steps view toggle (recipeSource present)", () => {
     const brewSteps: IBrewStepsConfig = {
       steps: [{ id: "x", label: "Bloom", kind: "timed", seconds: 45 }],

@@ -26,13 +26,25 @@ describe("brew-shot-list", () => {
     element.remove();
   });
 
-  it("renders the empty-state hint when shots is empty", async () => {
+  it("renders shot-worded empty-state hint for the Espresso Shot brew type", async () => {
     element.shots = [];
+    element.brewType = "Espresso Shot";
     await element.updateComplete;
 
     const emptyState = element.shadowRoot?.querySelector("brew-empty-state");
     expect(emptyState).not.toBeNull();
     expect(emptyState?.getAttribute("message")).toContain("No shots recorded yet");
+    expect(element.shadowRoot?.querySelector(".shot-card")).toBeNull();
+  });
+
+  it("renders brew-worded empty-state hint for a non-Espresso Shot brew type", async () => {
+    element.shots = [];
+    element.brewType = "V60";
+    await element.updateComplete;
+
+    const emptyState = element.shadowRoot?.querySelector("brew-empty-state");
+    expect(emptyState).not.toBeNull();
+    expect(emptyState?.getAttribute("message")).toContain("No brews recorded yet");
     expect(element.shadowRoot?.querySelector(".shot-card")).toBeNull();
   });
 
