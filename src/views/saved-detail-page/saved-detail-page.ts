@@ -25,6 +25,7 @@ import {
   SHARE_ICON,
 } from "../../shared/icons/icons";
 import type { IBrewStepsConfig, ISavedBrew } from "../../shared/interfaces/brew.interface";
+import { getBrewTypeFeatures } from "../../shared/stores/brew-type-features.store";
 import { addCustomBrewType, allBrewTypesSignal } from "../../shared/stores/brew-types.store";
 import {
   brewAgain,
@@ -409,14 +410,19 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                   ${renderRecipeProvenanceBanner(brew.recipeSource, recipeCurrent, () => {
                     this._originalRecipeOpen = true;
                   })}
-
-                  <div class="section-title">
-                    ${brew.brewType === "Espresso Shot" ? "Shots" : "Brews"}
-                  </div>
-                  <brew-shot-list
-                    .shots="${getShotsForBrew(brew.id)}"
-                    brew-type="${brew.brewType}"
-                  ></brew-shot-list>
+                  ${
+                    getBrewTypeFeatures(brew.brewType).showShotsSection
+                      ? html`
+                          <div class="section-title">
+                            ${brew.brewType === "Espresso Shot" ? "Shots" : "Brews"}
+                          </div>
+                          <brew-shot-list
+                            .shots="${getShotsForBrew(brew.id)}"
+                            brew-type="${brew.brewType}"
+                          ></brew-shot-list>
+                        `
+                      : nothing
+                  }
 
                   <div class="section-title">Brew guide</div>
                   ${

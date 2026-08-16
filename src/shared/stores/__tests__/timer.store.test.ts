@@ -474,5 +474,34 @@ describe("timer.store", () => {
 
       expect(timerRunningSignal.value).toBe(false);
     });
+
+    it("skips recording a shot for a brew type whose telemetry is locked off (Aeropress), but still stamps the brew as brewed", () => {
+      const brew: ISavedBrew = {
+        id: 101,
+        brewType: "Aeropress",
+        ratio: 15,
+        water: 200,
+        coffee: 13,
+        oz: 7,
+        createdAt: Date.now(),
+      };
+      savedBrewsSignal.value = [...savedBrewsSignal.value, brew];
+      primeTimerForSavedBrew(brew);
+      timerRunningSignal.value = true;
+      timerSecondsSignal.value = 40;
+      startTelemetryRecording();
+      recordScaleReading({
+        timeMs: 1000,
+        weightGrams: 18,
+        flowRateGramsPerSecond: 1.2,
+        batteryPercent: 85,
+      });
+
+      stopSession();
+
+      expect(getShotsForBrew(101)).toEqual([]);
+      const updatedBrew = savedBrewsSignal.value.find((item) => item.id === 101);
+      expect(updatedBrew?.lastBrewedAt).toBeDefined();
+    });
   });
 });

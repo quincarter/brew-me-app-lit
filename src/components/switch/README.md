@@ -15,10 +15,11 @@ dark-mode row on the Settings screen.
 
 ## Properties
 
-| Property        | Attribute    | Type      | Default | Description                      |
-| --------------- | ------------ | --------- | ------- | -------------------------------- |
-| `checked`       | `checked`    | `Boolean` | `false` | Current on/off state.            |
-| `ariaLabelText` | `aria-label` | `String`  | `""`    | Accessible label for the toggle. |
+| Property        | Attribute    | Type      | Default | Description                                     |
+| --------------- | ------------ | --------- | ------- | ----------------------------------------------- |
+| `checked`       | `checked`    | `Boolean` | `false` | Current on/off state.                           |
+| `ariaLabelText` | `aria-label` | `String`  | `""`    | Accessible label for the toggle.                |
+| `disabled`      | `disabled`   | `Boolean` | `false` | Renders non-interactive and ignores activation. |
 
 ## Events
 

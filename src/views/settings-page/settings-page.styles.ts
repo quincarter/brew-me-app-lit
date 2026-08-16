@@ -121,6 +121,39 @@ export const SettingsPageStyles = css`
     color: var(--brew-color-on-surface);
   }
 
+  .feature-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .feature-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    border-radius: 16px;
+    background: var(--brew-color-surface-container-low);
+  }
+
+  .feature-row-sublabel {
+    font-size: 13px;
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .feature-row-telemetry {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  .feature-row-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
   .status-text {
     margin: -6px 0 0;
     font-size: 13px;

@@ -48,4 +48,10 @@ export const SwitchStyles = css`
     outline: 2px solid var(--brew-color-primary);
     outline-offset: 2px;
   }
+
+  .track[disabled] {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
 `;

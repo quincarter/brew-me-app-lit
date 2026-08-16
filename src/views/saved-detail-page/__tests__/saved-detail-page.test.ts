@@ -7,6 +7,7 @@ import type {
   ILoadedRecipeSource,
   ISavedBrew,
 } from "../../../shared/interfaces/brew.interface";
+import { brewTypeFeaturesSignal } from "../../../shared/stores/brew-type-features.store";
 import { deleteAllCustomBrewTypes } from "../../../shared/stores/brew-types.store";
 import {
   addSavedBrew,
@@ -37,6 +38,7 @@ describe("saved-detail-page", () => {
     postSaveSheetOpenSignal.value = false;
     postSaveSheetAlreadyOnDetailSignal.value = false;
     editBeforeBrewingIdSignal.value = null;
+    brewTypeFeaturesSignal.value = {};
   });
 
   afterEach(() => {
@@ -163,8 +165,11 @@ describe("saved-detail-page", () => {
     });
 
     it("reads 'Brews' and forwards the pour-over brew-type to brew-shot-list for a non-espresso brew type", async () => {
+      // Not Aeropress - that brew type's shots/brews section is now locked
+      // off entirely (see the "showShotsSection gating" describe below), so
+      // it wouldn't demonstrate this title/forwarding behavior.
       const brew = addSavedBrew({
-        brewType: "Aeropress",
+        brewType: "V60",
         ratio: 16,
         water: 480,
         coffee: 30,
@@ -177,8 +182,60 @@ describe("saved-detail-page", () => {
       );
       expect(sectionTitles.some((title) => title.textContent?.trim() === "Brews")).toBe(true);
       expect(element.shadowRoot?.querySelector("brew-shot-list")?.getAttribute("brew-type")).toBe(
-        "Aeropress",
+        "V60",
       );
+    });
+  });
+
+  describe("showShotsSection gating", () => {
+    it("renders no Brews/Shots section title or brew-shot-list for Aeropress (locked off)", async () => {
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 16,
+        water: 480,
+        coffee: 30,
+        oz: 16.2,
+      });
+      await mount(brew);
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent?.trim() === "Brews")).toBe(false);
+      expect(element.shadowRoot?.querySelector("brew-shot-list")).toBeNull();
+    });
+
+    it("renders the Brews/Shots section for an unlocked brew type by default", async () => {
+      const brew = addSavedBrew({
+        brewType: "Chemex",
+        ratio: 16,
+        water: 480,
+        coffee: 30,
+        oz: 16.2,
+      });
+      await mount(brew);
+
+      expect(element.shadowRoot?.querySelector("brew-shot-list")).not.toBeNull();
+    });
+
+    it("hides the Brews/Shots section once showShotsSection is turned off for an unlocked brew type", async () => {
+      brewTypeFeaturesSignal.value = {
+        Chemex: { showShotsSection: false, telemetryMode: "full" },
+      };
+      const brew = addSavedBrew({
+        brewType: "Chemex",
+        ratio: 16,
+        water: 480,
+        coffee: 30,
+        oz: 16.2,
+      });
+      await mount(brew);
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent?.trim() === "Brews")).toBe(false);
+      expect(element.shadowRoot?.querySelector("brew-shot-list")).toBeNull();
     });
   });
 

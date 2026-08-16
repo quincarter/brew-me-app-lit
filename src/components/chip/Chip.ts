@@ -15,8 +15,10 @@ export class Chip extends LitElement {
 
   @property({ type: String }) label = "";
   @property({ type: Boolean, reflect: true }) selected = false;
+  @property({ type: Boolean, reflect: true }) disabled = false;
 
   private _onClick = (): void => {
+    if (this.disabled) return;
     this.dispatchEvent(new CustomEvent("chip-click", { bubbles: true, composed: true }));
   };
 
@@ -25,6 +27,7 @@ export class Chip extends LitElement {
       <button
         class="chip ${this.selected ? "selected" : ""}"
         type="button"
+        ?disabled="${this.disabled}"
         @click="${this._onClick}"
       >
         ${this.selected ? html`<brew-icon .svg="${CHECK_ICON_SVG}" size="16"></brew-icon>` : nothing}

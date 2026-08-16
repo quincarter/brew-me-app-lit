@@ -24,6 +24,7 @@ import {
 } from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import type { IPrimedRecipe } from "../../shared/interfaces/timer.interface";
+import { getBrewTypeFeatures } from "../../shared/stores/brew-type-features.store";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
 import {
   connectMonitor,
@@ -110,10 +111,13 @@ export class TimerPage extends SignalWatcher(LitElement) {
    * now owns this globally) rather than staying listed here, and once both are connected
    * there's nothing left to offer so the banner disappears on its own. Devices are optional,
    * so someone who doesn't own either can dismiss this for the rest of the session instead of
-   * it permanently pushing the dial/controls down.
+   * it permanently pushing the dial/controls down. Also hidden for a primed recipe whose brew
+   * type's `telemetryMode` is "off" (e.g. Aeropress) - pairing a device would be pointless when
+   * nothing from it can be displayed or recorded for that brew type.
    */
-  private _renderDevicesBanner(): HTMLTemplateResult | typeof nothing {
+  private _renderDevicesBanner(brewType: string | null): HTMLTemplateResult | typeof nothing {
     if (!isWebBluetoothSupported()) return nothing;
+    if (brewType && getBrewTypeFeatures(brewType).telemetryMode === "off") return nothing;
 
     const scaleState = scaleConnectionStateSignal.value;
     const monitorState = monitorConnectionStateSignal.value;
@@ -174,9 +178,14 @@ export class TimerPage extends SignalWatcher(LitElement) {
     `;
   }
 
-  /** Brief, dismissable pointer to Settings once someone picks "Never show again" above - the banner's connect affordance is gone, so this is the one-time hint for where it moved. */
-  private _renderSettingsNotice(): HTMLTemplateResult | typeof nothing {
+  /**
+   * Brief, dismissable pointer to Settings once someone picks "Never show again" above - the
+   * banner's connect affordance is gone, so this is the one-time hint for where it moved. Gated
+   * the same way as `_renderDevicesBanner` for the same reason.
+   */
+  private _renderSettingsNotice(brewType: string | null): HTMLTemplateResult | typeof nothing {
     if (!isWebBluetoothSupported()) return nothing;
+    if (brewType && getBrewTypeFeatures(brewType).telemetryMode === "off") return nothing;
 
     return html`
       <brew-collapsible-banner ?open="${this._showSettingsNotice}">
@@ -197,8 +206,15 @@ export class TimerPage extends SignalWatcher(LitElement) {
     `;
   }
 
-  private _renderTelemetryRow(): HTMLTemplateResult | typeof nothing {
+  /**
+   * Gated on Web Bluetooth support and, when a recipe is primed, its brew type's
+   * `telemetryMode` - some methods (starting with Aeropress) can't actually support device
+   * telemetry, so their gauges are hidden regardless of what's connected. No primed recipe (the
+   * generic stopwatch case) has no brew type to restrict on, so only the bluetooth check applies.
+   */
+  private _renderTelemetryRow(brewType: string | null): HTMLTemplateResult | typeof nothing {
     if (!isWebBluetoothSupported()) return nothing;
+    if (brewType && getBrewTypeFeatures(brewType).telemetryMode !== "full") return nothing;
 
     const weight = latestScaleReadingSignal.value?.weightGrams.toFixed(1) ?? "--";
     const pressure = latestMonitorReadingSignal.value?.pressureBar.toFixed(1) ?? "--";
@@ -215,10 +231,13 @@ export class TimerPage extends SignalWatcher(LitElement) {
    * Gated on Web Bluetooth support only - `brew-extraction-chart` picks its own empty state
    * from there (an invitation to connect a device, then "Waiting for data…" once one has, per
    * `anyDeviceConnectedThisSessionSignal`), so a supported browser always sees this card even
-   * before ever connecting anything, rather than the chart's whole spot being absent.
+   * before ever connecting anything, rather than the chart's whole spot being absent. Also
+   * gated on the primed recipe's brew type's `telemetryMode` not being "off" (see
+   * `_renderTelemetryRow`'s doc comment) - no primed recipe skips that check.
    */
-  private _renderExtractionChart(): HTMLTemplateResult | typeof nothing {
+  private _renderExtractionChart(brewType: string | null): HTMLTemplateResult | typeof nothing {
     if (!isWebBluetoothSupported()) return nothing;
+    if (brewType && getBrewTypeFeatures(brewType).telemetryMode === "off") return nothing;
 
     return html`<brew-extraction-chart></brew-extraction-chart>`;
   }
@@ -348,7 +367,8 @@ export class TimerPage extends SignalWatcher(LitElement) {
                 ></brew-active-step-banner>`
               : nothing
           }
-          ${this._renderDevicesBanner()} ${this._renderSettingsNotice()}
+          ${this._renderDevicesBanner(recipe?.brewType ?? null)}
+          ${this._renderSettingsNotice(recipe?.brewType ?? null)}
           ${this._renderDialCluster(
             isIdle,
             running,
@@ -375,7 +395,8 @@ export class TimerPage extends SignalWatcher(LitElement) {
                 `
               : nothing
           }
-          ${this._renderTelemetryRow()} ${this._renderExtractionChart()}
+          ${this._renderTelemetryRow(recipe?.brewType ?? null)}
+          ${this._renderExtractionChart(recipe?.brewType ?? null)}
           ${
             isIdle
               ? html`

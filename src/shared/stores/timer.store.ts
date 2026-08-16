@@ -6,6 +6,7 @@ import type { IPrimedRecipe } from "../interfaces/timer.interface";
 import { computeTotalStepSeconds } from "../utilities/brew-step-progress.utility";
 import { getBrewDisplayName } from "../utilities/brew-display.utility";
 import { markBrewedNow } from "./brew.store";
+import { getBrewTypeFeatures } from "./brew-type-features.store";
 import { addShot } from "./shot.store";
 import {
   clearTelemetry,
@@ -77,6 +78,10 @@ export const resetTimer = (): void => {
  * `resetTimer` for "I'm done pulling this shot" rather than "start over".
  * A no-op once already sealed, so it can't be re-invoked (e.g. via a stray
  * `toggleTimer` + second seal) into recording a duplicate, stale shot.
+ * Skips recording a shot entirely for a brew type whose `telemetryMode` is
+ * "off" (e.g. Aeropress) - that lock means telemetry can't genuinely be
+ * tracked for it, so a connected device's samples would just be persisted
+ * data nobody can ever see (its Saved Detail hides the Brews/Shots section).
  */
 export const stopSession = (): void => {
   if (telemetrySealedSignal.value) return;
@@ -86,15 +91,19 @@ export const stopSession = (): void => {
   sealTelemetry();
 
   const recipe = primedRecipeSignal.value;
-  if (recipe?.savedBrewId !== undefined) {
+  if (recipe?.savedBrewId === undefined) return;
+
+  const telemetryLocked =
+    recipe.brewType !== null && getBrewTypeFeatures(recipe.brewType).telemetryMode === "off";
+  if (!telemetryLocked) {
     addShot({
       savedBrewId: recipe.savedBrewId,
       elapsedSeconds: timerSecondsSignal.value,
       scaleSamples: scaleSamplesSignal.value,
       monitorSamples: monitorSamplesSignal.value,
     });
-    markBrewedNow(recipe.savedBrewId);
   }
+  markBrewedNow(recipe.savedBrewId);
 };
 
 /** Unprimes the timer, dropping it back to the plain base stopwatch (and its "start now or choose a saved brew" idle state) - the counterpart to `resetTimer` deliberately keeping the recipe, for when the person wants to leave the guided brew entirely rather than just restart its clock. */

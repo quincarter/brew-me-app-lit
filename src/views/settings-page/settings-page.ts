@@ -3,6 +3,7 @@ import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, query, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
+import "../../components/chip/brew-chip";
 import "../../components/device-connect-rows/brew-device-connect-rows";
 import "../../components/icon/brew-icon";
 import "../../components/list-row/brew-list-row";
@@ -11,6 +12,12 @@ import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
 import { BREW_TYPES } from "../../shared/data/brew-content.data";
 import { ARROW_BACK_ICON_SVG, CLOSE_ICON } from "../../shared/icons/icons";
+import {
+  getBrewTypeFeatures,
+  isBrewTypeFeaturesLocked,
+  setShowShotsSection,
+  setTelemetryMode,
+} from "../../shared/stores/brew-type-features.store";
 import {
   addCustomBrewType,
   customBrewTypesSignal,
@@ -118,6 +125,74 @@ export class SettingsPage extends SignalWatcher(LitElement) {
     this._confirmingDelete = false;
   };
 
+  /** One brew type's row within the "Brew type features" section - locked types (e.g. Aeropress) render disabled with a hint instead of an editable switch/chips. */
+  private _renderBrewTypeFeaturesRow(name: string): HTMLTemplateResult {
+    const locked = isBrewTypeFeaturesLocked(name);
+    const features = getBrewTypeFeatures(name);
+
+    return html`
+      <div class="feature-row">
+        <span class="row-label">${name}</span>
+
+        <div class="row">
+          <span class="feature-row-sublabel">Show Brews/Shots section</span>
+          <brew-switch
+            ?checked="${features.showShotsSection}"
+            ?disabled="${locked}"
+            aria-label="Show Brews/Shots section for ${name}"
+            @change="${(e: CustomEvent<boolean>) => setShowShotsSection(name, e.detail)}"
+          ></brew-switch>
+        </div>
+
+        <div class="feature-row-telemetry">
+          <span class="feature-row-sublabel">Timer telemetry</span>
+          <div class="feature-row-chips">
+            <brew-chip
+              label="Off"
+              ?selected="${features.telemetryMode === "off"}"
+              ?disabled="${locked}"
+              @chip-click="${() => setTelemetryMode(name, "off")}"
+            ></brew-chip>
+            <brew-chip
+              label="Gauges + chart"
+              ?selected="${features.telemetryMode === "full"}"
+              ?disabled="${locked}"
+              @chip-click="${() => setTelemetryMode(name, "full")}"
+            ></brew-chip>
+            <brew-chip
+              label="Chart only"
+              ?selected="${features.telemetryMode === "chart-only"}"
+              ?disabled="${locked}"
+              @chip-click="${() => setTelemetryMode(name, "chart-only")}"
+            ></brew-chip>
+          </div>
+        </div>
+
+        ${
+          locked
+            ? html`<p class="section-hint">Telemetry can't be tracked for ${name} yet.</p>`
+            : nothing
+        }
+      </div>
+    `;
+  }
+
+  private _renderBrewTypeFeaturesSection(): HTMLTemplateResult {
+    const allTypes = [...BREW_TYPES, ...customBrewTypesSignal.value];
+
+    return html`
+      <div class="divider"></div>
+      <div class="section-title">Brew type features</div>
+      <p class="section-hint">
+        Control which optional sections show up per brew type - useful for methods that can't
+        support every feature.
+      </p>
+      <div class="feature-rows">
+        ${allTypes.map((name) => this._renderBrewTypeFeaturesRow(name))}
+      </div>
+    `;
+  }
+
   private _renderConnectedDevicesSection(): HTMLTemplateResult | typeof nothing {
     if (!isWebBluetoothSupported()) return nothing;
 
@@ -190,6 +265,7 @@ export class SettingsPage extends SignalWatcher(LitElement) {
                   >
                 `
           }
+          ${this._renderBrewTypeFeaturesSection()}
 
           <div class="divider"></div>
           <div class="section-title">Appearance</div>

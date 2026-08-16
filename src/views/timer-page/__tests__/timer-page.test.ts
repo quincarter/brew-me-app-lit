@@ -2,6 +2,7 @@ import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ISavedBrew } from "../../../shared/interfaces/brew.interface";
 import type { IPrimedRecipe } from "../../../shared/interfaces/timer.interface";
+import { brewTypeFeaturesSignal } from "../../../shared/stores/brew-type-features.store";
 import { savedBrewsSignal } from "../../../shared/stores/brew.store";
 import {
   devicesBannerDismissedSignal,
@@ -107,6 +108,7 @@ describe("timer-page", () => {
     primedRecipeSignal.value = null;
     guidedModeSignal.value = "countdown";
     savedBrewsSignal.value = [];
+    brewTypeFeaturesSignal.value = {};
   });
 
   afterEach(() => {
@@ -534,6 +536,76 @@ describe("timer-page", () => {
       await mount();
 
       expect(element.shadowRoot?.querySelector("brew-extraction-chart")).not.toBeNull();
+    });
+  });
+
+  describe("telemetry gating by brew type features", () => {
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+    });
+
+    const statTiles = (): Element | null =>
+      element.shadowRoot?.querySelector(".telemetry-row") ?? null;
+
+    const chart = (): Element | null =>
+      element.shadowRoot?.querySelector("brew-extraction-chart") ?? null;
+
+    it("renders neither the stat tiles nor the extraction chart when the primed recipe's brew type resolves to telemetryMode 'off' (e.g. Aeropress)", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      primedRecipeSignal.value = primedRecipe({ brewType: "Aeropress" });
+      await mount();
+
+      expect(statTiles()).toBeNull();
+      expect(chart()).toBeNull();
+    });
+
+    it("renders the extraction chart but not the stat tiles for telemetryMode 'chart-only'", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      brewTypeFeaturesSignal.value = {
+        V60: { showShotsSection: true, telemetryMode: "chart-only" },
+      };
+      primedRecipeSignal.value = primedRecipe({ brewType: "V60" });
+      await mount();
+
+      expect(statTiles()).toBeNull();
+      expect(chart()).not.toBeNull();
+    });
+
+    it("renders both the stat tiles and the extraction chart for telemetryMode 'full'", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      brewTypeFeaturesSignal.value = { V60: { showShotsSection: true, telemetryMode: "full" } };
+      primedRecipeSignal.value = primedRecipe({ brewType: "V60" });
+      await mount();
+
+      expect(statTiles()).not.toBeNull();
+      expect(chart()).not.toBeNull();
+    });
+
+    it("preserves old behavior (both render) for a null recipe (no brew type to restrict on)", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      primedRecipeSignal.value = null;
+      await mount();
+
+      expect(statTiles()).not.toBeNull();
+      expect(chart()).not.toBeNull();
+    });
+
+    it("also hides the 'Connect your devices' banner for a locked brew type, so pairing isn't offered for telemetry that can never be shown or recorded", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      devicesBannerDismissedSignal.value = false;
+      primedRecipeSignal.value = primedRecipe({ brewType: "Aeropress" });
+      await mount();
+
+      expect(element.shadowRoot?.querySelector(".devices-banner")).toBeNull();
+    });
+
+    it("still offers the devices banner for a brew type with telemetry enabled", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      devicesBannerDismissedSignal.value = false;
+      primedRecipeSignal.value = primedRecipe({ brewType: "V60" });
+      await mount();
+
+      expect(element.shadowRoot?.querySelector(".devices-banner")).not.toBeNull();
     });
   });
 
