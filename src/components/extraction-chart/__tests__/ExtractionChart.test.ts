@@ -4,6 +4,7 @@ import type {
   IBookooScaleReading,
 } from "../../../shared/interfaces/bookoo-ble.interface";
 import type { IExtractionGhostPoint } from "../../../shared/interfaces/extraction-chart.interface";
+import { anyDeviceConnectedThisSessionSignal } from "../../../shared/stores/device-connection.store";
 import {
   clearTelemetry,
   recordMonitorReading,
@@ -33,6 +34,10 @@ describe("brew-extraction-chart", () => {
   beforeEach(async () => {
     clearTelemetry();
     startTelemetryRecording();
+    // Most tests below are about behavior once a device HAS connected this session (the
+    // waiting/series/ghost states) - the dedicated "never connected" describe block below
+    // overrides this back to false for its own cases.
+    anyDeviceConnectedThisSessionSignal.value = true;
     element = document.createElement("brew-extraction-chart") as ExtractionChart;
     document.body.appendChild(element);
     await element.updateComplete;
@@ -41,6 +46,31 @@ describe("brew-extraction-chart", () => {
   afterEach(() => {
     element.remove();
     clearTelemetry();
+    anyDeviceConnectedThisSessionSignal.value = false;
+  });
+
+  describe("never connected this session", () => {
+    it("renders an invitation to connect a device instead of the waiting/chart states, even with no telemetry recorded", async () => {
+      anyDeviceConnectedThisSessionSignal.value = false;
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".placeholder")?.textContent?.trim()).toBe(
+        "Connect a scale or espresso monitor to get live feedback about your shots",
+      );
+      expect(element.shadowRoot?.querySelector(".chart-svg")).toBeNull();
+    });
+
+    it("takes priority over the waiting-for-data state even if telemetry samples somehow exist", async () => {
+      recordScaleReading(scaleReading());
+      recordScaleReading(scaleReading());
+      anyDeviceConnectedThisSessionSignal.value = false;
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".placeholder")?.textContent?.trim()).toBe(
+        "Connect a scale or espresso monitor to get live feedback about your shots",
+      );
+      expect(element.shadowRoot?.querySelector(".chart-svg")).toBeNull();
+    });
   });
 
   describe("empty state", () => {

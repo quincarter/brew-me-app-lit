@@ -2,6 +2,7 @@ import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { property } from "lit/decorators.js";
 import type { IExtractionGhostPoint } from "../../shared/interfaces/extraction-chart.interface";
+import { anyDeviceConnectedThisSessionSignal } from "../../shared/stores/device-connection.store";
 import { monitorSamplesSignal, scaleSamplesSignal } from "../../shared/stores/telemetry.store";
 import {
   buildExtractionChartPath,
@@ -31,10 +32,13 @@ const ghostSeries = (
  * # Extraction Chart
  * The Timer screen's live pressure/flow/weight curve, plotted from
  * `scaleSamplesSignal`/`monitorSamplesSignal` directly (no props needed for
- * the live data). Shows a "Waiting for data…" placeholder until there are
- * ≥2 combined samples, and stays visible with the frozen final curve after
- * a mid-/post-session device disconnect (that visibility gating lives in
- * the Timer page, not here).
+ * the live data). Renders unconditionally once mounted (visibility - i.e.
+ * whether Web Bluetooth is supported at all - is the Timer page's call, not
+ * this component's) and picks its own empty state: an invitation to connect
+ * a device until `anyDeviceConnectedThisSessionSignal` is true, then a
+ * "Waiting for data…" placeholder until there are ≥2 combined samples. Stays
+ * visible with the frozen final curve after a mid-/post-session device
+ * disconnect.
  * @element brew-extraction-chart
  */
 export class ExtractionChart extends SignalWatcher(LitElement) {
@@ -45,6 +49,16 @@ export class ExtractionChart extends SignalWatcher(LitElement) {
   @property({ type: String }) ghostLabel = "";
 
   render(): HTMLTemplateResult {
+    if (!anyDeviceConnectedThisSessionSignal.value) {
+      return html`
+        <div class="chart-card">
+          <p class="placeholder">
+            Connect a scale or espresso monitor to get live feedback about your shots
+          </p>
+        </div>
+      `;
+    }
+
     const scaleSamples = scaleSamplesSignal.value;
     const monitorSamples = monitorSamplesSignal.value;
 

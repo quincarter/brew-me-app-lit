@@ -433,6 +433,26 @@ describe("timer-page", () => {
     });
   });
 
+  describe("extraction chart", () => {
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+    });
+
+    it("is absent when Web Bluetooth is unsupported", async () => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+      await mount();
+
+      expect(element.shadowRoot?.querySelector("brew-extraction-chart")).toBeNull();
+    });
+
+    it("renders even before any device has connected this session, once Web Bluetooth is supported", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      await mount();
+
+      expect(element.shadowRoot?.querySelector("brew-extraction-chart")).not.toBeNull();
+    });
+  });
+
   describe('"go to Settings" notice after Never show again', () => {
     afterEach(() => {
       Reflect.deleteProperty(navigator, "bluetooth");

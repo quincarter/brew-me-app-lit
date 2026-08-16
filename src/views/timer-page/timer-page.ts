@@ -17,7 +17,6 @@ import { ARROW_BACK_ICON_SVG, CLOSE_ICON } from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
 import {
-  anyDeviceConnectedThisSessionSignal,
   connectMonitor,
   connectScale,
   devicesBannerDismissedSignal,
@@ -203,9 +202,14 @@ export class TimerPage extends SignalWatcher(LitElement) {
     `;
   }
 
-  /** Only once ≥1 device has connected this session - stays up afterwards (frozen final curve) even through a mid-/post-session disconnect, per `anyDeviceConnectedThisSessionSignal`. */
+  /**
+   * Gated on Web Bluetooth support only - `brew-extraction-chart` picks its own empty state
+   * from there (an invitation to connect a device, then "Waiting for data…" once one has, per
+   * `anyDeviceConnectedThisSessionSignal`), so a supported browser always sees this card even
+   * before ever connecting anything, rather than the chart's whole spot being absent.
+   */
   private _renderExtractionChart(): HTMLTemplateResult | typeof nothing {
-    if (!anyDeviceConnectedThisSessionSignal.value) return nothing;
+    if (!isWebBluetoothSupported()) return nothing;
 
     return html`<brew-extraction-chart></brew-extraction-chart>`;
   }
