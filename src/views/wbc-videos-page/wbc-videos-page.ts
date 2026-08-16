@@ -82,9 +82,7 @@ export class WbcVideosPage extends LitElement {
           <div class="divider"></div>
 
           <!-- Misc & Behind the Scenes Section -->
-          <h3 class="section-title">
-            Beverage Breakdown &amp; Behind the Scenes
-          </h3>
+          <h3 class="section-title">Beverage Breakdown &amp; Behind the Scenes</h3>
           <div class="video-list">
             ${WBC_MISC_VIDEOS.map(
               (video) => html`

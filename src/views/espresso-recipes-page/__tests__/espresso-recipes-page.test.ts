@@ -2,7 +2,10 @@ import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ESPRESSO_PROFILES } from "../../../shared/data/espresso-profiles.data";
 import { ESPRESSO_SHOT_STYLES } from "../../../shared/data/espresso-shot-styles.data";
-import type { IEspressoProfile, IEspressoShotStyle } from "../../../shared/interfaces/brew.interface";
+import type {
+  IEspressoProfile,
+  IEspressoShotStyle,
+} from "../../../shared/interfaces/brew.interface";
 import { deleteAllSavedBrews, savedBrewsSignal } from "../../../shared/stores/brew.store";
 import {
   closePostSaveSheet,
