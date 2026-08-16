@@ -2,7 +2,11 @@ import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
+import "../../components/button/brew-button";
+import "../../components/connection-status-pill/brew-connection-status-pill";
+import "../../components/device-connect-action/brew-device-connect-action";
 import "../../components/saved-brew-picker-sheet/brew-saved-brew-picker-sheet";
+import "../../components/stat-tile/brew-stat-tile";
 import "../../components/timer-controls/brew-timer-controls";
 import "../../components/timer-dial/brew-timer-dial";
 import "../../components/timer-recipe-panel/brew-timer-recipe-panel";
@@ -10,6 +14,14 @@ import "../../components/top-bar/brew-top-bar";
 import { ARROW_BACK_ICON_SVG } from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
+import {
+  connectMonitor,
+  connectScale,
+  disconnectMonitor,
+  disconnectScale,
+  monitorConnectionStateSignal,
+  scaleConnectionStateSignal,
+} from "../../shared/stores/device-connection.store";
 import {
   type GuidedTimerMode,
   clearPrimedRecipe,
@@ -23,7 +35,12 @@ import {
   timerSecondsSignal,
   toggleTimer,
 } from "../../shared/stores/timer.store";
+import {
+  latestMonitorReadingSignal,
+  latestScaleReadingSignal,
+} from "../../shared/stores/telemetry.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
+import { isWebBluetoothSupported } from "../../shared/utilities/web-bluetooth.utility";
 import { TimerPageStyles } from "./timer-page.styles";
 
 @customElement("timer-page")
@@ -47,6 +64,51 @@ export class TimerPage extends SignalWatcher(LitElement) {
     this._pickerOpen = false;
   }
 
+  private _renderDevicesRow(): HTMLTemplateResult | typeof nothing {
+    if (!isWebBluetoothSupported()) return nothing;
+
+    return html`
+      <div class="devices-row">
+        <div class="device">
+          <span class="device-name">Bookoo Scale</span>
+          <brew-connection-status-pill
+            state="${scaleConnectionStateSignal.value}"
+          ></brew-connection-status-pill>
+          <brew-device-connect-action
+            state="${scaleConnectionStateSignal.value}"
+            @connect-click="${connectScale}"
+            @disconnect-click="${disconnectScale}"
+          ></brew-device-connect-action>
+        </div>
+        <div class="device">
+          <span class="device-name">Espresso Monitor</span>
+          <brew-connection-status-pill
+            state="${monitorConnectionStateSignal.value}"
+          ></brew-connection-status-pill>
+          <brew-device-connect-action
+            state="${monitorConnectionStateSignal.value}"
+            @connect-click="${connectMonitor}"
+            @disconnect-click="${disconnectMonitor}"
+          ></brew-device-connect-action>
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderTelemetryRow(): HTMLTemplateResult | typeof nothing {
+    if (!isWebBluetoothSupported()) return nothing;
+
+    const weight = latestScaleReadingSignal.value?.weightGrams.toFixed(1) ?? "--";
+    const pressure = latestMonitorReadingSignal.value?.pressureBar.toFixed(1) ?? "--";
+
+    return html`
+      <div class="telemetry-row">
+        <brew-stat-tile value="${weight}" label="Weight (g)"></brew-stat-tile>
+        <brew-stat-tile value="${pressure}" label="Pressure (bar)"></brew-stat-tile>
+      </div>
+    `;
+  }
+
   render(): HTMLTemplateResult {
     const running = timerRunningSignal.value;
     const recipe = primedRecipeSignal.value;
@@ -67,6 +129,8 @@ export class TimerPage extends SignalWatcher(LitElement) {
         <brew-top-bar title="${title}" .icon="${ARROW_BACK_ICON_SVG}" href="/more"></brew-top-bar>
 
         <div class="content">
+          ${this._renderDevicesRow()}
+
           <brew-timer-dial
             ?guided="${recipe !== null}"
             ?countdown="${isCountdown}"
@@ -88,6 +152,7 @@ export class TimerPage extends SignalWatcher(LitElement) {
                 `
               : nothing
           }
+          ${this._renderTelemetryRow()}
 
           <brew-timer-controls
             ?idle="${isIdle}"

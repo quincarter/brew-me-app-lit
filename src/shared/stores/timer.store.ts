@@ -5,6 +5,7 @@ import type { ISavedBrew } from "../interfaces/brew.interface";
 import type { IPrimedRecipe } from "../interfaces/timer.interface";
 import { computeTotalStepSeconds } from "../utilities/brew-step-progress.utility";
 import { getBrewDisplayName } from "../utilities/brew-display.utility";
+import { clearTelemetry } from "./telemetry.store";
 
 /**
  * Module-level (not component-level) timer state, so the pour-over countdown
@@ -50,6 +51,7 @@ export const resetTimer = (): void => {
   clearInterval(intervalHandle);
   timerRunningSignal.value = false;
   timerSecondsSignal.value = 0;
+  clearTelemetry();
 };
 
 /** Unprimes the timer, dropping it back to the plain base stopwatch (and its "start now or choose a saved brew" idle state) - the counterpart to `resetTimer` deliberately keeping the recipe, for when the person wants to leave the guided brew entirely rather than just restart its clock. */

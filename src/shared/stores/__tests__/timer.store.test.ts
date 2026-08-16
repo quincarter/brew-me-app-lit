@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { BREW_STEPS_PRESETS } from "../../data/brew-steps-presets.data";
+import type { IBookooScaleReading } from "../../interfaces/bookoo-ble.interface";
 import type { IBrewStep, ISavedBrew } from "../../interfaces/brew.interface";
 import type { IPrimedRecipe } from "../../interfaces/timer.interface";
+import {
+  latestMonitorReadingSignal,
+  latestScaleReadingSignal,
+  recordMonitorReading,
+  recordScaleReading,
+} from "../telemetry.store";
 import {
   clearPrimedRecipe,
   guidedModeSignal,
@@ -257,6 +264,24 @@ describe("timer.store", () => {
       resetTimer();
 
       expect(primedRecipeSignal.value).toBeNull();
+    });
+
+    it("clears recorded telemetry, resetting latest scale/monitor readings to null", () => {
+      const scaleReading: IBookooScaleReading = {
+        timeMs: 100,
+        weightGrams: 12,
+        flowRateGramsPerSecond: 0.5,
+        batteryPercent: 90,
+      };
+      recordScaleReading(scaleReading);
+      recordMonitorReading({ pressureBar: 9, batteryPercent: 90 });
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading);
+      expect(latestMonitorReadingSignal.value).not.toBeNull();
+
+      resetTimer();
+
+      expect(latestScaleReadingSignal.value).toBeNull();
+      expect(latestMonitorReadingSignal.value).toBeNull();
     });
   });
 

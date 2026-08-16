@@ -255,4 +255,40 @@ describe("settings-page", () => {
     expect(confirmImportButton()).toBeUndefined();
     expect(reloadSpy).not.toHaveBeenCalled();
   });
+
+  describe("Connected devices section", () => {
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+    });
+
+    it("is absent when Web Bluetooth is unsupported", async () => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+      element.requestUpdate();
+      await element.updateComplete;
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent === "Connected devices")).toBe(false);
+      expect(element.shadowRoot?.querySelector("brew-connection-status-pill")).toBeNull();
+    });
+
+    it("shows a scale row and a monitor row when Web Bluetooth is supported", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      element.requestUpdate();
+      await element.updateComplete;
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent === "Connected devices")).toBe(true);
+
+      const rowLabels = Array.from(element.shadowRoot?.querySelectorAll(".row-label") ?? []).map(
+        (label) => label.textContent,
+      );
+      expect(rowLabels).toContain("Bookoo Scale");
+      expect(rowLabels).toContain("Espresso Monitor");
+      expect(element.shadowRoot?.querySelectorAll("brew-connection-status-pill")).toHaveLength(2);
+    });
+  });
 });

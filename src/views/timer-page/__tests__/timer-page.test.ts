@@ -320,4 +320,30 @@ describe("timer-page", () => {
       expect(controls()?.idle).toBe(true);
     });
   });
+
+  describe("devices row", () => {
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+    });
+
+    it("is absent when Web Bluetooth is unsupported", async () => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+      await mount();
+
+      expect(element.shadowRoot?.querySelector(".devices-row")).toBeNull();
+      expect(element.shadowRoot?.querySelector("brew-connection-status-pill")).toBeNull();
+    });
+
+    it("shows a scale device and a monitor device when Web Bluetooth is supported", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      await mount();
+
+      const deviceNames = Array.from(
+        element.shadowRoot?.querySelectorAll(".device-name") ?? [],
+      ).map((name) => name.textContent);
+      expect(deviceNames).toContain("Bookoo Scale");
+      expect(deviceNames).toContain("Espresso Monitor");
+      expect(element.shadowRoot?.querySelectorAll("brew-connection-status-pill")).toHaveLength(2);
+    });
+  });
 });

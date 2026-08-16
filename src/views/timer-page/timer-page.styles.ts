@@ -28,4 +28,33 @@ export const TimerPageStyles = css`
     gap: 28px;
     padding: 20px;
   }
+
+  .devices-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .device {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: var(--brew-color-surface-container-low);
+  }
+
+  .device-name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--brew-color-on-surface);
+  }
+
+  .telemetry-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+  }
 `;

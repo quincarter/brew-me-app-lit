@@ -1,8 +1,10 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, query, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
+import "../../components/connection-status-pill/brew-connection-status-pill";
+import "../../components/device-connect-action/brew-device-connect-action";
 import "../../components/icon/brew-icon";
 import "../../components/list-row/brew-list-row";
 import "../../components/switch/brew-switch";
@@ -17,10 +19,19 @@ import {
   deleteCustomBrewType,
 } from "../../shared/stores/brew-types.store";
 import { deleteAllSavedBrews } from "../../shared/stores/brew.store";
+import {
+  connectMonitor,
+  connectScale,
+  disconnectMonitor,
+  disconnectScale,
+  monitorConnectionStateSignal,
+  scaleConnectionStateSignal,
+} from "../../shared/stores/device-connection.store";
 import { isDarkThemeSignal, setDarkTheme } from "../../shared/stores/theme.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { exportAppData, importAppData } from "../../shared/utilities/export-data.utility";
 import { refreshApp } from "../../shared/utilities/register-service-worker.utility";
+import { isWebBluetoothSupported } from "../../shared/utilities/web-bluetooth.utility";
 import { SettingsPageStyles } from "./settings-page.styles";
 
 @customElement("settings-page")
@@ -116,6 +127,41 @@ export class SettingsPage extends SignalWatcher(LitElement) {
     this._confirmingDelete = false;
   };
 
+  private _renderConnectedDevicesSection(): HTMLTemplateResult | typeof nothing {
+    if (!isWebBluetoothSupported()) return nothing;
+
+    return html`
+      <div class="divider"></div>
+      <div class="section-title">Connected devices</div>
+      <div class="row">
+        <span class="row-label">Bookoo Scale</span>
+        <div class="device-controls">
+          <brew-connection-status-pill
+            state="${scaleConnectionStateSignal.value}"
+          ></brew-connection-status-pill>
+          <brew-device-connect-action
+            state="${scaleConnectionStateSignal.value}"
+            @connect-click="${connectScale}"
+            @disconnect-click="${disconnectScale}"
+          ></brew-device-connect-action>
+        </div>
+      </div>
+      <div class="row">
+        <span class="row-label">Espresso Monitor</span>
+        <div class="device-controls">
+          <brew-connection-status-pill
+            state="${monitorConnectionStateSignal.value}"
+          ></brew-connection-status-pill>
+          <brew-device-connect-action
+            state="${monitorConnectionStateSignal.value}"
+            @connect-click="${connectMonitor}"
+            @disconnect-click="${disconnectMonitor}"
+          ></brew-device-connect-action>
+        </div>
+      </div>
+    `;
+  }
+
   render(): HTMLTemplateResult {
     const customTypes = customBrewTypesSignal.value;
 
@@ -197,6 +243,8 @@ export class SettingsPage extends SignalWatcher(LitElement) {
             ready. If you don't see it but suspect there's an update, force a refresh here.
           </p>
           <brew-button variant="outlined" @button-click="${refreshApp}">Refresh app</brew-button>
+
+          ${this._renderConnectedDevicesSection()}
 
           <div class="divider"></div>
           <div class="section-title">Data</div>
