@@ -54,15 +54,17 @@ export const TopBarStyles = css`
     outline-offset: 2px;
   }
 
-  /* brew-theme-toggle floats fixed at top:16px/right:16px (40px) above every screen. Since the
-   * device-status control can now appear on ANY screen's top bar (not just Timer, as before),
-   * its right edge would otherwise sit directly under/behind the toggle on a narrow/phone-width
-   * top bar unless something reserves the space - scoped here (rather than per-view) since this
-   * is now shared, global top-bar content. Not needed past EXPANDED_BREAKPOINT_PX (see
-   * responsive.styles.ts), where the top bar is already centered well clear of the toggle's
-   * corner. */
+  /* brew-theme-toggle floats fixed at top:16px/right:16px (40px) above every screen. Any
+   * trailing top-bar content (the device-status control, and/or a view's own trailing-slot
+   * content, e.g. Timer's settings link) would otherwise sit directly under/behind the toggle on
+   * a narrow/phone-width top bar unless something reserves the space - scoped to .trailing as a
+   * whole (rather than just .device-status) so it still applies on a browser where
+   * isWebBluetoothSupported() is false and only slotted content renders (e.g. iOS Safari).
+   * Scoped here (rather than per-view) since this is shared, global top-bar content. Not needed
+   * past EXPANDED_BREAKPOINT_PX (see responsive.styles.ts), where the top bar is already centered
+   * well clear of the toggle's corner. */
   @media (max-width: 839px) {
-    .device-status {
+    .trailing {
       margin-right: 64px;
     }
   }

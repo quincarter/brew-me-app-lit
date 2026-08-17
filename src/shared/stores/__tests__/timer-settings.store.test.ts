@@ -2,6 +2,8 @@ import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getAllPersistedData } from "../persistent-signal";
 import {
+  requestScrollToTimerSettingsSection,
+  scrollToTimerSettingsSectionSignal,
   setShowActiveStepBanner,
   setTimerCountStyle,
   showActiveStepBannerSignal,
@@ -29,11 +31,13 @@ describe("timer-settings.store", () => {
   beforeEach(() => {
     timerCountStyleSignal.value = "countdown";
     showActiveStepBannerSignal.value = true;
+    scrollToTimerSettingsSectionSignal.value = false;
   });
 
   afterEach(() => {
     timerCountStyleSignal.value = "countdown";
     showActiveStepBannerSignal.value = true;
+    scrollToTimerSettingsSectionSignal.value = false;
   });
 
   describe("timerCountStyleSignal", () => {
@@ -93,6 +97,18 @@ describe("timer-settings.store", () => {
       const data = await waitUntilPersisted((d) => d["timer-show-active-step-banner"] === false);
 
       expect(data["timer-show-active-step-banner"]).toBe(false);
+    });
+  });
+
+  describe("scrollToTimerSettingsSectionSignal / requestScrollToTimerSettingsSection", () => {
+    it("defaults to false", () => {
+      expect(scrollToTimerSettingsSectionSignal.value).toBe(false);
+    });
+
+    it("sets the signal to true when requested", () => {
+      requestScrollToTimerSettingsSection();
+
+      expect(scrollToTimerSettingsSectionSignal.value).toBe(true);
     });
   });
 });

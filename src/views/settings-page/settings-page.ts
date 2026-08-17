@@ -27,6 +27,7 @@ import {
 import { deleteAllSavedBrews } from "../../shared/stores/brew.store";
 import { isDarkThemeSignal, setDarkTheme } from "../../shared/stores/theme.store";
 import {
+  scrollToTimerSettingsSectionSignal,
   setShowActiveStepBanner,
   setTimerCountStyle,
   showActiveStepBannerSignal,
@@ -50,8 +51,44 @@ export class SettingsPage extends SignalWatcher(LitElement) {
   @state() private _pendingImportFile: File | null = null;
 
   @query("input[type='file']") private _fileInput!: HTMLInputElement;
+  @query("#timer-settings-section") private _timerSectionEl?: HTMLElement;
 
   private _statusTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  /** Consumes a pending scroll-to-Timer-section request from the Timer screen's settings shortcut - see `scrollToTimerSettingsSectionSignal`'s doc comment. */
+  protected firstUpdated(): void {
+    if (!scrollToTimerSettingsSectionSignal.value) return;
+    scrollToTimerSettingsSectionSignal.value = false;
+    this._scrollToTimerSectionOnceSettled();
+  }
+
+  /**
+   * `#timer-settings-section` sits below the "Brew type features" rows, whose own
+   * `brew-switch`/`brew-chip` children each schedule their first Lit render as a separate
+   * microtask - so right after this element's own `firstUpdated`, the target's `offsetTop` is
+   * still mid-layout-shift for a frame or two, and scrolling immediately lands short. Polls via
+   * `requestAnimationFrame` (same idea as `awaitTourTarget` in `tour-target.utility.ts`) until
+   * `offsetTop` stops changing between two consecutive frames before scrolling.
+   */
+  private _scrollToTimerSectionOnceSettled(maxFrames = 10): void {
+    let frame = 0;
+    let lastOffsetTop = -1;
+
+    const tick = (): void => {
+      const el = this._timerSectionEl;
+      if (!el) return;
+
+      frame += 1;
+      if (el.offsetTop === lastOffsetTop || frame >= maxFrames) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      lastOffsetTop = el.offsetTop;
+      requestAnimationFrame(tick);
+    };
+
+    requestAnimationFrame(tick);
+  }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
@@ -207,7 +244,7 @@ export class SettingsPage extends SignalWatcher(LitElement) {
 
     return html`
       <div class="divider"></div>
-      <div class="section-title">Timer</div>
+      <div class="section-title" id="timer-settings-section">Timer</div>
       <div class="row">
         <span class="row-label">Default count style</span>
         <div class="feature-row-chips">

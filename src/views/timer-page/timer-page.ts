@@ -20,6 +20,7 @@ import {
   PAUSE_ICON,
   PLAY_ICON,
   REFRESH_ICON,
+  SETTINGS_ICON_SVG,
   STOP_ICON,
 } from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
@@ -55,7 +56,10 @@ import {
   latestMonitorReadingSignal,
   latestScaleReadingSignal,
 } from "../../shared/stores/telemetry.store";
-import { showActiveStepBannerSignal } from "../../shared/stores/timer-settings.store";
+import {
+  requestScrollToTimerSettingsSection,
+  showActiveStepBannerSignal,
+} from "../../shared/stores/timer-settings.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { isWebBluetoothSupported } from "../../shared/utilities/web-bluetooth.utility";
 import { TimerPageStyles } from "./timer-page.styles";
@@ -358,7 +362,15 @@ export class TimerPage extends SignalWatcher(LitElement) {
 
     return html`
       <div class="screen">
-        <brew-top-bar title="${title}" .icon="${ARROW_BACK_ICON_SVG}" href="/more"></brew-top-bar>
+        <brew-top-bar title="${title}" .icon="${ARROW_BACK_ICON_SVG}" href="/more">
+          <brew-icon-button
+            slot="trailing"
+            .svgIcon="${SETTINGS_ICON_SVG}"
+            href="/more/settings"
+            aria-label="Timer settings"
+            @click="${requestScrollToTimerSettingsSection}"
+          ></brew-icon-button>
+        </brew-top-bar>
 
         <div class="content">
           ${

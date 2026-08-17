@@ -10,7 +10,10 @@ import {
   scaleConnectionStateSignal,
 } from "../../../shared/stores/device-connection.store";
 import { clearTelemetry, telemetrySealedSignal } from "../../../shared/stores/telemetry.store";
-import { showActiveStepBannerSignal } from "../../../shared/stores/timer-settings.store";
+import {
+  scrollToTimerSettingsSectionSignal,
+  showActiveStepBannerSignal,
+} from "../../../shared/stores/timer-settings.store";
 import {
   guidedModeSignal,
   primedRecipeSignal,
@@ -110,12 +113,14 @@ describe("timer-page", () => {
     guidedModeSignal.value = "countdown";
     savedBrewsSignal.value = [];
     brewTypeFeaturesSignal.value = {};
+    scrollToTimerSettingsSectionSignal.value = false;
   });
 
   afterEach(() => {
     resetTimer();
     clearTelemetry();
     element.remove();
+    scrollToTimerSettingsSectionSignal.value = false;
   });
 
   describe("title", () => {
@@ -146,6 +151,27 @@ describe("timer-page", () => {
         | (HTMLElement & { title: string })
         | undefined;
       expect(topBar?.title).toBe("V60 Timer");
+    });
+
+    it("has a top-bar settings link to /more/settings", async () => {
+      await mount();
+
+      const settingsLink = element.shadowRoot?.querySelector(
+        'brew-top-bar brew-icon-button[slot="trailing"]',
+      );
+      expect(settingsLink?.getAttribute("href")).toBe("/more/settings");
+      expect(settingsLink?.getAttribute("aria-label")).toBe("Timer settings");
+    });
+
+    it("requests a scroll to Settings' Timer section when the settings link is clicked", async () => {
+      await mount();
+
+      const settingsLink = element.shadowRoot?.querySelector(
+        'brew-top-bar brew-icon-button[slot="trailing"]',
+      );
+      settingsLink?.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true }));
+
+      expect(scrollToTimerSettingsSectionSignal.value).toBe(true);
     });
   });
 

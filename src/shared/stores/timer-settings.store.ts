@@ -1,3 +1,4 @@
+import { signal } from "@lit-labs/preact-signals";
 import type { GuidedTimerMode } from "./timer.store";
 import { persistentSignal } from "./persistent-signal";
 
@@ -31,4 +32,18 @@ export function setTimerCountStyle(mode: GuidedTimerMode): void {
 
 export function setShowActiveStepBanner(value: boolean): void {
   showActiveStepBannerSignal.value = value;
+}
+
+/**
+ * Set by the Timer screen's settings shortcut - true means Settings should
+ * scroll its "Timer" section into view once it renders, rather than landing
+ * scrolled to the top. Ephemeral (not persisted), same shape as
+ * `editBeforeBrewingIdSignal` in `post-save-sheet.store.ts`: this store sets
+ * it, the destination screen (`settings-page.ts`) consumes and clears it.
+ */
+export const scrollToTimerSettingsSectionSignal = signal(false);
+
+/** Requests the scroll-into-view above - used instead of a plain link since the Timer section isn't the first thing on the Settings screen. */
+export function requestScrollToTimerSettingsSection(): void {
+  scrollToTimerSettingsSectionSignal.value = true;
 }

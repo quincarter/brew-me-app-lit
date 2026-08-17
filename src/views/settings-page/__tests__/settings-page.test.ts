@@ -11,6 +11,7 @@ import {
 } from "../../../shared/stores/brew-types.store";
 import { deleteAllSavedBrews } from "../../../shared/stores/brew.store";
 import {
+  scrollToTimerSettingsSectionSignal,
   showActiveStepBannerSignal,
   timerCountStyleSignal,
 } from "../../../shared/stores/timer-settings.store";
@@ -34,6 +35,7 @@ describe("settings-page", () => {
     brewTypeFeaturesSignal.value = {};
     timerCountStyleSignal.value = "countdown";
     showActiveStepBannerSignal.value = true;
+    scrollToTimerSettingsSectionSignal.value = false;
     vi.mocked(exportAppData).mockReset();
     vi.mocked(importAppData).mockReset();
 
@@ -471,6 +473,61 @@ describe("settings-page", () => {
       expect(sectionTitles.some((title) => title.textContent === "Timer")).toBe(true);
       expect(countStyleRow()).not.toBeUndefined();
       expect(bannerRow()).not.toBeUndefined();
+    });
+  });
+
+  describe("scroll to Timer section on navigation", () => {
+    /**
+     * `_scrollToTimerSectionOnceSettled` polls via `requestAnimationFrame` for up to its
+     * `maxFrames` (10) before forcing the scroll - waits out that full bounded chain (rather than
+     * guessing how many frames happy-dom's always-0 `offsetTop` takes to "settle") so the internal
+     * loop is guaranteed to have already called `scrollIntoView` by the time each test asserts,
+     * and doesn't leave a straggling `requestAnimationFrame` callback to fire during a *later*
+     * test's own spy window.
+     */
+    const waitForSettledScroll = async (frames = 12): Promise<void> => {
+      for (let i = 0; i < frames; i += 1) {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      }
+    };
+
+    afterEach(() => {
+      scrollToTimerSettingsSectionSignal.value = false;
+    });
+
+    it("scrolls the Timer section into view and clears the pending request when mounted with one set", async () => {
+      scrollToTimerSettingsSectionSignal.value = true;
+      const scrollIntoViewSpy = vi
+        .spyOn(HTMLElement.prototype, "scrollIntoView")
+        .mockImplementation(() => {});
+
+      const freshElement = document.createElement("settings-page") as SettingsPage;
+      document.body.appendChild(freshElement);
+      await freshElement.updateComplete;
+      await waitForSettledScroll();
+
+      expect(scrollIntoViewSpy).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+      expect(scrollToTimerSettingsSectionSignal.value).toBe(false);
+
+      freshElement.remove();
+      scrollIntoViewSpy.mockRestore();
+    });
+
+    it("does not scroll when mounted with no pending request", async () => {
+      scrollToTimerSettingsSectionSignal.value = false;
+      const scrollIntoViewSpy = vi
+        .spyOn(HTMLElement.prototype, "scrollIntoView")
+        .mockImplementation(() => {});
+
+      const freshElement = document.createElement("settings-page") as SettingsPage;
+      document.body.appendChild(freshElement);
+      await freshElement.updateComplete;
+      await waitForSettledScroll();
+
+      expect(scrollIntoViewSpy).not.toHaveBeenCalled();
+
+      freshElement.remove();
+      scrollIntoViewSpy.mockRestore();
     });
   });
 
