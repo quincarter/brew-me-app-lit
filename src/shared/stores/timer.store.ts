@@ -1,10 +1,11 @@
-import { signal } from "@lit-labs/preact-signals";
+import { effect, signal } from "@lit-labs/preact-signals";
 import { BREW_GUIDE } from "../data/brew-content.data";
 import { BREW_STEPS_PRESETS } from "../data/brew-steps-presets.data";
 import type { ISavedBrew } from "../interfaces/brew.interface";
 import type { IPrimedRecipe } from "../interfaces/timer.interface";
 import { computeTotalStepSeconds } from "../utilities/brew-step-progress.utility";
 import { getBrewDisplayName } from "../utilities/brew-display.utility";
+import { setWakeLockActive } from "../utilities/wake-lock.utility";
 import { markBrewedNow } from "./brew.store";
 import { getBrewTypeFeatures } from "./brew-type-features.store";
 import { addShot } from "./shot.store";
@@ -25,6 +26,11 @@ import {
  */
 export const timerSecondsSignal = signal(0);
 export const timerRunningSignal = signal(false);
+
+/** Keeps the screen awake for the duration of a running brew, so the pour-over timer isn't lost to the display sleeping mid-brew. */
+effect(() => {
+  setWakeLockActive(timerRunningSignal.value);
+});
 
 /**
  * Set when the Timer screen was reached via "Start guided timer" - null for
