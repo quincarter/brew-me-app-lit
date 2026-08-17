@@ -52,10 +52,9 @@ test.describe("importing saved data", () => {
       page.locator(".section-hint").filter({ hasText: "brew-me-export-2026-08-09.json" }),
     ).toBeVisible();
 
-    await Promise.all([
-      page.waitForLoadState("load"),
-      page.getByRole("button", { name: "Yes, import and replace" }).click(),
-    ]);
+    const loaded = page.waitForEvent("load");
+    await page.getByRole("button", { name: "Yes, import and replace" }).click();
+    await loaded;
 
     await page.locator("brew-bottom-nav").getByRole("link", { name: "Saved" }).click();
     await expect(page.locator("brew-list-row")).toHaveCount(9);

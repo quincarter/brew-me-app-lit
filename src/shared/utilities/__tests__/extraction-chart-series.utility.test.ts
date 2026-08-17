@@ -4,7 +4,8 @@ import type {
   IBookooScaleReading,
 } from "../../interfaces/bookoo-ble.interface";
 import type { ITelemetrySample } from "../../interfaces/telemetry.interface";
-import { buildExtractionSeries } from "../extraction-chart-series.utility";
+import { REAL_LONG_SCALE_ONLY_SHOT } from "./fixtures/real-device-export.fixture";
+import { buildExtractionSeries, MIN_WEIGHT_MAX_GRAMS } from "../extraction-chart-series.utility";
 
 const scaleSample = (
   timestampMs: number,
@@ -83,5 +84,23 @@ describe("buildExtractionSeries", () => {
     );
 
     expect(result.weightDomain).toMatchObject({ minValue: 0, maxValue: 20 });
+  });
+
+  it("shapes a real ~1500-sample scale capture without producing NaN/Infinity points or domains", () => {
+    const result = buildExtractionSeries(
+      REAL_LONG_SCALE_ONLY_SHOT.scaleSamples,
+      REAL_LONG_SCALE_ONLY_SHOT.monitorSamples,
+    );
+
+    expect(result.weightPoints).toHaveLength(REAL_LONG_SCALE_ONLY_SHOT.scaleSamples.length);
+    expect(result.flowPoints).toHaveLength(REAL_LONG_SCALE_ONLY_SHOT.scaleSamples.length);
+    expect(result.pressurePoints).toEqual([]);
+
+    for (const point of [...result.weightPoints, ...result.flowPoints]) {
+      expect(Number.isFinite(point.elapsedSeconds)).toBe(true);
+      expect(Number.isFinite(point.value)).toBe(true);
+    }
+    expect(result.weightDomain.maxElapsedSeconds).toBeGreaterThan(0);
+    expect(result.weightDomain.maxValue).toBeGreaterThanOrEqual(MIN_WEIGHT_MAX_GRAMS);
   });
 });

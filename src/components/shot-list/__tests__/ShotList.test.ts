@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { IBrewShot } from "../../../shared/interfaces/shot.interface";
+import { REAL_LONG_SCALE_ONLY_SHOT } from "../../../shared/utilities/__tests__/fixtures/real-device-export.fixture";
 import "../brew-shot-list";
 import type { ShotList } from "../ShotList";
 
@@ -98,6 +99,23 @@ describe("brew-shot-list", () => {
     await element.updateComplete;
 
     expect(element.shadowRoot?.querySelector(".shot-chart-svg")).toBeNull();
+  });
+
+  it("charts a real scale capture's weight/flow curves but leaves the pressure curve empty (no monitor connected)", async () => {
+    element.shots = [REAL_LONG_SCALE_ONLY_SHOT];
+    element.brewType = "Chemex";
+    await element.updateComplete;
+
+    expect(element.shadowRoot?.querySelector(".shot-chart-svg")).not.toBeNull();
+    expect(
+      element.shadowRoot?.querySelector(".shot-series-path.weight")?.getAttribute("d"),
+    ).toMatch(/^M/);
+    expect(element.shadowRoot?.querySelector(".shot-series-path.flow")?.getAttribute("d")).toMatch(
+      /^M/,
+    );
+    expect(element.shadowRoot?.querySelector(".shot-series-path.pressure")?.getAttribute("d")).toBe(
+      "",
+    );
   });
 
   it("renders multiple shots newest-first regardless of input order", async () => {

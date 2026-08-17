@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { saveBrewFromCalculator } from "./helpers";
+import { saveBrewFromCalculator, stubWebBluetoothSupport } from "./helpers";
 
 /** Scopes down to the single "Brew type features" row for `brewType` on the Settings screen. */
 const featureRow = (page: Page, brewType: string): Locator =>
@@ -28,21 +28,6 @@ const primeTimerWithSavedBrew = async (page: Page, name: string): Promise<void> 
     .locator("brew-saved-brew-picker-sheet brew-list-row")
     .filter({ hasText: name })
     .click();
-};
-
-/**
- * The Timer's telemetry row/chart (and Settings' "Connected devices" section) are gated on
- * `isWebBluetoothSupported()`, which just checks `"bluetooth" in navigator` - true on real desktop
- * Chrome, but Playwright's bundled open-source Chromium build doesn't ship `navigator.bluetooth` at
- * all, so it's stubbed here rather than skipping telemetry coverage entirely. Must be called before
- * any navigation in the test (it registers via `addInitScript`, applied on every subsequent load).
- */
-const stubWebBluetoothSupport = async (page: Page): Promise<void> => {
-  await page.addInitScript(() => {
-    if (!("bluetooth" in navigator)) {
-      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
-    }
-  });
 };
 
 test.describe("brew type feature settings", () => {

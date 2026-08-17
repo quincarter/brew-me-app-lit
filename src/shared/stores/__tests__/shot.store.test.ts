@@ -1,6 +1,10 @@
 import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { IBrewShot } from "../../interfaces/shot.interface";
+import {
+  REAL_SAVED_SHOTS,
+  REAL_SHOT_COUNTS_BY_SAVED_BREW_ID,
+} from "../../utilities/__tests__/fixtures/real-device-export.fixture";
 import { addShot, getShotsForBrew, savedShotsSignal } from "../shot.store";
 
 const shot = (overrides: Partial<Omit<IBrewShot, "id" | "createdAt">> = {}) => ({
@@ -48,6 +52,23 @@ describe("shot.store", () => {
       addShot(shot({ savedBrewId: 1 }));
 
       expect(getShotsForBrew(999)).toEqual([]);
+    });
+  });
+
+  describe("getShotsForBrew (real device export)", () => {
+    beforeEach(() => {
+      savedShotsSignal.value = REAL_SAVED_SHOTS;
+    });
+
+    it.each(Object.entries(REAL_SHOT_COUNTS_BY_SAVED_BREW_ID))(
+      "returns %s recorded shots for saved brew %s",
+      (savedBrewId, expectedCount) => {
+        expect(getShotsForBrew(Number(savedBrewId))).toHaveLength(expectedCount);
+      },
+    );
+
+    it("returns the empty array (not undefined) for the one saved brew that was never brewed", () => {
+      expect(getShotsForBrew(1786877819002)).toEqual([]);
     });
   });
 });
