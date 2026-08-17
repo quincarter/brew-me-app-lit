@@ -34,6 +34,7 @@ test.describe("brew type feature settings", () => {
   test("toggling 'Show Brews/Shots section' off and back on affects a stock brew type's Saved Detail page", async ({
     page,
   }) => {
+    await stubWebBluetoothSupport(page);
     await saveBrewFromCalculator(page, { name: "V60 Feature Toggle", type: "V60" });
 
     await page.locator("brew-bottom-nav").getByRole("link", { name: "Saved" }).click();
@@ -161,6 +162,7 @@ test.describe("brew type feature settings", () => {
   }) => {
     const customType = "Vac Pot";
 
+    await stubWebBluetoothSupport(page);
     await page.goto("/more/settings");
     await page.getByRole("button", { name: "Add brew type", exact: true }).click();
     await page.getByLabel("New brew type", { exact: true }).fill(customType);
