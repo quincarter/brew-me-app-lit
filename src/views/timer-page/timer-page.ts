@@ -1,15 +1,43 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
+import "../../components/active-step-banner/brew-active-step-banner";
 import "../../components/bottom-nav/brew-bottom-nav";
+import "../../components/button/brew-button";
+import "../../components/collapsible-banner/brew-collapsible-banner";
+import "../../components/device-connect-action/brew-device-connect-action";
+import "../../components/extraction-chart/brew-extraction-chart";
+import "../../components/icon-button/brew-icon-button";
 import "../../components/saved-brew-picker-sheet/brew-saved-brew-picker-sheet";
+import "../../components/stat-tile/brew-stat-tile";
 import "../../components/timer-controls/brew-timer-controls";
 import "../../components/timer-dial/brew-timer-dial";
 import "../../components/timer-recipe-panel/brew-timer-recipe-panel";
 import "../../components/top-bar/brew-top-bar";
-import { ARROW_BACK_ICON_SVG } from "../../shared/icons/icons";
+import {
+  ARROW_BACK_ICON_SVG,
+  CLOSE_ICON,
+  PAUSE_ICON,
+  PLAY_ICON,
+  REFRESH_ICON,
+  SETTINGS_ICON_SVG,
+  STOP_ICON,
+} from "../../shared/icons/icons";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
+import type { IPrimedRecipe } from "../../shared/interfaces/timer.interface";
+import { getBrewTypeFeatures } from "../../shared/stores/brew-type-features.store";
 import { savedBrewsSignal } from "../../shared/stores/brew.store";
+import {
+  connectMonitor,
+  connectScale,
+  devicesBannerDismissedSignal,
+  disconnectMonitor,
+  disconnectScale,
+  dismissDevicesBanner,
+  monitorConnectionStateSignal,
+  neverShowDevicesBannerAgain,
+  scaleConnectionStateSignal,
+} from "../../shared/stores/device-connection.store";
 import {
   type GuidedTimerMode,
   clearPrimedRecipe,
@@ -19,18 +47,39 @@ import {
   resetTimer,
   setGuidedMode,
   setGuidedTargetSeconds,
+  stopSession,
   timerRunningSignal,
   timerSecondsSignal,
   toggleTimer,
 } from "../../shared/stores/timer.store";
+import {
+  latestMonitorReadingSignal,
+  latestScaleReadingSignal,
+} from "../../shared/stores/telemetry.store";
+import {
+  requestScrollToTimerSettingsSection,
+  showActiveStepBannerSignal,
+} from "../../shared/stores/timer-settings.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
+import { isWebBluetoothSupported } from "../../shared/utilities/web-bluetooth.utility";
 import { TimerPageStyles } from "./timer-page.styles";
+
+/** How long the "go to Settings to connect devices" notice stays up after "Never show again". */
+const SETTINGS_NOTICE_DURATION_MS = 5000;
 
 @customElement("timer-page")
 export class TimerPage extends SignalWatcher(LitElement) {
   static styles = [TimerPageStyles, responsiveScreenStyles];
 
   @state() private _pickerOpen = false;
+  @state() private _showSettingsNotice = false;
+
+  private _settingsNoticeTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    clearTimeout(this._settingsNoticeTimeout);
+  }
 
   private _onTargetMinutesChange(value: string): void {
     const minutes = Number.parseFloat(value);
@@ -47,6 +96,251 @@ export class TimerPage extends SignalWatcher(LitElement) {
     this._pickerOpen = false;
   }
 
+  private _onNeverShowBanner = (): void => {
+    neverShowDevicesBannerAgain();
+    this._showSettingsNotice = true;
+    clearTimeout(this._settingsNoticeTimeout);
+    this._settingsNoticeTimeout = setTimeout(() => {
+      this._showSettingsNotice = false;
+    }, SETTINGS_NOTICE_DURATION_MS);
+  };
+
+  private _dismissSettingsNotice = (): void => {
+    clearTimeout(this._settingsNoticeTimeout);
+    this._showSettingsNotice = false;
+  };
+
+  /**
+   * A compact, dismissible offer to pair whichever devices aren't connected yet - a device
+   * already connected shows its icon in the top bar instead (every screen's `brew-top-bar`
+   * now owns this globally) rather than staying listed here, and once both are connected
+   * there's nothing left to offer so the banner disappears on its own. Devices are optional,
+   * so someone who doesn't own either can dismiss this for the rest of the session instead of
+   * it permanently pushing the dial/controls down. Also hidden for a primed recipe whose brew
+   * type's `telemetryMode` is "off" (e.g. Aeropress) - pairing a device would be pointless when
+   * nothing from it can be displayed or recorded for that brew type.
+   */
+  private _renderDevicesBanner(brewType: string | null): HTMLTemplateResult | typeof nothing {
+    if (!isWebBluetoothSupported()) return nothing;
+    if (brewType && getBrewTypeFeatures(brewType).telemetryMode === "off") return nothing;
+
+    const scaleState = scaleConnectionStateSignal.value;
+    const monitorState = monitorConnectionStateSignal.value;
+    const bothConnected = scaleState === "connected" && monitorState === "connected";
+    // Rendered (via `brew-collapsible-banner`'s `open`) rather than removed outright even
+    // while closed, so dismissing it - or both devices finishing connecting - plays the exit
+    // animation instead of the banner just vanishing mid-render.
+    const bannerOpen = !devicesBannerDismissedSignal.value && !bothConnected;
+
+    return html`
+      <brew-collapsible-banner ?open="${bannerOpen}">
+        <div class="devices-banner">
+          <div class="devices-banner-header">
+            <span class="devices-banner-title">Connect your devices</span>
+            <brew-icon-button
+              .svgIcon="${CLOSE_ICON}"
+              size="14"
+              style="--icon-button-size: 24px"
+              aria-label="Dismiss"
+              @icon-click="${dismissDevicesBanner}"
+            ></brew-icon-button>
+          </div>
+          ${
+            scaleState !== "connected"
+              ? html`
+                  <div class="devices-banner-row">
+                    <span class="devices-banner-row-label">Bookoo Scale</span>
+                    <brew-device-connect-action
+                      state="${scaleState}"
+                      @connect-click="${connectScale}"
+                      @disconnect-click="${disconnectScale}"
+                    ></brew-device-connect-action>
+                  </div>
+                `
+              : nothing
+          }
+          ${
+            monitorState !== "connected"
+              ? html`
+                  <div class="devices-banner-row">
+                    <span class="devices-banner-row-label">Espresso Monitor</span>
+                    <brew-device-connect-action
+                      state="${monitorState}"
+                      @connect-click="${connectMonitor}"
+                      @disconnect-click="${disconnectMonitor}"
+                    ></brew-device-connect-action>
+                  </div>
+                `
+              : nothing
+          }
+          <div class="devices-banner-footer">
+            <brew-button variant="text" @button-click="${this._onNeverShowBanner}"
+              >Never show again</brew-button
+            >
+          </div>
+        </div>
+      </brew-collapsible-banner>
+    `;
+  }
+
+  /**
+   * Brief, dismissable pointer to Settings once someone picks "Never show again" above - the
+   * banner's connect affordance is gone, so this is the one-time hint for where it moved. Gated
+   * the same way as `_renderDevicesBanner` for the same reason.
+   */
+  private _renderSettingsNotice(brewType: string | null): HTMLTemplateResult | typeof nothing {
+    if (!isWebBluetoothSupported()) return nothing;
+    if (brewType && getBrewTypeFeatures(brewType).telemetryMode === "off") return nothing;
+
+    return html`
+      <brew-collapsible-banner ?open="${this._showSettingsNotice}">
+        <div class="devices-banner">
+          <div class="devices-banner-header">
+            <span class="devices-banner-title">To access connected devices, go to Settings</span>
+            <brew-icon-button
+              .svgIcon="${CLOSE_ICON}"
+              size="14"
+              style="--icon-button-size: 24px"
+              aria-label="Dismiss"
+              @icon-click="${this._dismissSettingsNotice}"
+            ></brew-icon-button>
+          </div>
+          <brew-button variant="text" href="/more/settings">Go to Settings</brew-button>
+        </div>
+      </brew-collapsible-banner>
+    `;
+  }
+
+  /**
+   * Gated on Web Bluetooth support and, when a recipe is primed, its brew type's
+   * `telemetryMode` - some methods (starting with Aeropress) can't actually support device
+   * telemetry, so their gauges are hidden regardless of what's connected. No primed recipe (the
+   * generic stopwatch case) has no brew type to restrict on, so only the bluetooth check applies.
+   */
+  private _renderTelemetryRow(brewType: string | null): HTMLTemplateResult | typeof nothing {
+    if (!isWebBluetoothSupported()) return nothing;
+    if (brewType && getBrewTypeFeatures(brewType).telemetryMode !== "full") return nothing;
+
+    const weight = latestScaleReadingSignal.value?.weightGrams.toFixed(1) ?? "--";
+    const pressure = latestMonitorReadingSignal.value?.pressureBar.toFixed(1) ?? "--";
+
+    return html`
+      <div class="telemetry-row">
+        <brew-stat-tile value="${weight}" label="Weight (g)"></brew-stat-tile>
+        <brew-stat-tile value="${pressure}" label="Pressure (bar)"></brew-stat-tile>
+      </div>
+    `;
+  }
+
+  /**
+   * Gated on Web Bluetooth support only - `brew-extraction-chart` picks its own empty state
+   * from there (an invitation to connect a device, then "Waiting for data…" once one has, per
+   * `anyDeviceConnectedThisSessionSignal`), so a supported browser always sees this card even
+   * before ever connecting anything, rather than the chart's whole spot being absent. Also
+   * gated on the primed recipe's brew type's `telemetryMode` not being "off" (see
+   * `_renderTelemetryRow`'s doc comment) - no primed recipe skips that check.
+   */
+  private _renderExtractionChart(brewType: string | null): HTMLTemplateResult | typeof nothing {
+    if (!isWebBluetoothSupported()) return nothing;
+    if (brewType && getBrewTypeFeatures(brewType).telemetryMode === "off") return nothing;
+
+    return html`<brew-extraction-chart></brew-extraction-chart>`;
+  }
+
+  /**
+   * The dial plus its baked-in controls: a reset button floating to the
+   * dial's left, an optional "clear brew" button floating to its right (only
+   * once a recipe is primed), and a play/pause-or-stop/seal fab overlapping
+   * the dial's bottom rim - all absent while `isIdle`, when
+   * `brew-timer-controls` owns the "start now / choose a saved brew" prompt
+   * instead. `sealing` mirrors the old `TimerControls` "active" branch: a
+   * running timer with a scale or monitor connected swaps the fab to
+   * Stop/Seal (ends and saves the shot) instead of Play/Pause.
+   */
+  private _renderDialCluster(
+    isIdle: boolean,
+    running: boolean,
+    recipe: IPrimedRecipe | null,
+    dialTemplate: HTMLTemplateResult,
+  ): HTMLTemplateResult {
+    const sealing =
+      running &&
+      (scaleConnectionStateSignal.value === "connected" ||
+        monitorConnectionStateSignal.value === "connected");
+
+    return html`
+      <div class="dial-cluster">
+        ${
+          !isIdle
+            ? html`
+                <brew-icon-button
+                  class="dial-side-btn dial-reset-btn"
+                  .svgIcon="${REFRESH_ICON}"
+                  aria-label="Reset"
+                  @icon-click="${resetTimer}"
+                ></brew-icon-button>
+              `
+            : nothing
+        }
+        ${dialTemplate}
+        ${
+          !isIdle
+            ? recipe !== null
+              ? html`
+                  <brew-icon-button
+                    class="dial-side-btn dial-clear-btn"
+                    .svgIcon="${CLOSE_ICON}"
+                    aria-label="Clear brew"
+                    @icon-click="${clearPrimedRecipe}"
+                  ></brew-icon-button>
+                `
+              : html`<span class="dial-side-spacer"></span>`
+            : nothing
+        }
+        ${
+          !isIdle
+            ? sealing
+              ? html`
+                  <brew-icon-button
+                    class="dial-fab"
+                    variant="fab"
+                    size="28"
+                    .svgIcon="${STOP_ICON}"
+                    aria-label="Stop and seal"
+                    @icon-click="${stopSession}"
+                  ></brew-icon-button>
+                `
+              : html`
+                  <brew-icon-button
+                    class="dial-fab"
+                    variant="fab"
+                    size="28"
+                    .svgIcon="${running ? PAUSE_ICON : PLAY_ICON}"
+                    aria-label="${running ? "Pause" : "Start"}"
+                    @icon-click="${toggleTimer}"
+                  ></brew-icon-button>
+                `
+            : nothing
+        }
+      </div>
+      ${
+        !isIdle
+          ? html`
+              <p class="dial-hint">
+                ${
+                  sealing
+                    ? "Recording · Stop/Seal ends & saves this shot."
+                    : running
+                      ? "Brewing in progress…"
+                      : "Tap play to start your pour-over timer."
+                }
+              </p>
+            `
+          : nothing
+      }
+    `;
+  }
+
   render(): HTMLTemplateResult {
     const running = timerRunningSignal.value;
     const recipe = primedRecipeSignal.value;
@@ -61,19 +355,46 @@ export class TimerPage extends SignalWatcher(LitElement) {
     // Never primed and never started - the base screen's "start now or pick a brew" choice. Once either happens (running, or a recipe is primed) this stays false for the rest of this stopwatch/brew.
     const isIdle = recipe === null && !running && timerSecondsSignal.value === 0;
     const hasSavedBrews = savedBrewsSignal.value.length > 0;
+    // Reflects the guided timer's own progress, not device-connection state - shown whether or not a scale/monitor is connected.
+    const guidedSteps = recipe?.steps ?? null;
+    const showActiveStepBanner =
+      guidedSteps !== null && guidedSteps.length > 0 && running && showActiveStepBannerSignal.value;
 
     return html`
       <div class="screen">
-        <brew-top-bar title="${title}" .icon="${ARROW_BACK_ICON_SVG}" href="/more"></brew-top-bar>
+        <brew-top-bar title="${title}" .icon="${ARROW_BACK_ICON_SVG}" href="/more">
+          <brew-icon-button
+            slot="trailing"
+            .svgIcon="${SETTINGS_ICON_SVG}"
+            href="/more/settings"
+            aria-label="Timer settings"
+            @click="${requestScrollToTimerSettingsSection}"
+          ></brew-icon-button>
+        </brew-top-bar>
 
         <div class="content">
-          <brew-timer-dial
-            ?guided="${recipe !== null}"
-            ?countdown="${isCountdown}"
-            ?idle="${isIdle}"
-            seconds="${dialSeconds}"
-          ></brew-timer-dial>
-
+          ${
+            showActiveStepBanner
+              ? html`<brew-active-step-banner
+                  .steps="${guidedSteps}"
+                  elapsed-seconds="${timerSecondsSignal.value}"
+                ></brew-active-step-banner>`
+              : nothing
+          }
+          ${this._renderDevicesBanner(recipe?.brewType ?? null)}
+          ${this._renderSettingsNotice(recipe?.brewType ?? null)}
+          ${this._renderDialCluster(
+            isIdle,
+            running,
+            recipe,
+            html`
+              <brew-timer-dial
+                ?countdown="${isCountdown}"
+                ?idle="${isIdle}"
+                seconds="${dialSeconds}"
+              ></brew-timer-dial>
+            `,
+          )}
           ${
             recipe
               ? html`
@@ -88,18 +409,19 @@ export class TimerPage extends SignalWatcher(LitElement) {
                 `
               : nothing
           }
-
-          <brew-timer-controls
-            ?idle="${isIdle}"
-            ?running="${running}"
-            ?has-saved-brews="${hasSavedBrews}"
-            ?has-recipe="${recipe !== null}"
-            @start-click="${toggleTimer}"
-            @choose-saved-click="${this._openPicker}"
-            @reset-click="${resetTimer}"
-            @toggle-click="${toggleTimer}"
-            @clear-click="${clearPrimedRecipe}"
-          ></brew-timer-controls>
+          ${this._renderTelemetryRow(recipe?.brewType ?? null)}
+          ${this._renderExtractionChart(recipe?.brewType ?? null)}
+          ${
+            isIdle
+              ? html`
+                  <brew-timer-controls
+                    ?has-saved-brews="${hasSavedBrews}"
+                    @start-click="${toggleTimer}"
+                    @choose-saved-click="${this._openPicker}"
+                  ></brew-timer-controls>
+                `
+              : nothing
+          }
         </div>
 
         <brew-bottom-nav active="more"></brew-bottom-nav>

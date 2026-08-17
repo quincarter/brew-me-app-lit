@@ -9,6 +9,7 @@ import {
   parseImportPayload,
   readFileAsText,
 } from "../export-data.utility";
+import { REAL_DEVICE_EXPORT_RAW as REAL_EXPORT_RAW } from "./fixtures/real-device-export.fixture";
 
 describe("export-data.utility", () => {
   describe("buildExportPayload", () => {
@@ -226,6 +227,13 @@ describe("export-data.utility", () => {
         expect(() => parseImportPayload(raw)).toThrow("Not a valid BrewMe export file.");
       },
     );
+
+    it("parses a real ~1.4MB device export (5 saved brews, 10 saved shots with embedded telemetry) without throwing", () => {
+      const data = parseImportPayload(REAL_EXPORT_RAW);
+
+      expect(data["saved-brews"]).toHaveLength(5);
+      expect(data["saved-shots"]).toHaveLength(10);
+    });
   });
 
   describe("readFileAsText", () => {
@@ -285,6 +293,21 @@ describe("export-data.utility", () => {
       );
 
       await expect(importAppData(file)).rejects.toThrow("IndexedDB unavailable");
+    });
+
+    it("replaces persisted data with a real ~1.4MB device export's full contents, unmodified", async () => {
+      const file = new File([REAL_EXPORT_RAW], "brew-me-export-2026-08-16.json", {
+        type: "application/json",
+      });
+      const replaceSpy = vi
+        .spyOn(persistentSignalModule, "replaceAllPersistedData")
+        .mockResolvedValue(undefined);
+
+      await importAppData(file);
+
+      const passedData = replaceSpy.mock.calls[0]?.[0] as Record<string, unknown>;
+      expect(passedData["saved-brews"]).toHaveLength(5);
+      expect(passedData["saved-shots"]).toHaveLength(10);
     });
   });
 });

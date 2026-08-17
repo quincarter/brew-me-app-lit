@@ -1,0 +1,4 @@
+[tools]
+github-cli = "latest"
+node = "24"
+vale = "latest"

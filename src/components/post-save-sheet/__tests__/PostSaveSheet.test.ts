@@ -1,3 +1,4 @@
+import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { ISavedBrew } from "../../../shared/interfaces/brew.interface";
 import { BREW_STEPS_PRESETS } from "../../../shared/data/brew-steps-presets.data";
@@ -161,6 +162,7 @@ describe("brew-post-save-sheet", () => {
       ratio: 16,
       targetSeconds: 120,
       steps: BREW_STEPS_PRESETS.V60.steps,
+      savedBrewId: 12345,
     });
     expect(window.location.pathname).toBe("/timer");
     expect(postSaveSheetOpenSignal.value).toBe(false);

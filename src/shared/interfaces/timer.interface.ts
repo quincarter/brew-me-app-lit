@@ -13,6 +13,8 @@ export interface IPrimedRecipe {
   targetSeconds: number | null;
   /** The brew's step sequence (from its saved `brewSteps`, or its type's canned `BREW_STEPS_PRESETS` entry) - null when there's no step data to show. */
   steps: IBrewStep[] | null;
+  /** The originating `ISavedBrew.id`, when this recipe was primed from a saved brew - lets `stopSession()` attribute the sealed shot to it. Unset for a plain/unprimed stopwatch. */
+  savedBrewId?: number;
 }
 
 export type BrewStepStatus = "done" | "active" | "upcoming";

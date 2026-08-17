@@ -1,7 +1,20 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { deleteAllCustomBrewTypes } from "../../../shared/stores/brew-types.store";
+import { BREW_TYPES } from "../../../shared/data/brew-content.data";
+import {
+  brewTypeFeaturesSignal,
+  getBrewTypeFeatures,
+} from "../../../shared/stores/brew-type-features.store";
+import {
+  addCustomBrewType,
+  deleteAllCustomBrewTypes,
+} from "../../../shared/stores/brew-types.store";
 import { deleteAllSavedBrews } from "../../../shared/stores/brew.store";
+import {
+  scrollToTimerSettingsSectionSignal,
+  showActiveStepBannerSignal,
+  timerCountStyleSignal,
+} from "../../../shared/stores/timer-settings.store";
 import { exportAppData, importAppData } from "../../../shared/utilities/export-data.utility";
 import "../settings-page";
 import type { SettingsPage } from "../settings-page";
@@ -19,6 +32,10 @@ describe("settings-page", () => {
   beforeEach(async () => {
     deleteAllSavedBrews();
     deleteAllCustomBrewTypes();
+    brewTypeFeaturesSignal.value = {};
+    timerCountStyleSignal.value = "countdown";
+    showActiveStepBannerSignal.value = true;
+    scrollToTimerSettingsSectionSignal.value = false;
     vi.mocked(exportAppData).mockReset();
     vi.mocked(importAppData).mockReset();
 
@@ -36,6 +53,8 @@ describe("settings-page", () => {
   afterEach(() => {
     element.remove();
     vi.useRealTimers();
+    timerCountStyleSignal.value = "countdown";
+    showActiveStepBannerSignal.value = true;
     Object.defineProperty(window, "location", {
       configurable: true,
       value: originalLocation,
@@ -254,5 +273,291 @@ describe("settings-page", () => {
     );
     expect(confirmImportButton()).toBeUndefined();
     expect(reloadSpy).not.toHaveBeenCalled();
+  });
+
+  describe("Brew type features section", () => {
+    beforeEach(async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      element.requestUpdate();
+      await element.updateComplete;
+    });
+
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+    });
+
+    const featureRowFor = (name: string): Element | undefined =>
+      Array.from(element.shadowRoot?.querySelectorAll(".feature-row") ?? []).find(
+        (row) => row.querySelector(".row-label")?.textContent?.trim() === name,
+      );
+
+    const switchIn = (row: Element | undefined): (Element & { checked: boolean }) | null =>
+      (row?.querySelector("brew-switch") as (Element & { checked: boolean }) | null) ?? null;
+
+    const chipIn = (
+      row: Element | undefined,
+      label: string,
+    ): (Element & { selected: boolean }) | undefined =>
+      Array.from(row?.querySelectorAll("brew-chip") ?? []).find(
+        (chip) => chip.getAttribute("label") === label,
+      ) as (Element & { selected: boolean }) | undefined;
+
+    it("renders one feature row per built-in brew type", () => {
+      const rows = element.shadowRoot?.querySelectorAll(".feature-row");
+      expect(rows?.length).toBe(BREW_TYPES.length);
+    });
+
+    it("renders a feature row for a newly-added custom brew type too", async () => {
+      addCustomBrewType("Siphon");
+      element.requestUpdate();
+      await element.updateComplete;
+
+      expect(featureRowFor("Siphon")).not.toBeUndefined();
+    });
+
+    it("reflects the default features for an unlocked brew type: shots switch on, telemetry mode 'full' selected", () => {
+      const row = featureRowFor("V60");
+
+      expect(switchIn(row)?.checked).toBe(true);
+      expect(chipIn(row, "Gauges + chart")?.selected).toBe(true);
+      expect(chipIn(row, "Off")?.selected).toBe(false);
+      expect(chipIn(row, "Chart only")?.selected).toBe(false);
+    });
+
+    it("calls setShowShotsSection and re-renders the switch checked when its change event fires", async () => {
+      const row = featureRowFor("V60");
+      switchIn(row)?.dispatchEvent(
+        new CustomEvent<boolean>("change", { detail: false, bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(getBrewTypeFeatures("V60").showShotsSection).toBe(false);
+      expect(switchIn(featureRowFor("V60"))?.checked).toBe(false);
+    });
+
+    it("calls setTelemetryMode and re-renders the selected chip when a telemetry chip-click fires", async () => {
+      const row = featureRowFor("Chemex");
+      chipIn(row, "Off")?.dispatchEvent(
+        new CustomEvent("chip-click", { bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(getBrewTypeFeatures("Chemex").telemetryMode).toBe("off");
+      const updatedRow = featureRowFor("Chemex");
+      expect(chipIn(updatedRow, "Off")?.selected).toBe(true);
+      expect(chipIn(updatedRow, "Gauges + chart")?.selected).toBe(false);
+    });
+
+    it("renders the Aeropress row locked: disabled switch/chips, locked-off values, and a hint", () => {
+      const row = featureRowFor("Aeropress");
+
+      expect(switchIn(row)?.hasAttribute("disabled")).toBe(true);
+      expect(switchIn(row)?.checked).toBe(false);
+      expect(chipIn(row, "Off")?.selected).toBe(true);
+      expect(chipIn(row, "Off")?.hasAttribute("disabled")).toBe(true);
+      expect(chipIn(row, "Gauges + chart")?.hasAttribute("disabled")).toBe(true);
+      expect(chipIn(row, "Chart only")?.hasAttribute("disabled")).toBe(true);
+      expect(row?.querySelector(".section-hint")?.textContent?.trim()).toBe(
+        "Telemetry can't be tracked for Aeropress yet.",
+      );
+    });
+
+    it("renders no hint for an unlocked brew type", () => {
+      const row = featureRowFor("V60");
+
+      expect(row?.querySelector(".section-hint")).toBeNull();
+    });
+
+    it("is absent when Web Bluetooth is unsupported", async () => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+      element.requestUpdate();
+      await element.updateComplete;
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent === "Brew type features")).toBe(false);
+      expect(element.shadowRoot?.querySelectorAll(".feature-row").length).toBe(0);
+    });
+  });
+
+  describe("Timer section", () => {
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+    });
+
+    const rowFor = (label: string): Element | undefined =>
+      Array.from(element.shadowRoot?.querySelectorAll(".row") ?? []).find(
+        (row) => row.querySelector(".row-label")?.textContent?.trim() === label,
+      );
+
+    const countStyleRow = (): Element | undefined => rowFor("Default count style");
+
+    const bannerRow = (): Element | undefined => rowFor("Show large step banner");
+
+    const switchIn = (row: Element | undefined): (Element & { checked: boolean }) | null =>
+      (row?.querySelector("brew-switch") as (Element & { checked: boolean }) | null) ?? null;
+
+    const chipIn = (
+      row: Element | undefined,
+      label: string,
+    ): (Element & { selected: boolean }) | undefined =>
+      Array.from(row?.querySelectorAll("brew-chip") ?? []).find(
+        (chip) => chip.getAttribute("label") === label,
+      ) as (Element & { selected: boolean }) | undefined;
+
+    it("renders the Timer section title", () => {
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent === "Timer")).toBe(true);
+    });
+
+    it("reflects the default timerCountStyleSignal value: Count down selected, Count up not", () => {
+      const row = countStyleRow();
+
+      expect(chipIn(row, "Count down")?.selected).toBe(true);
+      expect(chipIn(row, "Count up")?.selected).toBe(false);
+    });
+
+    it("reflects the default showActiveStepBannerSignal value: switch checked", () => {
+      expect(switchIn(bannerRow())?.checked).toBe(true);
+    });
+
+    it("calls setTimerCountStyle('countup') and re-renders the selected chip when Count up is clicked", async () => {
+      chipIn(countStyleRow(), "Count up")?.dispatchEvent(
+        new CustomEvent("chip-click", { bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(timerCountStyleSignal.value).toBe("countup");
+      const updatedRow = countStyleRow();
+      expect(chipIn(updatedRow, "Count up")?.selected).toBe(true);
+      expect(chipIn(updatedRow, "Count down")?.selected).toBe(false);
+    });
+
+    it("calls setTimerCountStyle('countdown') and re-renders the selected chip when Count down is clicked", async () => {
+      timerCountStyleSignal.value = "countup";
+      element.requestUpdate();
+      await element.updateComplete;
+
+      chipIn(countStyleRow(), "Count down")?.dispatchEvent(
+        new CustomEvent("chip-click", { bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(timerCountStyleSignal.value).toBe("countdown");
+      const updatedRow = countStyleRow();
+      expect(chipIn(updatedRow, "Count down")?.selected).toBe(true);
+      expect(chipIn(updatedRow, "Count up")?.selected).toBe(false);
+    });
+
+    it("calls setShowActiveStepBanner and re-renders the switch checked when its change event fires", async () => {
+      switchIn(bannerRow())?.dispatchEvent(
+        new CustomEvent<boolean>("change", { detail: false, bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(showActiveStepBannerSignal.value).toBe(false);
+      expect(switchIn(bannerRow())?.checked).toBe(false);
+    });
+
+    it("is present even when Web Bluetooth is unsupported, unlike the Brew type features / Connected devices sections", async () => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+      element.requestUpdate();
+      await element.updateComplete;
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent === "Timer")).toBe(true);
+      expect(countStyleRow()).not.toBeUndefined();
+      expect(bannerRow()).not.toBeUndefined();
+    });
+  });
+
+  describe("scroll to Timer section on navigation", () => {
+    /**
+     * `_scrollToTimerSectionOnceSettled` polls via `requestAnimationFrame` for up to its
+     * `maxFrames` (10) before forcing the scroll - waits out that full bounded chain (rather than
+     * guessing how many frames happy-dom's always-0 `offsetTop` takes to "settle") so the internal
+     * loop is guaranteed to have already called `scrollIntoView` by the time each test asserts,
+     * and doesn't leave a straggling `requestAnimationFrame` callback to fire during a *later*
+     * test's own spy window.
+     */
+    const waitForSettledScroll = async (frames = 12): Promise<void> => {
+      for (let i = 0; i < frames; i += 1) {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      }
+    };
+
+    afterEach(() => {
+      scrollToTimerSettingsSectionSignal.value = false;
+    });
+
+    it("scrolls the Timer section into view and clears the pending request when mounted with one set", async () => {
+      scrollToTimerSettingsSectionSignal.value = true;
+      const scrollIntoViewSpy = vi
+        .spyOn(HTMLElement.prototype, "scrollIntoView")
+        .mockImplementation(() => {});
+
+      const freshElement = document.createElement("settings-page") as SettingsPage;
+      document.body.appendChild(freshElement);
+      await freshElement.updateComplete;
+      await waitForSettledScroll();
+
+      expect(scrollIntoViewSpy).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+      expect(scrollToTimerSettingsSectionSignal.value).toBe(false);
+
+      freshElement.remove();
+      scrollIntoViewSpy.mockRestore();
+    });
+
+    it("does not scroll when mounted with no pending request", async () => {
+      scrollToTimerSettingsSectionSignal.value = false;
+      const scrollIntoViewSpy = vi
+        .spyOn(HTMLElement.prototype, "scrollIntoView")
+        .mockImplementation(() => {});
+
+      const freshElement = document.createElement("settings-page") as SettingsPage;
+      document.body.appendChild(freshElement);
+      await freshElement.updateComplete;
+      await waitForSettledScroll();
+
+      expect(scrollIntoViewSpy).not.toHaveBeenCalled();
+
+      freshElement.remove();
+      scrollIntoViewSpy.mockRestore();
+    });
+  });
+
+  describe("Connected devices section", () => {
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+    });
+
+    it("is absent when Web Bluetooth is unsupported", async () => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+      element.requestUpdate();
+      await element.updateComplete;
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent === "Connected devices")).toBe(false);
+      expect(element.shadowRoot?.querySelector("brew-device-connect-rows")).toBeNull();
+    });
+
+    it("shows the device connect rows when Web Bluetooth is supported", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      element.requestUpdate();
+      await element.updateComplete;
+
+      const sectionTitles = Array.from(
+        element.shadowRoot?.querySelectorAll(".section-title") ?? [],
+      );
+      expect(sectionTitles.some((title) => title.textContent === "Connected devices")).toBe(true);
+      expect(element.shadowRoot?.querySelector("brew-device-connect-rows")).not.toBeNull();
+    });
   });
 });

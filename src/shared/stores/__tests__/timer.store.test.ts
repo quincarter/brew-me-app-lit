@@ -1,7 +1,23 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import "fake-indexeddb/auto";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { BREW_STEPS_PRESETS } from "../../data/brew-steps-presets.data";
+import type { IBookooScaleReading } from "../../interfaces/bookoo-ble.interface";
 import type { IBrewStep, ISavedBrew } from "../../interfaces/brew.interface";
 import type { IPrimedRecipe } from "../../interfaces/timer.interface";
+import { deleteAllSavedBrews, savedBrewsSignal } from "../brew.store";
+import { getShotsForBrew, savedShotsSignal } from "../shot.store";
+import { timerCountStyleSignal } from "../timer-settings.store";
+import {
+  latestMonitorReadingSignal,
+  latestScaleReadingSignal,
+  monitorSamplesSignal,
+  recordMonitorReading,
+  recordScaleReading,
+  scaleSamplesSignal,
+  startTelemetryRecording,
+  telemetryRecordingSignal,
+  telemetrySealedSignal,
+} from "../telemetry.store";
 import {
   clearPrimedRecipe,
   guidedModeSignal,
@@ -11,8 +27,10 @@ import {
   resetTimer,
   setGuidedMode,
   setGuidedTargetSeconds,
+  stopSession,
   timerRunningSignal,
   timerSecondsSignal,
+  toggleTimer,
 } from "../timer.store";
 
 const recipe: IPrimedRecipe = {
@@ -40,6 +58,13 @@ describe("timer.store", () => {
     resetTimer();
     primedRecipeSignal.value = null;
     guidedModeSignal.value = "countdown";
+    timerCountStyleSignal.value = "countdown";
+    deleteAllSavedBrews();
+    savedShotsSignal.value = [];
+  });
+
+  afterEach(() => {
+    timerCountStyleSignal.value = "countdown";
   });
 
   describe("primeTimerForRecipe", () => {
@@ -60,13 +85,29 @@ describe("timer.store", () => {
       expect(primedRecipeSignal.value).toEqual(recipe);
     });
 
-    it("defaults to countdown mode when the recipe has a target", () => {
+    it("defaults to countdown mode when the recipe has a target and timerCountStyleSignal is left at its default", () => {
       primeTimerForRecipe(recipe);
 
       expect(guidedModeSignal.value).toBe("countdown");
     });
 
+    it("respects timerCountStyleSignal set to countup when the recipe has a target", () => {
+      timerCountStyleSignal.value = "countup";
+
+      primeTimerForRecipe(recipe);
+
+      expect(guidedModeSignal.value).toBe("countup");
+    });
+
     it("defaults to countup mode when the recipe has no target (e.g. Cold Brew)", () => {
+      primeTimerForRecipe(recipeWithoutTarget);
+
+      expect(guidedModeSignal.value).toBe("countup");
+    });
+
+    it("still forces countup when the recipe has no target even if timerCountStyleSignal is countdown", () => {
+      timerCountStyleSignal.value = "countdown";
+
       primeTimerForRecipe(recipeWithoutTarget);
 
       expect(guidedModeSignal.value).toBe("countup");
@@ -95,6 +136,7 @@ describe("timer.store", () => {
         ratio: 16,
         targetSeconds: 120,
         steps: BREW_STEPS_PRESETS.V60.steps,
+        savedBrewId: 1,
       });
     });
 
@@ -258,6 +300,27 @@ describe("timer.store", () => {
 
       expect(primedRecipeSignal.value).toBeNull();
     });
+
+    it("clears the recorded telemetry buffers, but leaves the latest live reading alone - a connected device's stat-tile readout shouldn't go blank on Reset", () => {
+      startTelemetryRecording();
+      const scaleReading: IBookooScaleReading = {
+        timeMs: 100,
+        weightGrams: 12,
+        flowRateGramsPerSecond: 0.5,
+        batteryPercent: 90,
+      };
+      recordScaleReading(scaleReading);
+      recordMonitorReading({ pressureBar: 9, batteryPercent: 90 });
+      expect(scaleSamplesSignal.value).toHaveLength(1);
+      expect(monitorSamplesSignal.value).toHaveLength(1);
+
+      resetTimer();
+
+      expect(scaleSamplesSignal.value).toEqual([]);
+      expect(monitorSamplesSignal.value).toEqual([]);
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading);
+      expect(latestMonitorReadingSignal.value).not.toBeNull();
+    });
   });
 
   describe("clearPrimedRecipe", () => {
@@ -277,6 +340,190 @@ describe("timer.store", () => {
       clearPrimedRecipe();
 
       expect(primedRecipeSignal.value).toBeNull();
+    });
+  });
+
+  describe("toggleTimer", () => {
+    afterEach(() => {
+      // toggleTimer's start branch schedules a real setInterval - stop it so it doesn't
+      // keep ticking (and leaking across tests) past this test's own cleanup.
+      if (timerRunningSignal.value) toggleTimer();
+    });
+
+    it("starts telemetry recording when starting from idle", () => {
+      expect(telemetryRecordingSignal.value).toBe(false);
+
+      toggleTimer();
+
+      expect(timerRunningSignal.value).toBe(true);
+      expect(telemetryRecordingSignal.value).toBe(true);
+    });
+
+    it("leaves telemetry recording alone when pausing", () => {
+      toggleTimer();
+      expect(telemetryRecordingSignal.value).toBe(true);
+
+      toggleTimer();
+
+      expect(timerRunningSignal.value).toBe(false);
+      expect(telemetryRecordingSignal.value).toBe(true);
+    });
+  });
+
+  describe("stopSession", () => {
+    it("freezes timerRunningSignal to false without zeroing timerSecondsSignal", () => {
+      primeTimerForRecipe(recipe);
+      timerRunningSignal.value = true;
+      timerSecondsSignal.value = 42;
+
+      stopSession();
+
+      expect(timerRunningSignal.value).toBe(false);
+      expect(timerSecondsSignal.value).toBe(42);
+    });
+
+    it("seals telemetry so a late reading no longer gets appended to the recorded buffer, but still updates the live stat-tile reading", () => {
+      primeTimerForRecipe(recipe);
+      expect(telemetrySealedSignal.value).toBe(false);
+
+      stopSession();
+
+      expect(telemetrySealedSignal.value).toBe(true);
+
+      const scaleReading: IBookooScaleReading = {
+        timeMs: 100,
+        weightGrams: 12,
+        flowRateGramsPerSecond: 0.5,
+        batteryPercent: 90,
+      };
+      recordScaleReading(scaleReading);
+
+      // A connected scale still reports its real, current weight after Stop/Seal (e.g. as the
+      // cup is removed) - only the sealed dataset feeding the chart/shot must stop growing.
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading);
+      expect(scaleSamplesSignal.value).toEqual([]);
+    });
+
+    it("does not throw and does not create a shot when there's no primed recipe", () => {
+      expect(() => stopSession()).not.toThrow();
+
+      expect(savedShotsSignal.value).toEqual([]);
+    });
+
+    it("does not create a shot when the primed recipe has no savedBrewId (plain/unsaved recipe)", () => {
+      primeTimerForRecipe(recipe);
+      timerSecondsSignal.value = 30;
+
+      stopSession();
+
+      expect(savedShotsSignal.value).toEqual([]);
+    });
+
+    it("records a sealed IBrewShot and stamps the originating brew as brewed when primed from a saved brew", () => {
+      const brew: ISavedBrew = {
+        id: 99,
+        brewType: "V60",
+        ratio: 16,
+        water: 320,
+        coffee: 20,
+        oz: 11,
+        createdAt: Date.now(),
+      };
+      savedBrewsSignal.value = [...savedBrewsSignal.value, brew];
+      primeTimerForSavedBrew(brew);
+      timerRunningSignal.value = true;
+      timerSecondsSignal.value = 125;
+      startTelemetryRecording();
+
+      const scaleReading: IBookooScaleReading = {
+        timeMs: 1000,
+        weightGrams: 18,
+        flowRateGramsPerSecond: 1.2,
+        batteryPercent: 85,
+      };
+      recordScaleReading(scaleReading);
+      recordMonitorReading({ pressureBar: 9, batteryPercent: 85 });
+
+      stopSession();
+
+      const shots = getShotsForBrew(99);
+      expect(shots).toHaveLength(1);
+      expect(shots[0]).toMatchObject({
+        savedBrewId: 99,
+        elapsedSeconds: 125,
+      });
+      expect(shots[0]?.scaleSamples.map((sample) => sample.reading)).toEqual([scaleReading]);
+      expect(shots[0]?.monitorSamples.map((sample) => sample.reading)).toEqual([
+        { pressureBar: 9, batteryPercent: 85 },
+      ]);
+
+      const updatedBrew = savedBrewsSignal.value.find((item) => item.id === 99);
+      expect(updatedBrew?.lastBrewedAt).toBeDefined();
+    });
+
+    it("is a no-op on a second call, so a re-invocation can't record a duplicate shot", () => {
+      const brew: ISavedBrew = {
+        id: 100,
+        brewType: "V60",
+        ratio: 16,
+        water: 320,
+        coffee: 20,
+        oz: 11,
+        createdAt: Date.now(),
+      };
+      savedBrewsSignal.value = [...savedBrewsSignal.value, brew];
+      primeTimerForSavedBrew(brew);
+      timerRunningSignal.value = true;
+      timerSecondsSignal.value = 30;
+
+      stopSession();
+      expect(getShotsForBrew(100)).toHaveLength(1);
+
+      timerSecondsSignal.value = 999;
+      stopSession();
+
+      expect(getShotsForBrew(100)).toHaveLength(1);
+    });
+
+    it("prevents toggleTimer from resuming a sealed session", () => {
+      primeTimerForRecipe(recipe);
+      timerRunningSignal.value = true;
+
+      stopSession();
+      expect(timerRunningSignal.value).toBe(false);
+
+      toggleTimer();
+
+      expect(timerRunningSignal.value).toBe(false);
+    });
+
+    it("skips recording a shot for a brew type whose telemetry is locked off (Aeropress), but still stamps the brew as brewed", () => {
+      const brew: ISavedBrew = {
+        id: 101,
+        brewType: "Aeropress",
+        ratio: 15,
+        water: 200,
+        coffee: 13,
+        oz: 7,
+        createdAt: Date.now(),
+      };
+      savedBrewsSignal.value = [...savedBrewsSignal.value, brew];
+      primeTimerForSavedBrew(brew);
+      timerRunningSignal.value = true;
+      timerSecondsSignal.value = 40;
+      startTelemetryRecording();
+      recordScaleReading({
+        timeMs: 1000,
+        weightGrams: 18,
+        flowRateGramsPerSecond: 1.2,
+        batteryPercent: 85,
+      });
+
+      stopSession();
+
+      expect(getShotsForBrew(101)).toEqual([]);
+      const updatedBrew = savedBrewsSignal.value.find((item) => item.id === 101);
+      expect(updatedBrew?.lastBrewedAt).toBeDefined();
     });
   });
 });

@@ -4,6 +4,7 @@ import { customElement } from "lit/decorators.js";
 import { html as staticHtml, unsafeStatic } from "lit/static-html.js";
 import "urlpattern-polyfill";
 import { AppShellStyles } from "./app-shell.styles";
+import "./components/device-connect-sheet/brew-device-connect-sheet";
 import "./components/install-prompt/brew-install-prompt";
 import "./components/post-save-sheet/brew-post-save-sheet";
 import "./components/theme-toggle/brew-theme-toggle";
@@ -83,6 +84,7 @@ export class AppShell extends LitElement {
       <brew-install-prompt></brew-install-prompt>
       <brew-update-prompt></brew-update-prompt>
       <brew-post-save-sheet></brew-post-save-sheet>
+      <brew-device-connect-sheet></brew-device-connect-sheet>
       <brew-tour-overlay></brew-tour-overlay>
     `;
   }

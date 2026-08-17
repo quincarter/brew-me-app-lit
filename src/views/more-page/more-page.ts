@@ -6,10 +6,7 @@ import "../../components/list-row/brew-list-row";
 import "../../components/stat-tile/brew-stat-tile";
 import "../../components/top-bar/brew-top-bar";
 import { BREW_GUIDE } from "../../shared/data/brew-content.data";
-import {
-  streakDaysSignal,
-  totalBrewsSignal,
-} from "../../shared/stores/brew.store";
+import { streakDaysSignal, totalBrewsSignal } from "../../shared/stores/brew.store";
 import { startTour } from "../../shared/stores/tour.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getInitial } from "../../shared/utilities/avatar-palette.utility";
@@ -87,9 +84,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           ></brew-list-row>
 
           <div class="divider"></div>
-          <div class="section-title" data-tour="more-guides-section">
-            Brew method guide
-          </div>
+          <div class="section-title" data-tour="more-guides-section">Brew method guide</div>
           ${[...BREW_GUIDE]
             .sort((a, b) => a.name.localeCompare(b.name))
             .map(

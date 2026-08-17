@@ -19,8 +19,10 @@ export class Switch extends LitElement {
   @property({ type: Boolean, reflect: true }) checked = false;
   /** Named `ariaLabelText` (not `ariaLabel`) to avoid clashing with the built-in `ARIAMixin.ariaLabel` on `HTMLElement`. */
   @property({ type: String, attribute: "aria-label" }) ariaLabelText = "";
+  @property({ type: Boolean, reflect: true }) disabled = false;
 
   private _onClick = (): void => {
+    if (this.disabled) return;
     this.dispatchEvent(
       new CustomEvent<boolean>("change", { detail: !this.checked, bubbles: true, composed: true }),
     );
@@ -34,6 +36,7 @@ export class Switch extends LitElement {
         role="switch"
         aria-checked="${this.checked}"
         aria-label="${this.ariaLabelText || nothing}"
+        ?disabled="${this.disabled}"
         @click="${this._onClick}"
       >
         <span class="thumb"></span>

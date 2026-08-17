@@ -64,8 +64,12 @@ async function capture() {
   console.log("Importing mock data for populated screenshots...");
   await page.goto(`${baseUrl}/more/settings`, { waitUntil: "networkidle" });
   await page.locator('input[type="file"]').setInputFiles(mockDataPath);
+  // Import runs async before window.location.reload() fires, so we must wait
+  // for an actual navigation event here (not just "load" state on the
+  // current, already-loaded document) or a later page.goto() can race the
+  // reload and get cancelled mid-flight.
   await Promise.all([
-    page.waitForLoadState("load"),
+    page.waitForNavigation({ waitUntil: "load" }),
     page.getByRole("button", { name: "Yes, import and replace" }).click(),
   ]);
 

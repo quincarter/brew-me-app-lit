@@ -8,6 +8,8 @@ export const ActionTileStyles = css`
 
   .tile {
     box-sizing: border-box;
+    width: 100%;
+    border: none;
     border-radius: 20px;
     padding: 16px;
     display: flex;
@@ -15,6 +17,8 @@ export const ActionTileStyles = css`
     gap: 10px;
     cursor: pointer;
     text-decoration: none;
+    text-align: left;
+    font: inherit;
     height: 100%;
     justify-content: space-between;
   }
@@ -32,6 +36,14 @@ export const ActionTileStyles = css`
   .tile.tertiary {
     background: var(--brew-color-tertiary-container);
     color: var(--brew-color-on-tertiary-container);
+  }
+
+  /* Deliberately muted/neutral rather than one of the three brand-color containers above -
+   * for a tile that isn't a core brewing action (e.g. Home's "Devices" tile), so it doesn't
+   * visually compete with Calculate/Saved Brews/Timer or the "Brew again" card. */
+  .tile.neutral {
+    background: var(--brew-color-surface-container);
+    color: var(--brew-color-on-surface);
   }
 
   .label {

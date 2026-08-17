@@ -1,0 +1,216 @@
+import { beforeEach, describe, expect, it } from "vitest";
+import type {
+  IBookooMonitorReading,
+  IBookooScaleReading,
+} from "../../interfaces/bookoo-ble.interface";
+import {
+  MAX_SAMPLES_PER_DEVICE,
+  clearTelemetry,
+  latestMonitorReadingSignal,
+  latestScaleReadingSignal,
+  monitorSamplesSignal,
+  recordMonitorReading,
+  recordScaleReading,
+  scaleSamplesSignal,
+  sealTelemetry,
+  startTelemetryRecording,
+  telemetryRecordingSignal,
+  telemetrySealedSignal,
+} from "../telemetry.store";
+
+const scaleReading = (weightGrams: number): IBookooScaleReading => ({
+  timeMs: 0,
+  weightGrams,
+  flowRateGramsPerSecond: 0,
+  batteryPercent: 90,
+});
+
+const monitorReading = (pressureBar: number): IBookooMonitorReading => ({
+  pressureBar,
+  batteryPercent: 90,
+});
+
+describe("telemetry.store", () => {
+  beforeEach(() => {
+    clearTelemetry();
+    // clearTelemetry() deliberately leaves the live "latest reading" signals alone (see their
+    // doc comment) - reset them here directly so tests in this file don't leak into each other.
+    latestScaleReadingSignal.value = null;
+    latestMonitorReadingSignal.value = null;
+    // Recording is off by default (see the dedicated `telemetryRecordingSignal` block below) -
+    // every other describe block here is about append/cap/seal behavior once a session is
+    // already running, so start it up front rather than repeating this in every test.
+    startTelemetryRecording();
+  });
+
+  describe("telemetryRecordingSignal", () => {
+    it("is false until startTelemetryRecording() is called, so a connected-but-idle device isn't recorded", () => {
+      clearTelemetry();
+      expect(telemetryRecordingSignal.value).toBe(false);
+
+      recordScaleReading(scaleReading(1));
+      recordMonitorReading(monitorReading(1));
+
+      expect(scaleSamplesSignal.value).toEqual([]);
+      expect(monitorSamplesSignal.value).toEqual([]);
+    });
+
+    it("still updates the latest live reading (for stat-tile display) even while not recording", () => {
+      clearTelemetry();
+      expect(telemetryRecordingSignal.value).toBe(false);
+
+      recordScaleReading(scaleReading(7));
+      recordMonitorReading(monitorReading(4));
+
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading(7));
+      expect(latestMonitorReadingSignal.value).toEqual(monitorReading(4));
+      // ...but still hasn't touched the recorded buffers the chart/shot data reads from.
+      expect(scaleSamplesSignal.value).toEqual([]);
+      expect(monitorSamplesSignal.value).toEqual([]);
+    });
+
+    it("lets readings through once started", () => {
+      clearTelemetry();
+      startTelemetryRecording();
+
+      recordScaleReading(scaleReading(1));
+
+      expect(telemetryRecordingSignal.value).toBe(true);
+      expect(scaleSamplesSignal.value).toHaveLength(1);
+    });
+
+    it("is reset to false by clearTelemetry(), so the next session needs its own start", () => {
+      startTelemetryRecording();
+      expect(telemetryRecordingSignal.value).toBe(true);
+
+      clearTelemetry();
+
+      expect(telemetryRecordingSignal.value).toBe(false);
+    });
+  });
+
+  describe("recordScaleReading", () => {
+    it("appends a sample and updates the latest-reading computed", () => {
+      expect(latestScaleReadingSignal.value).toBeNull();
+
+      recordScaleReading(scaleReading(10));
+
+      expect(scaleSamplesSignal.value).toHaveLength(1);
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading(10));
+    });
+
+    it("tracks the most recently recorded reading as latest", () => {
+      recordScaleReading(scaleReading(10));
+      recordScaleReading(scaleReading(20));
+
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading(20));
+      expect(scaleSamplesSignal.value).toHaveLength(2);
+    });
+
+    it("caps the buffer at MAX_SAMPLES_PER_DEVICE, dropping the oldest sample first", () => {
+      // Fill right up to the real exported cap, then push one more and confirm the oldest
+      // sample was dropped (not the newest) and the array length stays capped.
+      for (let i = 0; i < MAX_SAMPLES_PER_DEVICE; i++) {
+        recordScaleReading(scaleReading(i));
+      }
+      expect(scaleSamplesSignal.value).toHaveLength(MAX_SAMPLES_PER_DEVICE);
+      expect(scaleSamplesSignal.value[0]?.reading.weightGrams).toBe(0);
+
+      recordScaleReading(scaleReading(MAX_SAMPLES_PER_DEVICE));
+
+      expect(scaleSamplesSignal.value).toHaveLength(MAX_SAMPLES_PER_DEVICE);
+      expect(scaleSamplesSignal.value[0]?.reading.weightGrams).toBe(1);
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading(MAX_SAMPLES_PER_DEVICE));
+    });
+  });
+
+  describe("recordMonitorReading", () => {
+    it("appends a sample and updates the latest-reading computed", () => {
+      expect(latestMonitorReadingSignal.value).toBeNull();
+
+      recordMonitorReading(monitorReading(9));
+
+      expect(monitorSamplesSignal.value).toHaveLength(1);
+      expect(latestMonitorReadingSignal.value).toEqual(monitorReading(9));
+    });
+
+    it("caps the buffer at MAX_SAMPLES_PER_DEVICE, dropping the oldest sample first", () => {
+      for (let i = 0; i < MAX_SAMPLES_PER_DEVICE; i++) {
+        recordMonitorReading(monitorReading(i));
+      }
+      recordMonitorReading(monitorReading(MAX_SAMPLES_PER_DEVICE));
+
+      expect(monitorSamplesSignal.value).toHaveLength(MAX_SAMPLES_PER_DEVICE);
+      expect(monitorSamplesSignal.value[0]?.reading.pressureBar).toBe(1);
+      expect(latestMonitorReadingSignal.value).toEqual(monitorReading(MAX_SAMPLES_PER_DEVICE));
+    });
+  });
+
+  it("keeps the scale and monitor buffers independent", () => {
+    recordScaleReading(scaleReading(5));
+
+    expect(scaleSamplesSignal.value).toHaveLength(1);
+    expect(monitorSamplesSignal.value).toHaveLength(0);
+    expect(latestMonitorReadingSignal.value).toBeNull();
+
+    recordMonitorReading(monitorReading(3));
+
+    expect(scaleSamplesSignal.value).toHaveLength(1);
+    expect(monitorSamplesSignal.value).toHaveLength(1);
+  });
+
+  describe("clearTelemetry", () => {
+    it("empties both recorded buffers, but leaves the latest live reading alone (it reflects the device's current state, not this session's recorded data)", () => {
+      recordScaleReading(scaleReading(1));
+      recordMonitorReading(monitorReading(1));
+
+      clearTelemetry();
+
+      expect(scaleSamplesSignal.value).toEqual([]);
+      expect(monitorSamplesSignal.value).toEqual([]);
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading(1));
+      expect(latestMonitorReadingSignal.value).toEqual(monitorReading(1));
+    });
+
+    it("un-seals telemetry, so recording resumes after a previous sealTelemetry()", () => {
+      sealTelemetry();
+      expect(telemetrySealedSignal.value).toBe(true);
+
+      clearTelemetry();
+
+      expect(telemetrySealedSignal.value).toBe(false);
+    });
+  });
+
+  describe("sealTelemetry", () => {
+    it("sets telemetrySealedSignal to true", () => {
+      expect(telemetrySealedSignal.value).toBe(false);
+
+      sealTelemetry();
+
+      expect(telemetrySealedSignal.value).toBe(true);
+    });
+
+    it("stops recordScaleReading from appending to the recorded buffer once sealed, but still updates the live reading", () => {
+      recordScaleReading(scaleReading(1));
+      sealTelemetry();
+
+      recordScaleReading(scaleReading(2));
+
+      expect(scaleSamplesSignal.value).toHaveLength(1);
+      // The recorded/sealed dataset stays frozen at what it had - but a still-connected scale
+      // keeps reporting its real weight, so the live stat-tile reading keeps moving.
+      expect(latestScaleReadingSignal.value).toEqual(scaleReading(2));
+    });
+
+    it("stops recordMonitorReading from appending to the recorded buffer once sealed, but still updates the live reading", () => {
+      recordMonitorReading(monitorReading(1));
+      sealTelemetry();
+
+      recordMonitorReading(monitorReading(2));
+
+      expect(monitorSamplesSignal.value).toHaveLength(1);
+      expect(latestMonitorReadingSignal.value).toEqual(monitorReading(2));
+    });
+  });
+});

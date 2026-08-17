@@ -33,7 +33,9 @@
       "Bash(git status *)",
       "Bash(grep -n \"^a\\\\b\\\\|^a,\\\\|a {\" /Users/quincarter/Documents/Dev/brew-me-app-lit/src/index.css)",
       "Bash(git -C /Users/quincarter/Documents/Dev/brew-me-app-lit status --porcelain=v1)",
-      "Bash(cd /Users/quincarter/Documents/Dev/brew-me-app-lit && cat playwright.config.ts 2>/dev/null | head -50)"
+      "Bash(cd /Users/quincarter/Documents/Dev/brew-me-app-lit && cat playwright.config.ts 2>/dev/null | head -50)",
+      "Bash(gh issue *)",
+      "Bash(gh api graphql -f 'query= *)"
     ]
   }
 }

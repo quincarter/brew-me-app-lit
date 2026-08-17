@@ -8,6 +8,7 @@ import "../../components/icon/brew-icon";
 import "../../components/link-card/brew-link-card";
 import "../../components/ratio-form/brew-ratio-form";
 import "../../components/ratio-summary/brew-ratio-summary";
+import "../../components/shot-list/brew-shot-list";
 import "../../components/star-rating/brew-star-rating";
 import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
@@ -24,6 +25,7 @@ import {
   SHARE_ICON,
 } from "../../shared/icons/icons";
 import type { IBrewStepsConfig, ISavedBrew } from "../../shared/interfaces/brew.interface";
+import { getBrewTypeFeatures } from "../../shared/stores/brew-type-features.store";
 import { addCustomBrewType, allBrewTypesSignal } from "../../shared/stores/brew-types.store";
 import {
   brewAgain,
@@ -32,6 +34,7 @@ import {
   updateSavedBrew,
 } from "../../shared/stores/brew.store";
 import { editBeforeBrewingIdSignal } from "../../shared/stores/post-save-sheet.store";
+import { getShotsForBrew } from "../../shared/stores/shot.store";
 import { BrewStepsViewToggleStyles } from "../../shared/styles/brew-steps-view-toggle.styles";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
@@ -53,6 +56,7 @@ import {
   renderRecipeProvenanceBanner,
 } from "../../shared/utilities/recipe-provenance.utility";
 import { SHARE_OUTCOME_MESSAGES, shareBrew } from "../../shared/utilities/share.utility";
+import { isWebBluetoothSupported } from "../../shared/utilities/web-bluetooth.utility";
 import { SavedDetailPageStyles } from "./saved-detail-page.styles";
 
 @customElement("saved-detail-page")
@@ -407,6 +411,19 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                   ${renderRecipeProvenanceBanner(brew.recipeSource, recipeCurrent, () => {
                     this._originalRecipeOpen = true;
                   })}
+                  ${
+                    isWebBluetoothSupported() && getBrewTypeFeatures(brew.brewType).showShotsSection
+                      ? html`
+                          <div class="section-title">
+                            ${brew.brewType === "Espresso Shot" ? "Shots" : "Brews"}
+                          </div>
+                          <brew-shot-list
+                            .shots="${getShotsForBrew(brew.id)}"
+                            brew-type="${brew.brewType}"
+                          ></brew-shot-list>
+                        `
+                      : nothing
+                  }
 
                   <div class="section-title">Brew guide</div>
                   ${

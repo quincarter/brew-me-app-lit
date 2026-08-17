@@ -1,0 +1,1601 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @keyframes brewPulse {
+            0%,
+            100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.35;
+            }
+          }
+          @keyframes brewSweep {
+            0% {
+              stroke-dashoffset: 120;
+            }
+            100% {
+              stroke-dashoffset: 0;
+            }
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          --brew-color-primary: #8b5000;
+          --brew-color-on-primary: #ffffff;
+          --brew-color-primary-container: #ffddb3;
+          --brew-color-on-primary-container: #2b1700;
+          --brew-color-secondary: #6f5b40;
+          --brew-color-on-secondary: #ffffff;
+          --brew-color-secondary-container: #fbdebc;
+          --brew-color-on-secondary-container: #271904;
+          --brew-color-tertiary: #51643f;
+          --brew-color-on-tertiary: #ffffff;
+          --brew-color-tertiary-container: #d2e8bc;
+          --brew-color-on-tertiary-container: #101f0c;
+          --brew-color-surface: #fff8f3;
+          --brew-color-on-surface: #201b13;
+          --brew-color-on-surface-variant: #504438;
+          --brew-color-surface-container-lowest: #ffffff;
+          --brew-color-surface-container-low: #faf1e8;
+          --brew-color-surface-container: #f5ebe0;
+          --brew-color-surface-container-high: #efe5d9;
+          --brew-color-surface-container-highest: #e9e0d4;
+          --brew-color-outline: #82756a;
+          --brew-color-outline-variant: #d3c4b4;
+          --brew-color-error: #ba1a1a;
+          --brew-color-on-error: #ffffff;
+          --brew-color-error-container: #ffdad6;
+          --brew-color-on-error-container: #410002;
+          --brew-page-background: #efeae3;
+          font-family: Roboto, system-ui, sans-serif;
+          background: var(--brew-page-background);
+          color: var(--brew-color-on-surface);
+          max-width: 900px;
+          margin: 0 auto;
+          padding: 40px 32px 100px;
+          box-sizing: border-box;
+          line-height: 1.55;
+        "
+      >
+        <div style="margin-bottom: 40px">
+          <div
+            style="
+              font-size: 12px;
+              font-weight: 700;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              color: var(--brew-color-primary);
+            "
+          >
+            Design direction · Parent #43
+          </div>
+          <h1 style="font-size: 30px; font-weight: 700; margin: 6px 0 8px">
+            BLE brew-tracking feature set
+          </h1>
+          <p
+            style="
+              font-size: 15px;
+              color: var(--brew-color-on-surface-variant);
+              margin: 0;
+              max-width: 640px;
+            "
+          >
+            Bookoo Scale + Espresso Monitor connection, a Timer-page telemetry/chart experience, and
+            a Visualizer.coffee ghost-curve picker — built entirely from BrewMe's existing Material
+            tokens and components. No new design system, no working code yet.
+          </p>
+        </div>
+
+        <!-- ASSUMPTIONS -->
+        <section
+          style="
+            margin-bottom: 44px;
+            background: var(--brew-color-surface-container-low);
+            border-radius: 16px;
+            padding: 20px 24px;
+          "
+        >
+          <div
+            style="
+              font-size: 13px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              color: var(--brew-color-on-surface-variant);
+              margin-bottom: 10px;
+            "
+          >
+            Assumptions, from your answers
+          </div>
+          <ul
+            style="
+              margin: 0;
+              padding-left: 18px;
+              font-size: 14px;
+              color: var(--brew-color-on-surface);
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+            "
+          >
+            <li>
+              Bookoo Scale and Espresso Monitor are <strong>fully separate</strong> connect flows —
+              no shared "device" abstraction, just two independent rows/pills.
+            </li>
+            <li>
+              Stop/Seal sends a stop command to <strong>every connected device</strong> and ends
+              recording — distinct from Reset (discards) and Play/Pause (timer-only, no hardware
+              effect until connected).
+            </li>
+            <li>
+              Once <em>any</em> device is connected, Play/Pause's running state is replaced by
+              Stop/Seal — no ambiguous "paused but still recording" hardware state.
+            </li>
+            <li>
+              Ghost curve can be picked before brewing <em>and</em> swapped mid-brew; it always
+              overlays the live curve.
+            </li>
+            <li>
+              Extraction chart is hidden entirely until a device has connected at least once this
+              session — no empty dashboard for pour-over-only users.
+            </li>
+            <li>
+              Visualizer.coffee browser is designed against a real-looking API surface: search,
+              tags, author, machine/grinder filters.
+            </li>
+            <li>
+              Expanded (≥840px) layout splits the Timer page into two columns: dial + controls left,
+              chart + telemetry + ghost picker right.
+            </li>
+            <li>
+              <strong>Revised:</strong> unsupported browsers (iOS Safari, Firefox) don't get a
+              visible "unsupported" state — the whole BLE surface (Settings section, Timer banner,
+              pill) is feature-detected out, so those users just see today's app.
+            </li>
+          </ul>
+        </section>
+
+        <!-- 1. CONNECTION STATUS PILL -->
+        <section style="margin-bottom: 48px">
+          <h2 style="font-size: 20px; margin: 0 0 4px">1 · Connection status pill</h2>
+          <p
+            style="
+              font-size: 14px;
+              color: var(--brew-color-on-surface-variant);
+              margin: 0 0 18px;
+              max-width: 600px;
+            "
+          >
+            One new primitive — nothing today renders a colored state badge. Compact (dot + label)
+            so it drops into a banner row or a stat tile header without competing with the numbers
+            next to it.
+          </p>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 16px">
+            <!-- disconnected -->
+            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start">
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  height: 24px;
+                  padding: 0 10px 0 8px;
+                  border-radius: 12px;
+                  background: var(--brew-color-surface-container-high);
+                  color: var(--brew-color-on-surface-variant);
+                  font-size: 12px;
+                  font-weight: 600;
+                "
+              >
+                <span
+                  style="
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                    background: currentColor;
+                    opacity: 0.5;
+                  "
+                ></span
+                >Disconnected
+              </span>
+              <span style="font-size: 11px; color: var(--brew-color-on-surface-variant)"
+                >surface-container-high / on-surface-variant</span
+              >
+            </div>
+            <!-- connecting -->
+            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start">
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  height: 24px;
+                  padding: 0 10px 0 8px;
+                  border-radius: 12px;
+                  background: var(--brew-color-primary-container);
+                  color: var(--brew-color-on-primary-container);
+                  font-size: 12px;
+                  font-weight: 600;
+                "
+              >
+                <span
+                  style="
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                    background: currentColor;
+                    animation: brewPulse 1.4s ease-in-out infinite;
+                  "
+                ></span
+                >Connecting…
+              </span>
+              <span style="font-size: 11px; color: var(--brew-color-on-surface-variant)"
+                >primary-container / on-primary-container, pulsing dot</span
+              >
+            </div>
+            <!-- connected -->
+            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start">
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  height: 24px;
+                  padding: 0 10px 0 8px;
+                  border-radius: 12px;
+                  background: var(--brew-color-tertiary-container);
+                  color: var(--brew-color-on-tertiary-container);
+                  font-size: 12px;
+                  font-weight: 600;
+                "
+              >
+                <span
+                  style="width: 6px; height: 6px; border-radius: 50%; background: currentColor"
+                ></span
+                >Connected
+              </span>
+              <span style="font-size: 11px; color: var(--brew-color-on-surface-variant)"
+                >tertiary-container — app's only "positive" hue, no new green</span
+              >
+            </div>
+            <!-- unsupported: not a visible pill state -->
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
+                max-width: 180px;
+              "
+            >
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  height: 24px;
+                  padding: 0 10px;
+                  border-radius: 12px;
+                  border: 1px dashed var(--brew-color-outline-variant);
+                  color: var(--brew-color-outline);
+                  font-size: 12px;
+                  font-weight: 600;
+                "
+                >Hidden</span
+              >
+              <span style="font-size: 11px; color: var(--brew-color-on-surface-variant)"
+                >not a 4th pill state — see below</span
+              >
+            </div>
+          </div>
+          <p
+            style="
+              font-size: 13px;
+              color: var(--brew-color-on-surface-variant);
+              margin: 16px 0 0;
+              max-width: 640px;
+            "
+          >
+            Revised: "unsupported" is <strong>not</strong> a visible pill state. On a browser
+            without Web Bluetooth (iOS Safari, Firefox), all BLE UI is feature-detected out at
+            render time — the pill only ever shows disconnected / connecting / connected, because it
+            only ever renders where BLE is possible.
+          </p>
+        </section>
+
+        <!-- 2. SETTINGS SECTION -->
+        <section style="margin-bottom: 48px">
+          <h2 style="font-size: 20px; margin: 0 0 4px">2 · Settings → "Connected devices"</h2>
+          <p
+            style="
+              font-size: 14px;
+              color: var(--brew-color-on-surface-variant);
+              margin: 0 0 18px;
+              max-width: 640px;
+            "
+          >
+            List-row's documented API doesn't take a rich trailing pill, so the state lives in
+            <code>leadingBg</code>/<code>leadingFg</code> (already a prop) recoloring the icon
+            circle, plus the supporting line — no new row primitive needed. Placed between "App" and
+            "Data": it's feature config, not data management.
+          </p>
+
+          <div
+            style="
+              background: var(--brew-color-surface-container-lowest);
+              border-radius: 16px;
+              padding: 16px 20px;
+              max-width: 520px;
+            "
+          >
+            <div
+              style="
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--brew-color-on-surface-variant);
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                margin-bottom: 2px;
+              "
+            >
+              App
+            </div>
+            <div
+              style="font-size: 13px; color: var(--brew-color-outline-variant); padding: 6px 0 10px"
+            >
+              ⋯
+            </div>
+            <div
+              style="height: 1px; background: var(--brew-color-outline-variant); margin: 4px 0 14px"
+            ></div>
+            <div
+              style="
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--brew-color-on-surface-variant);
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                margin-bottom: 12px;
+              "
+            >
+              Connected devices
+            </div>
+
+            <!-- connected row -->
+            <div style="display: flex; align-items: center; gap: 14px; padding: 8px 0">
+              <div
+                style="
+                  width: 40px;
+                  height: 40px;
+                  border-radius: 50%;
+                  background: var(--brew-color-tertiary-container);
+                  color: var(--brew-color-on-tertiary-container);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  flex-shrink: 0;
+                "
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M6 3v18l6-4-6-4 6-4-6-4 6-4z" transform="translate(3,0) scale(0.8)" />
+                  <path d="M6.5 6.8v10.4l4.7-3.1-9-6 9-6-4.7 3.1" />
+                </svg>
+              </div>
+              <div style="flex: 1; min-width: 0">
+                <div style="font-size: 16px; color: var(--brew-color-on-surface)">Bookoo Scale</div>
+                <div style="font-size: 13px; color: var(--brew-color-on-surface-variant)">
+                  Connected · Themis-2G3F
+                </div>
+              </div>
+              <button
+                style="
+                  all: unset;
+                  box-sizing: border-box;
+                  width: 36px;
+                  height: 36px;
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: var(--brew-color-on-surface-variant);
+                  cursor: pointer;
+                "
+                aria-label="Disconnect"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- connecting row -->
+            <div style="display: flex; align-items: center; gap: 14px; padding: 8px 0">
+              <div
+                style="
+                  width: 40px;
+                  height: 40px;
+                  border-radius: 50%;
+                  background: var(--brew-color-primary-container);
+                  color: var(--brew-color-on-primary-container);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  flex-shrink: 0;
+                  animation: brewPulse 1.4s ease-in-out infinite;
+                "
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M6.5 6.8v10.4l4.7-3.1-9-6 9-6-4.7 3.1" />
+                </svg>
+              </div>
+              <div style="flex: 1; min-width: 0">
+                <div style="font-size: 16px; color: var(--brew-color-on-surface)">
+                  Espresso Monitor
+                </div>
+                <div style="font-size: 13px; color: var(--brew-color-on-surface-variant)">
+                  Connecting…
+                </div>
+              </div>
+              <span
+                style="font-size: 13px; color: var(--brew-color-on-surface-variant); padding: 0 4px"
+                >Cancel</span
+              >
+            </div>
+
+            <div
+              style="height: 1px; background: var(--brew-color-outline-variant); margin: 10px 0"
+            ></div>
+            <p
+              style="font-size: 13px; color: var(--brew-color-on-surface-variant); margin: 0 0 10px"
+            >
+              You dismissed the connect banner on the Timer page.
+            </p>
+            <div
+              style="
+                display: inline-flex;
+                align-items: center;
+                height: 36px;
+                padding: 0 16px;
+                border-radius: 18px;
+                border: 1px solid var(--brew-color-outline);
+                color: var(--brew-color-primary);
+                font-size: 13px;
+                font-weight: 600;
+              "
+            >
+              Show connect banner again
+            </div>
+          </div>
+          <p
+            style="
+              font-size: 13px;
+              color: var(--brew-color-on-surface-variant);
+              margin: 12px 0 0;
+              max-width: 600px;
+            "
+          >
+            On an unsupported browser (iOS Safari, Firefox),
+            <strong>the entire "Connected devices" section is omitted</strong> — no rows, no
+            explanatory copy, no disabled state. Settings looks exactly like it does today, straight
+            from "App" to "Data". Feature-detect <code>"bluetooth" in navigator</code> once at the
+            page level and skip rendering the section, same way a feature the user's device can't
+            use just isn't there.
+          </p>
+        </section>
+
+        <!-- 3+4+5+6 TIMER PAGE -->
+        <section style="margin-bottom: 48px">
+          <h2 style="font-size: 20px; margin: 0 0 4px">
+            3–6 · Timer page: banner, telemetry, Stop/Seal, chart
+          </h2>
+          <p
+            style="
+              font-size: 14px;
+              color: var(--brew-color-on-surface-variant);
+              margin: 0 0 18px;
+              max-width: 680px;
+            "
+          >
+            Content-column order top→bottom: connect banner (only while Web Bluetooth is supported
+            <em>and</em> ≥1 device is disconnected, not dismissed) → dial → telemetry row →
+            extraction chart (only once ≥1 device has connected this session) → controls. On iOS
+            Safari / Firefox, the banner is never rendered — the Timer page looks exactly as it does
+            today. Below, phone column on the left; the ≥840px two-column split on the right.
+          </p>
+
+          <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start">
+            <!-- PHONE MOCK -->
+            <div
+              style="
+                width: 300px;
+                background: var(--brew-color-surface);
+                border-radius: 28px;
+                border: 1px solid var(--brew-color-outline-variant);
+                padding: 16px 14px 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+              "
+            >
+              <div
+                style="
+                  font-size: 11px;
+                  font-weight: 700;
+                  color: var(--brew-color-outline);
+                  text-align: center;
+                "
+              >
+                PHONE · disconnected, dismissable banner
+              </div>
+
+              <!-- banner -->
+              <div
+                style="
+                  background: var(--brew-color-surface-container-low);
+                  border-radius: 16px;
+                  padding: 12px 14px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 8px;
+                "
+              >
+                <div style="display: flex; align-items: center; justify-content: space-between">
+                  <span
+                    style="font-size: 13px; font-weight: 600; color: var(--brew-color-on-surface)"
+                    >Connect your devices</span
+                  >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="var(--brew-color-on-surface-variant)"
+                    stroke-width="2"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 2px 0;
+                  "
+                >
+                  <span style="font-size: 13px; color: var(--brew-color-on-surface-variant)"
+                    >Bookoo Scale</span
+                  >
+                  <span style="font-size: 12px; font-weight: 600; color: var(--brew-color-primary)"
+                    >Connect</span
+                  >
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 2px 0;
+                  "
+                >
+                  <span style="font-size: 13px; color: var(--brew-color-on-surface-variant)"
+                    >Espresso Monitor</span
+                  >
+                  <span style="font-size: 12px; font-weight: 600; color: var(--brew-color-primary)"
+                    >Connect</span
+                  >
+                </div>
+              </div>
+
+              <!-- dial -->
+              <div
+                style="
+                  width: 150px;
+                  height: 150px;
+                  border-radius: 50%;
+                  background: var(--brew-color-primary-container);
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 4px;
+                  margin: 0 auto;
+                "
+              >
+                <div
+                  style="
+                    font-size: 10px;
+                    color: var(--brew-color-on-primary-container);
+                    text-transform: uppercase;
+                    letter-spacing: 0.06em;
+                  "
+                >
+                  Ready
+                </div>
+                <div
+                  style="
+                    font-size: 32px;
+                    font-weight: 600;
+                    color: var(--brew-color-on-primary-container);
+                  "
+                >
+                  00:00
+                </div>
+              </div>
+
+              <!-- telemetry, placeholders -->
+              <div style="display: flex; gap: 10px">
+                <div
+                  style="
+                    flex: 1;
+                    background: var(--brew-color-surface-container-low);
+                    border-radius: 14px;
+                    padding: 10px;
+                    text-align: center;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 20px;
+                      font-weight: 600;
+                      color: var(--brew-color-on-surface-variant);
+                    "
+                  >
+                    —
+                  </div>
+                  <div
+                    style="
+                      font-size: 11px;
+                      color: var(--brew-color-on-surface-variant);
+                      text-transform: uppercase;
+                      letter-spacing: 0.04em;
+                    "
+                  >
+                    Weight (g)
+                  </div>
+                </div>
+                <div
+                  style="
+                    flex: 1;
+                    background: var(--brew-color-surface-container-low);
+                    border-radius: 14px;
+                    padding: 10px;
+                    text-align: center;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 20px;
+                      font-weight: 600;
+                      color: var(--brew-color-on-surface-variant);
+                    "
+                  >
+                    —
+                  </div>
+                  <div
+                    style="
+                      font-size: 11px;
+                      color: var(--brew-color-on-surface-variant);
+                      text-transform: uppercase;
+                      letter-spacing: 0.04em;
+                    "
+                  >
+                    Pressure (bar)
+                  </div>
+                </div>
+              </div>
+              <div style="font-size: 11px; color: var(--brew-color-outline); text-align: center">
+                chart hidden — nothing connected yet
+              </div>
+
+              <!-- controls -->
+              <div style="display: flex; align-items: center; justify-content: center; gap: 20px">
+                <div
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: var(--brew-color-on-surface-variant);
+                  "
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M4 4v6h6M20 20v-6h-6M4.5 15a8 8 0 0014.9 3M19.5 9A8 8 0 004.6 6" />
+                  </svg>
+                </div>
+                <div
+                  style="
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    background: var(--brew-color-primary-container);
+                    color: var(--brew-color-on-primary-container);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+                  "
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+                <span style="width: 40px; display: inline-block"></span>
+              </div>
+              <div
+                style="
+                  font-size: 12px;
+                  color: var(--brew-color-on-surface-variant);
+                  text-align: center;
+                "
+              >
+                Tap play to start your pour-over timer.
+              </div>
+            </div>
+
+            <!-- PHONE MOCK 2: connected + brewing + chart -->
+            <div
+              style="
+                width: 300px;
+                background: var(--brew-color-surface);
+                border-radius: 28px;
+                border: 1px solid var(--brew-color-outline-variant);
+                padding: 16px 14px 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+              "
+            >
+              <div
+                style="
+                  font-size: 11px;
+                  font-weight: 700;
+                  color: var(--brew-color-outline);
+                  text-align: center;
+                "
+              >
+                PHONE · connected &amp; brewing
+              </div>
+
+              <div
+                style="
+                  width: 150px;
+                  height: 150px;
+                  border-radius: 50%;
+                  background: var(--brew-color-surface);
+                  border: 8px solid var(--brew-color-primary-container);
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 4px;
+                  margin: 0 auto;
+                "
+              >
+                <div
+                  style="
+                    font-size: 10px;
+                    color: var(--brew-color-on-surface-variant);
+                    text-transform: uppercase;
+                    letter-spacing: 0.06em;
+                  "
+                >
+                  Brewing
+                </div>
+                <div style="font-size: 26px; font-weight: 700; color: var(--brew-color-on-surface)">
+                  00:24
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 10px">
+                <div
+                  style="
+                    flex: 1;
+                    background: var(--brew-color-surface-container-low);
+                    border-radius: 14px;
+                    padding: 10px;
+                    text-align: center;
+                  "
+                >
+                  <div
+                    style="font-size: 20px; font-weight: 700; color: var(--brew-color-on-surface)"
+                  >
+                    18.4
+                  </div>
+                  <div
+                    style="
+                      font-size: 11px;
+                      color: var(--brew-color-on-surface-variant);
+                      text-transform: uppercase;
+                      letter-spacing: 0.04em;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 4px;
+                    "
+                  >
+                    <span
+                      style="
+                        width: 5px;
+                        height: 5px;
+                        border-radius: 50%;
+                        background: var(--brew-color-tertiary-container);
+                        box-shadow: 0 0 0 2px var(--brew-color-on-tertiary-container) inset;
+                      "
+                    ></span
+                    >Weight (g)
+                  </div>
+                </div>
+                <div
+                  style="
+                    flex: 1;
+                    background: var(--brew-color-surface-container-low);
+                    border-radius: 14px;
+                    padding: 10px;
+                    text-align: center;
+                  "
+                >
+                  <div
+                    style="font-size: 20px; font-weight: 700; color: var(--brew-color-on-surface)"
+                  >
+                    9.1
+                  </div>
+                  <div
+                    style="
+                      font-size: 11px;
+                      color: var(--brew-color-on-surface-variant);
+                      text-transform: uppercase;
+                      letter-spacing: 0.04em;
+                    "
+                  >
+                    Pressure (bar)
+                  </div>
+                </div>
+              </div>
+
+              <!-- chart -->
+              <div
+                style="
+                  background: var(--brew-color-surface-container-low);
+                  border-radius: 16px;
+                  padding: 12px;
+                "
+              >
+                <div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap">
+                  <span
+                    style="
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 4px;
+                      height: 22px;
+                      padding: 0 8px;
+                      border-radius: 11px;
+                      background: var(--brew-color-secondary-container);
+                      color: var(--brew-color-on-secondary-container);
+                      font-size: 10px;
+                      font-weight: 600;
+                    "
+                    ><span
+                      style="width: 5px; height: 5px; border-radius: 50%; background: currentColor"
+                    ></span
+                    >Pressure</span
+                  >
+                  <span
+                    style="
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 4px;
+                      height: 22px;
+                      padding: 0 8px;
+                      border-radius: 11px;
+                      background: var(--brew-color-tertiary-container);
+                      color: var(--brew-color-on-tertiary-container);
+                      font-size: 10px;
+                      font-weight: 600;
+                    "
+                    ><span
+                      style="width: 5px; height: 5px; border-radius: 50%; background: currentColor"
+                    ></span
+                    >Flow</span
+                  >
+                  <span
+                    style="
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 4px;
+                      height: 22px;
+                      padding: 0 8px;
+                      border-radius: 11px;
+                      background: var(--brew-color-primary-container);
+                      color: var(--brew-color-on-primary-container);
+                      font-size: 10px;
+                      font-weight: 600;
+                    "
+                    ><span
+                      style="width: 5px; height: 5px; border-radius: 50%; background: currentColor"
+                    ></span
+                    >Weight</span
+                  >
+                </div>
+                <svg width="100%" height="90" viewBox="0 0 260 90" preserveAspectRatio="none">
+                  <line
+                    x1="0"
+                    y1="70"
+                    x2="260"
+                    y2="70"
+                    stroke="var(--brew-color-outline-variant)"
+                    stroke-width="1"
+                  />
+                  <path
+                    d="M0 60 Q40 20 80 24 T160 30 T260 20"
+                    fill="none"
+                    stroke="var(--brew-color-secondary)"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M0 78 Q60 65 100 50 T260 15"
+                    fill="none"
+                    stroke="var(--brew-color-tertiary)"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M0 82 Q60 55 100 60 T200 45 T260 55"
+                    fill="none"
+                    stroke-dasharray="4 4"
+                    stroke="var(--brew-color-primary)"
+                    stroke-width="2"
+                    opacity=".55"
+                  />
+                </svg>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px">
+                  <span
+                    style="
+                      width: 14px;
+                      height: 0;
+                      border-top: 2px dashed var(--brew-color-primary);
+                      opacity: 0.55;
+                      display: inline-block;
+                    "
+                  ></span>
+                  <span style="font-size: 10px; color: var(--brew-color-on-surface-variant)"
+                    >Ghost: James Hoffmann — V60 4:6 espresso</span
+                  >
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: center; justify-content: center; gap: 20px">
+                <div
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: var(--brew-color-on-surface-variant);
+                  "
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M4 4v6h6M20 20v-6h-6M4.5 15a8 8 0 0014.9 3M19.5 9A8 8 0 004.6 6" />
+                  </svg>
+                </div>
+                <div
+                  style="
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    background: var(--brew-color-primary-container);
+                    color: var(--brew-color-on-primary-container);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+                  "
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="6" width="12" height="12" rx="2" />
+                  </svg>
+                </div>
+                <span style="width: 40px; display: inline-block"></span>
+              </div>
+              <div
+                style="
+                  font-size: 12px;
+                  color: var(--brew-color-on-surface-variant);
+                  text-align: center;
+                "
+              >
+                Recording · Stop/Seal ends &amp; saves this shot.
+              </div>
+            </div>
+
+            <!-- EXPANDED MOCK -->
+            <div
+              style="
+                flex: 1;
+                min-width: 420px;
+                background: var(--brew-color-surface);
+                border-radius: 20px;
+                border: 1px solid var(--brew-color-outline-variant);
+                padding: 20px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+              "
+            >
+              <div
+                style="
+                  font-size: 11px;
+                  font-weight: 700;
+                  color: var(--brew-color-outline);
+                  margin-bottom: 14px;
+                "
+              >
+                EXPANDED (≥840px) · two columns
+              </div>
+              <div style="display: flex; gap: 24px">
+                <div
+                  style="
+                    width: 180px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 14px;
+                  "
+                >
+                  <div
+                    style="
+                      width: 150px;
+                      height: 150px;
+                      border-radius: 50%;
+                      background: var(--brew-color-surface);
+                      border: 8px solid var(--brew-color-primary-container);
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 4px;
+                    "
+                  >
+                    <div
+                      style="
+                        font-size: 10px;
+                        color: var(--brew-color-on-surface-variant);
+                        text-transform: uppercase;
+                        letter-spacing: 0.06em;
+                      "
+                    >
+                      Brewing
+                    </div>
+                    <div
+                      style="font-size: 26px; font-weight: 700; color: var(--brew-color-on-surface)"
+                    >
+                      00:24
+                    </div>
+                  </div>
+                  <div
+                    style="display: flex; align-items: center; justify-content: center; gap: 16px"
+                  >
+                    <div
+                      style="
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 50%;
+                        color: var(--brew-color-on-surface-variant);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      "
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M4 4v6h6M20 20v-6h-6M4.5 15a8 8 0 0014.9 3M19.5 9A8 8 0 004.6 6" />
+                      </svg>
+                    </div>
+                    <div
+                      style="
+                        width: 52px;
+                        height: 52px;
+                        border-radius: 50%;
+                        background: var(--brew-color-primary-container);
+                        color: var(--brew-color-on-primary-container);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      "
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="6" width="12" height="12" rx="2" />
+                      </svg>
+                    </div>
+                    <span style="width: 36px; display: inline-block"></span>
+                  </div>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 12px">
+                  <div style="display: flex; gap: 10px">
+                    <div
+                      style="
+                        flex: 1;
+                        background: var(--brew-color-surface-container-low);
+                        border-radius: 14px;
+                        padding: 10px;
+                        text-align: center;
+                      "
+                    >
+                      <div style="font-size: 18px; font-weight: 700">18.4</div>
+                      <div
+                        style="
+                          font-size: 10px;
+                          color: var(--brew-color-on-surface-variant);
+                          text-transform: uppercase;
+                        "
+                      >
+                        Weight (g)
+                      </div>
+                    </div>
+                    <div
+                      style="
+                        flex: 1;
+                        background: var(--brew-color-surface-container-low);
+                        border-radius: 14px;
+                        padding: 10px;
+                        text-align: center;
+                      "
+                    >
+                      <div style="font-size: 18px; font-weight: 700">9.1</div>
+                      <div
+                        style="
+                          font-size: 10px;
+                          color: var(--brew-color-on-surface-variant);
+                          text-transform: uppercase;
+                        "
+                      >
+                        Pressure (bar)
+                      </div>
+                    </div>
+                    <div
+                      style="
+                        flex: 1;
+                        background: var(--brew-color-surface-container-low);
+                        border-radius: 14px;
+                        padding: 10px;
+                        text-align: center;
+                        border: 1px dashed var(--brew-color-outline-variant);
+                        color: var(--brew-color-primary);
+                        font-size: 11px;
+                        font-weight: 600;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      "
+                    >
+                      + Ghost curve
+                    </div>
+                  </div>
+                  <div
+                    style="
+                      background: var(--brew-color-surface-container-low);
+                      border-radius: 16px;
+                      padding: 14px;
+                      flex: 1;
+                    "
+                  >
+                    <svg width="100%" height="110" viewBox="0 0 320 110" preserveAspectRatio="none">
+                      <line
+                        x1="0"
+                        y1="90"
+                        x2="320"
+                        y2="90"
+                        stroke="var(--brew-color-outline-variant)"
+                        stroke-width="1"
+                      />
+                      <path
+                        d="M0 75 Q50 25 100 30 T200 38 T320 25"
+                        fill="none"
+                        stroke="var(--brew-color-secondary)"
+                        stroke-width="2"
+                      />
+                      <path
+                        d="M0 95 Q70 80 120 62 T320 18"
+                        fill="none"
+                        stroke="var(--brew-color-tertiary)"
+                        stroke-width="2"
+                      />
+                      <path
+                        d="M0 100 Q70 68 120 74 T240 55 T320 68"
+                        fill="none"
+                        stroke-dasharray="4 4"
+                        stroke="var(--brew-color-primary)"
+                        stroke-width="2"
+                        opacity=".55"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- STOP/SEAL STATE MACHINE -->
+        <section style="margin-bottom: 48px">
+          <h2 style="font-size: 20px; margin: 0 0 4px">5 · Stop/Seal state logic</h2>
+          <p
+            style="
+              font-size: 14px;
+              color: var(--brew-color-on-surface-variant);
+              margin: 0 0 14px;
+              max-width: 680px;
+            "
+          >
+            Reuses the existing fab slot and icon-button styling — no new button style. It's a swap
+            of what occupies the center fab, not a fourth control.
+          </p>
+          <div
+            style="
+              display: flex;
+              gap: 0;
+              flex-wrap: wrap;
+              font-size: 13px;
+              background: var(--brew-color-surface-container-lowest);
+              border-radius: 14px;
+              overflow: hidden;
+              border: 1px solid var(--brew-color-outline-variant);
+            "
+          >
+            <div
+              style="
+                flex: 1;
+                min-width: 200px;
+                padding: 14px 16px;
+                border-right: 1px solid var(--brew-color-outline-variant);
+              "
+            >
+              <strong>No device connected</strong><br /><span
+                style="color: var(--brew-color-on-surface-variant)"
+                >Fab is Play → Pause → Play, exactly as today. Nothing changes for manual
+                brewers.</span
+              >
+            </div>
+            <div
+              style="
+                flex: 1;
+                min-width: 200px;
+                padding: 14px 16px;
+                border-right: 1px solid var(--brew-color-outline-variant);
+              "
+            >
+              <strong>Device connected, idle</strong><br /><span
+                style="color: var(--brew-color-on-surface-variant)"
+                >Fab is Play. Tapping it starts the timer <em>and</em> begins device
+                recording.</span
+              >
+            </div>
+            <div style="flex: 1; min-width: 200px; padding: 14px 16px">
+              <strong>Device connected, running</strong><br /><span
+                style="color: var(--brew-color-on-surface-variant)"
+                >Fab becomes Stop/Seal (filled square icon, same primary-container fab). Tap sends
+                stop to every connected device, ends recording, and stops the timer — no pause state
+                in between.</span
+              >
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. VISUALIZER SHEET -->
+        <section>
+          <h2 style="font-size: 20px; margin: 0 0 4px">7 · Visualizer.coffee profile picker</h2>
+          <p
+            style="
+              font-size: 14px;
+              color: var(--brew-color-on-surface-variant);
+              margin: 0 0 18px;
+              max-width: 680px;
+            "
+          >
+            <code>brew-bottom-sheet</code> (bottom sheet on phone, centered modal ≥840px, already
+            responsive) holding a search field, filter chips, and a result list — the same
+            browse→tap→select shape as the existing saved-brew/recipe picker sheets.
+            <code>brew-empty-state</code> covers no-results and offline.
+          </p>
+
+          <div
+            style="
+              width: 340px;
+              background: var(--brew-color-surface);
+              border-radius: 20px;
+              border: 1px solid var(--brew-color-outline-variant);
+              padding: 18px;
+              box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 14px;
+              "
+            >
+              <span style="font-size: 16px; font-weight: 600">Shot profiles</span>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--brew-color-on-surface-variant)"
+                stroke-width="2"
+              >
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </div>
+            <div
+              style="
+                height: 40px;
+                border-radius: 20px;
+                border: 1px solid var(--brew-color-outline);
+                display: flex;
+                align-items: center;
+                padding: 0 14px;
+                gap: 8px;
+                color: var(--brew-color-on-surface-variant);
+                font-size: 13px;
+                margin-bottom: 12px;
+              "
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="M21 21l-4.3-4.3" />
+              </svg>
+              Search shots, roasters, machines…
+            </div>
+            <div style="display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap">
+              <span
+                style="
+                  height: 28px;
+                  padding: 0 12px;
+                  border-radius: 14px;
+                  background: var(--brew-color-secondary-container);
+                  color: var(--brew-color-on-secondary-container);
+                  font-size: 12px;
+                  font-weight: 500;
+                  display: flex;
+                  align-items: center;
+                "
+                >Decent DE1</span
+              >
+              <span
+                style="
+                  height: 28px;
+                  padding: 0 12px;
+                  border-radius: 14px;
+                  border: 1px solid var(--brew-color-outline-variant);
+                  color: var(--brew-color-on-surface-variant);
+                  font-size: 12px;
+                  font-weight: 500;
+                  display: flex;
+                  align-items: center;
+                "
+                >Niche Zero</span
+              >
+              <span
+                style="
+                  height: 28px;
+                  padding: 0 12px;
+                  border-radius: 14px;
+                  border: 1px solid var(--brew-color-outline-variant);
+                  color: var(--brew-color-on-surface-variant);
+                  font-size: 12px;
+                  font-weight: 500;
+                  display: flex;
+                  align-items: center;
+                "
+                >Popular</span
+              >
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0">
+                <div
+                  style="
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    background: var(--brew-color-secondary-container);
+                    color: var(--brew-color-on-secondary-container);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 14px;
+                    font-weight: 600;
+                    flex-shrink: 0;
+                  "
+                >
+                  H
+                </div>
+                <div style="flex: 1; min-width: 0">
+                  <div style="font-size: 14px; color: var(--brew-color-on-surface)">
+                    V60 4:6, espresso adaptation
+                  </div>
+                  <div style="font-size: 12px; color: var(--brew-color-on-surface-variant)">
+                    by @jhoffmann · DE1 · Zero
+                  </div>
+                </div>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--brew-color-on-surface-variant)"
+                  stroke-width="2"
+                >
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0">
+                <div
+                  style="
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    background: var(--brew-color-secondary-container);
+                    color: var(--brew-color-on-secondary-container);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 14px;
+                    font-weight: 600;
+                    flex-shrink: 0;
+                  "
+                >
+                  B
+                </div>
+                <div style="flex: 1; min-width: 0">
+                  <div style="font-size: 14px; color: var(--brew-color-on-surface)">
+                    Blooming pressure profile
+                  </div>
+                  <div style="font-size: 12px; color: var(--brew-color-on-surface-variant)">
+                    by @baristahustle · Lever
+                  </div>
+                </div>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--brew-color-on-surface-variant)"
+                  stroke-width="2"
+                >
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <p
+            style="
+              font-size: 13px;
+              color: var(--brew-color-on-surface-variant);
+              margin: 14px 0 0;
+              max-width: 640px;
+            "
+          >
+            Tapping a row swaps the sheet content to that profile's static preview curve + a "Use as
+            ghost" primary button (mirrors <code>recipe-picker-sheet</code>'s browse→select shape) —
+            closing the sheet and drawing the ghost immediately, swappable anytime from the chart's
+            "+ Ghost curve" chip.
+          </p>
+        </section>
+
+        <section
+          style="
+            margin-top: 48px;
+            padding-top: 20px;
+            border-top: 1px solid var(--brew-color-outline-variant);
+          "
+        >
+          <div
+            style="
+              font-size: 13px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              color: var(--brew-color-on-surface-variant);
+              margin-bottom: 8px;
+            "
+          >
+            Handoff notes
+          </div>
+          <ul
+            style="
+              margin: 0;
+              padding-left: 18px;
+              font-size: 13px;
+              color: var(--brew-color-on-surface-variant);
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+            "
+          >
+            <li>
+              New primitive: the status pill (dot + label, 3 states — disconnected / connecting /
+              connected). Everything else is existing components used as documented.
+            </li>
+            <li>
+              Gate all BLE UI behind a single <code>"bluetooth" in navigator</code> check at the
+              app-shell/store level so Settings, Timer banner, and pill all agree — no per-component
+              feature detection drifting out of sync.
+            </li>
+            <li>
+              Verify <code>stat-tile</code>'s existing props before building new telemetry tiles —
+              it looks like the same value+label shape.
+            </li>
+            <li>
+              Bluetooth/scale/gauge icons above are placeholders — swap for the app's real Material
+              Symbols glyphs at build time.
+            </li>
+          </ul>
+        </section>
+      </div>
+    </x-dc>
+  </body>
+</html>

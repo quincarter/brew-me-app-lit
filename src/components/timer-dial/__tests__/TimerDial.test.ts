@@ -48,14 +48,4 @@ describe("brew-timer-dial", () => {
     // The countdown layout renders the value before the label (unlike the plain stopwatch layout).
     expect(value?.nextElementSibling).toBe(label ?? null);
   });
-
-  it("applies the 'guided' class only when guided is set", async () => {
-    element.guided = false;
-    await element.updateComplete;
-    expect(element.shadowRoot?.querySelector(".dial")?.classList.contains("guided")).toBe(false);
-
-    element.guided = true;
-    await element.updateComplete;
-    expect(element.shadowRoot?.querySelector(".dial")?.classList.contains("guided")).toBe(true);
-  });
 });

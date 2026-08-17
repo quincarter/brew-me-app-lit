@@ -16,15 +16,18 @@ import {
   streakDaysSignal,
   totalBrewsSignal,
 } from "../../shared/stores/brew.store";
+import { openDeviceConnectSheet } from "../../shared/stores/device-connect-sheet.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
 import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
 import { formatRatio } from "../../shared/utilities/format-ratio.utility";
 import { formatRelativeDay } from "../../shared/utilities/relative-date.utility";
+import { isWebBluetoothSupported } from "../../shared/utilities/web-bluetooth.utility";
 import { HomePageStyles } from "./home-page.styles";
 import { REPLAY_ICON } from "../../shared/icons/replay.svg";
 import {
+  BLUETOOTH_ICON_SVG,
   BOOKMARK_ADDED_ICON_SVG,
   CALCULATE_ICON_SVG,
   LOCAL_FIRE_DEPARTMENT_SVG,
@@ -80,6 +83,22 @@ export class HomePage extends SignalWatcher(LitElement) {
     `;
   }
 
+  /** A fourth action tile opening `brew-device-connect-sheet` - Home has its own header (no `brew-top-bar`), so it gets its own entry point to the same sheet everywhere else reaches via the top bar's device-status control. Hidden entirely on a Web-Bluetooth-unsupported browser, same as that control. */
+  private _renderDeviceAction(): HTMLTemplateResult | typeof nothing {
+    if (!isWebBluetoothSupported()) return nothing;
+
+    return html`
+      <div class="device-action">
+        <brew-action-tile
+          .svg="${BLUETOOTH_ICON_SVG}"
+          label="Devices"
+          tone="neutral"
+          @tile-click="${openDeviceConnectSheet}"
+        ></brew-action-tile>
+      </div>
+    `;
+  }
+
   render(): HTMLTemplateResult {
     const recent = recentSavedBrewsSignal.value;
     const mostRecent = mostRecentlyBrewedSignal.value;
@@ -114,6 +133,8 @@ export class HomePage extends SignalWatcher(LitElement) {
               href="/timer"
             ></brew-action-tile>
           </div>
+
+          ${this._renderDeviceAction()}
 
           <div class="stats">
             <brew-stat-tile

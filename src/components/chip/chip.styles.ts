@@ -35,4 +35,10 @@ export const ChipStyles = css`
     outline: 2px solid var(--brew-color-primary);
     outline-offset: 2px;
   }
+
+  .chip[disabled] {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
 `;
