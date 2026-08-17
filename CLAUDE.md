@@ -101,3 +101,7 @@ Five project subagents live in `.claude/agents/`. Claude Code routes matching wo
 | `code-reviewer`     | Proactive review after a change is made — checks it against the conventions in this file, lint/type correctness, and Lit best practices. Read-only: it reports findings rather than editing.     |
 
 Default to running `code-reviewer` after any non-trivial change, before considering the task done.
+
+## Git
+
+Do not add a `Co-Authored-By: Claude ...` trailer (or any other AI-attribution line) to commit messages in this repo.
