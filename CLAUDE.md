@@ -66,7 +66,7 @@ Mutations go through exported functions (`addSavedBrew`, `updateSavedBrew`, `del
 
 ### Theming
 
-CSS custom properties on `:root` (light) / `[data-theme="dark"]` (dark) in `src/index.css`. Color scheme is detected pre-render by a head script (`detect-color-scheme.js`, referenced from `index.html`) to avoid a flash, and toggled at runtime by `brew-theme-toggle`.
+CSS custom properties on `:root` (light) / `[data-theme="dark"]` (dark) in `src/index.css`. Color scheme is detected pre-render by `detectColorScheme` (`shared/utilities/detect-color-scheme.utility.ts`), called as the first statement in `src/app-shell.ts` so it runs before `AppShell` renders, and toggled at runtime by `brew-theme-toggle`.
 
 ### Responsive layout (`src/shared/styles/responsive.styles.ts`)
 

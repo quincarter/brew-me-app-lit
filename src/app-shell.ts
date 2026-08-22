@@ -1,3 +1,14 @@
+// Side-effect only, and deliberately the first import in this file: it
+// self-invokes on module evaluation (see its own file), and a module's
+// imports evaluate fully, in order, before anything else here - including
+// `./components/theme-toggle/brew-theme-toggle` below, which transitively
+// reads `data-theme` at *its* module top level to seed `isDarkThemeSignal`.
+// Being first guarantees `data-theme` is already set on `<html>` before
+// that read happens. Same pre-render intent the old standalone
+// `public/detect-color-scheme.js` head script had, now a bundled, hashed,
+// cacheable module instead of an unbundled public asset.
+import "./shared/utilities/detect-color-scheme.utility";
+
 import { Router } from "@lit-labs/router";
 import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
