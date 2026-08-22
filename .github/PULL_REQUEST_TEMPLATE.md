@@ -35,5 +35,5 @@
 - [x] `npm run build` LIST WHAT HAPPENED
 - [x] `npm run lint` LIST WHAT HAPPENED
 - [x] `npm test` — LIST WHAT HAPPENED
-- [x] `npm run test:e2et` — LIST WHAT HAPPENED
+- [x] `npm run test:e2e` — LIST WHAT HAPPENED
 - [ ] ANY OTHER RELEVANT STEPS FOR THIS PR
