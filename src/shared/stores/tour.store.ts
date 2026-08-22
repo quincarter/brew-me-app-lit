@@ -108,9 +108,16 @@ export const skipTour = (): void => {
  * arriving via a deep link (e.g. a shared `/share` brew) shouldn't be yanked
  * away from the page they actually opened, so this deliberately does nothing
  * off `/`. Those visitors can still start the tour manually from More.
+ *
+ * Also bails if `isPromptVisibleSignal` is already true (the install prompt
+ * or update banner is showing) - `currentTourStepSignal` already hides the
+ * tour's own content in that case, so this doesn't change what's on screen,
+ * but it avoids opening the tour's modal `<dialog>` (and its `showModal()`
+ * page-inert side effect) for a step that would immediately render nothing.
  */
 export const maybeAutoStartTour = (): void => {
   if (tourSeenSignal.value) return;
   if (window.location.pathname !== withBase("/")) return;
+  if (isPromptVisibleSignal.value) return;
   startTour();
 };
