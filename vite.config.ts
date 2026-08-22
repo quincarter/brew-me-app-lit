@@ -21,7 +21,7 @@ export default defineConfig({
         // Precache the full app shell (JS/CSS/HTML + every icon we ship)
         // so the app keeps working with zero network access after the
         // first load.
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,webp,svg,webmanifest}"],
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/assets/],
         // `registerType: "prompt"` above is what actually protects an

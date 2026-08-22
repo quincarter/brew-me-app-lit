@@ -14,7 +14,7 @@ import { EmptyStateStyles } from "./empty-state.styles";
 export class EmptyState extends LitElement {
   static styles = [EmptyStateStyles];
 
-  @property({ type: String }) image = "/tired-guy.png";
+  @property({ type: String }) image = "/tired-guy.webp";
   @property({ type: String, attribute: "message" }) message =
     "No coffee brews yet! Head over to Calculate to add some!";
   @property({ type: String, attribute: "cta-label" }) ctaLabel = "Calculate a brew";
@@ -23,7 +23,14 @@ export class EmptyState extends LitElement {
   render(): HTMLTemplateResult {
     return html`
       <div class="empty-state">
-        <img class="empty-state-image" src="${this.image}" alt="" width="117" height="187" />
+        <img
+          class="empty-state-image"
+          src="${this.image}"
+          alt=""
+          width="117"
+          height="187"
+          fetchpriority="high"
+        />
         <p class="empty-state-message">${this.message}</p>
         ${
           this.ctaLabel && this.ctaHref
