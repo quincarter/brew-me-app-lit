@@ -1,0 +1,28 @@
+# BrewMe
+
+> BrewMe is a free, installable web app (PWA) for dialing in pour-over and espresso coffee: a water:coffee ratio calculator, a guided pour-over timer, saved brew history, and a brew method guide. It works fully offline once installed and has no login or account system - all data (saved brews, preferences) is stored locally on the visitor's device, not on a server.
+
+BrewMe has no user accounts, no server-side data, and no API for third parties to call. Every route below is a client-rendered page in the same single-page app; there is nothing further to crawl behind them (no pagination, no per-user pages worth indexing).
+
+## Core pages
+
+- [Home](https://brewme.app/): App entry point - quick actions, recent brews, and a day-streak summary (all from the visitor's own local data).
+- [Ratio Calculator](https://brewme.app/calculate): Computes coffee/water amounts from a target ratio, cup count, and brew method.
+- [Pour-over Timer](https://brewme.app/timer): Guided step-by-step pour-over timer with optional bloom/pulse phases.
+
+## Brew guides
+
+- [AeroPress (WAC) Recipes](https://brewme.app/more/aeropress-recipes): World AeroPress Championship podium recipes, 2014-2025.
+- [V60 Recipes](https://brewme.app/more/v60-recipes)
+- [Origami Dripper Recipes](https://brewme.app/more/origami-recipes)
+- [Kalita Wave Recipes](https://brewme.app/more/kalita-wave-recipes)
+- [Chemex Recipes](https://brewme.app/more/chemex-recipes)
+- [Clever Dripper Recipes](https://brewme.app/more/clever-dripper-recipes)
+- [Hario Switch Recipes](https://brewme.app/more/hario-switch-recipes)
+- [Espresso Recipes](https://brewme.app/more/espresso-recipes)
+- [World Barista Championship Videos](https://brewme.app/more/wbc-videos)
+
+## Notes for automated fetching
+
+- The site is a client-rendered SPA (Lit + Vite). A plain HTTP GET returns the same `index.html` shell for every route (see `/sitemap.xml`); a crawler that only reads raw HTML without executing JavaScript will not see per-page content and should rely on this file's summaries instead.
+- `/saved` and `/saved/:id` are intentionally omitted above - they render a visitor's own locally-stored brews and have no content for a crawler with no local storage.
