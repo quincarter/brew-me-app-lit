@@ -39,7 +39,7 @@ export class SavedPage extends SignalWatcher(LitElement) {
                       leading-initial="${getInitial(getBrewDisplayName(brew))}"
                       leading-bg="${colors.background}"
                       leading-fg="${colors.foreground}"
-                      .avatarIcon="${getBrewTypeIcon(brew.brewType, brew.icon)}"
+                      .avatarIcon="${getBrewTypeIcon(brew.brewType, brew.icon) ?? null}"
                       is-saved-brew
                       href="/saved/${brew.id}"
                       rating="${brew.rating ?? 0}"
