@@ -2,6 +2,7 @@ import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
+import "../../components/bottom-sheet/brew-bottom-sheet";
 import "../../components/brew-steps-card/brew-steps-card";
 import "../../components/button/brew-button";
 import "../../components/icon/brew-icon";
@@ -77,6 +78,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
   @state() private _editBrewSteps: IBrewStepsConfig | null = null;
   @state() private _shareStatusText = "";
   @state() private _originalRecipeOpen = false;
+  @state() private _confirmingDelete = false;
   /** Which version of `brew.brewSteps` the inline card shows - only relevant while `brew.recipeSource` is present. Defaults to today's plain behavior. */
   @state() private _stepsViewMode: BrewStepsViewMode = "modified";
   /** Which version the "see the original" sheet shows - defaults to today's plain behavior (the curated recipe card). */
@@ -193,7 +195,16 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     this._editing = false;
   }
 
-  private _onDelete(id: number): void {
+  private _onDeleteClick = (): void => {
+    this._confirmingDelete = true;
+  };
+
+  private _onCancelDelete = (): void => {
+    this._confirmingDelete = false;
+  };
+
+  private _onConfirmDelete(id: number): void {
+    this._confirmingDelete = false;
     deleteSavedBrew(id);
     navigateTo("/saved");
   }
@@ -377,7 +388,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                       variant="outlined"
                       tone="danger"
                       full-width
-                      @button-click="${() => this._onDelete(brew.id)}"
+                      @button-click="${this._onDeleteClick}"
                       ><brew-icon .svg="${DELETE_ICON}" size="18"></brew-icon> Delete</brew-button
                     >
                   </div>
@@ -447,6 +458,26 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
         </div>
 
         <brew-bottom-nav active="saved"></brew-bottom-nav>
+        <brew-bottom-sheet
+          ?open="${this._confirmingDelete}"
+          label="Delete this saved brew?"
+          @sheet-scrim-click="${this._onCancelDelete}"
+        >
+          <div class="title">Delete this saved brew?</div>
+          <p class="hint">
+            This permanently deletes "${getBrewDisplayName(brew)}" from your saved brews. This can't
+            be undone.
+          </p>
+          <div class="actions">
+            <brew-button variant="text" @button-click="${this._onCancelDelete}">Cancel</brew-button>
+            <brew-button
+              variant="filled"
+              tone="danger"
+              @button-click="${() => this._onConfirmDelete(brew.id)}"
+              >Yes, delete</brew-button
+            >
+          </div>
+        </brew-bottom-sheet>
         ${renderOriginalRecipeSheet(
           brew.recipeSource,
           this._originalRecipeOpen,

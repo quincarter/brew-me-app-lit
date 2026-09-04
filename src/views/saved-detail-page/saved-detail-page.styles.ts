@@ -106,4 +106,15 @@ export const SavedDetailPageStyles = css`
     font-weight: 500;
     color: var(--brew-color-on-surface);
   }
+
+  .hint {
+    font-size: 12px;
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
 `;
