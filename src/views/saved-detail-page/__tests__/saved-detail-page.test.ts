@@ -624,4 +624,106 @@ describe("saved-detail-page", () => {
       expect(editButton()).not.toBeUndefined();
     });
   });
+
+  describe("delete flow", () => {
+    const deleteButton = (): Element | undefined =>
+      Array.from(element.shadowRoot?.querySelectorAll("brew-button") ?? []).find(
+        (button) => button.textContent?.replace(/\s+/g, " ").trim() === "Delete",
+      );
+
+    const deleteSheet = (): (Element & { open: boolean }) | undefined =>
+      Array.from(element.shadowRoot?.querySelectorAll("brew-bottom-sheet") ?? []).find((sheet) =>
+        sheet.textContent?.includes("Delete this saved brew?"),
+      ) as (Element & { open: boolean }) | undefined;
+
+    const deleteSheetButton = (label: string): Element | undefined =>
+      Array.from(deleteSheet()?.querySelectorAll("brew-button") ?? []).find(
+        (button) => button.textContent?.replace(/\s+/g, " ").trim() === label,
+      );
+
+    it("opens a confirmation sheet instead of deleting immediately", async () => {
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 16,
+        water: 480,
+        coffee: 30,
+        oz: 16.2,
+      });
+      await mount(brew);
+
+      expect(deleteSheet()?.open).toBe(false);
+
+      clickButton(deleteButton());
+      await element.updateComplete;
+
+      expect(deleteSheet()?.open).toBe(true);
+      expect(savedBrewsSignal.value.some((item) => item.id === brew.id)).toBe(true);
+    });
+
+    it("closes without deleting when the confirmation is cancelled", async () => {
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 16,
+        water: 480,
+        coffee: 30,
+        oz: 16.2,
+      });
+      await mount(brew);
+
+      clickButton(deleteButton());
+      await element.updateComplete;
+
+      clickButton(deleteSheetButton("Cancel"));
+      await element.updateComplete;
+
+      expect(deleteSheet()?.open).toBe(false);
+      expect(savedBrewsSignal.value.some((item) => item.id === brew.id)).toBe(true);
+    });
+
+    it("deletes the brew and navigates to /saved on confirm", async () => {
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 16,
+        water: 480,
+        coffee: 30,
+        oz: 16.2,
+      });
+      await mount(brew);
+
+      clickButton(deleteButton());
+      await element.updateComplete;
+
+      clickButton(deleteSheetButton("Yes, delete"));
+      await element.updateComplete;
+
+      expect(savedBrewsSignal.value.some((item) => item.id === brew.id)).toBe(false);
+      expect(window.location.pathname).toBe("/saved");
+    });
+
+    it("doesn't flash the not-found screen while still mounted after a confirmed delete", async () => {
+      // Regression test: this component stays mounted until the router's
+      // route swap to /saved lands (slow on a slow connection), so once the
+      // delete removes the brew from the signal it must not briefly render
+      // its "no longer exists" not-found state in the meantime.
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 16,
+        water: 480,
+        coffee: 30,
+        oz: 16.2,
+      });
+      await mount(brew);
+
+      clickButton(deleteButton());
+      await element.updateComplete;
+
+      clickButton(deleteSheetButton("Yes, delete"));
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.textContent).not.toContain("no longer exists");
+      expect(element.shadowRoot?.querySelector("brew-top-bar")?.getAttribute("title")).not.toBe(
+        "Not found",
+      );
+    });
+  });
 });

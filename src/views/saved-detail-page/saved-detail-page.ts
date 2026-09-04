@@ -2,6 +2,7 @@ import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
+import "../../components/bottom-sheet/brew-bottom-sheet";
 import "../../components/brew-steps-card/brew-steps-card";
 import "../../components/button/brew-button";
 import "../../components/icon/brew-icon";
@@ -77,6 +78,16 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
   @state() private _editBrewSteps: IBrewStepsConfig | null = null;
   @state() private _shareStatusText = "";
   @state() private _originalRecipeOpen = false;
+  @state() private _confirmingDelete = false;
+  /**
+   * Set right before `deleteSavedBrew` fires. On a slow connection the
+   * router's lazy chunk import for `/saved` can take a while to resolve, so
+   * this still-mounted component keeps re-rendering in the meantime - once
+   * the signal update removes this brew, `render()` would otherwise briefly
+   * flash the "no longer exists" not-found screen instead of just sitting
+   * blank until the route swap lands.
+   */
+  @state() private _deleting = false;
   /** Which version of `brew.brewSteps` the inline card shows - only relevant while `brew.recipeSource` is present. Defaults to today's plain behavior. */
   @state() private _stepsViewMode: BrewStepsViewMode = "modified";
   /** Which version the "see the original" sheet shows - defaults to today's plain behavior (the curated recipe card). */
@@ -193,7 +204,17 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     this._editing = false;
   }
 
-  private _onDelete(id: number): void {
+  private _onDeleteClick = (): void => {
+    this._confirmingDelete = true;
+  };
+
+  private _onCancelDelete = (): void => {
+    this._confirmingDelete = false;
+  };
+
+  private _onConfirmDelete(id: number): void {
+    this._confirmingDelete = false;
+    this._deleting = true;
     deleteSavedBrew(id);
     navigateTo("/saved");
   }
@@ -210,6 +231,11 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     const brew = brews.find((item) => item.id === id);
 
     if (!brew) {
+      // Already on the way out to `/saved` - avoid flashing the not-found
+      // screen while the router's route swap is still in flight.
+      if (this._deleting) {
+        return html`<div class="screen"></div>`;
+      }
       return html`
         <div class="screen">
           <brew-top-bar
@@ -377,7 +403,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
                       variant="outlined"
                       tone="danger"
                       full-width
-                      @button-click="${() => this._onDelete(brew.id)}"
+                      @button-click="${this._onDeleteClick}"
                       ><brew-icon .svg="${DELETE_ICON}" size="18"></brew-icon> Delete</brew-button
                     >
                   </div>
@@ -447,6 +473,26 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
         </div>
 
         <brew-bottom-nav active="saved"></brew-bottom-nav>
+        <brew-bottom-sheet
+          ?open="${this._confirmingDelete}"
+          label="Delete this saved brew?"
+          @sheet-scrim-click="${this._onCancelDelete}"
+        >
+          <div class="title">Delete this saved brew?</div>
+          <p class="hint">
+            This permanently deletes "${getBrewDisplayName(brew)}" from your saved brews. This can't
+            be undone.
+          </p>
+          <div class="actions">
+            <brew-button variant="text" @button-click="${this._onCancelDelete}">Cancel</brew-button>
+            <brew-button
+              variant="filled"
+              tone="danger"
+              @button-click="${() => this._onConfirmDelete(brew.id)}"
+              >Yes, delete</brew-button
+            >
+          </div>
+        </brew-bottom-sheet>
         ${renderOriginalRecipeSheet(
           brew.recipeSource,
           this._originalRecipeOpen,
