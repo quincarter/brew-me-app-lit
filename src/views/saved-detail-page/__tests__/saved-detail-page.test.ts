@@ -699,5 +699,31 @@ describe("saved-detail-page", () => {
       expect(savedBrewsSignal.value.some((item) => item.id === brew.id)).toBe(false);
       expect(window.location.pathname).toBe("/saved");
     });
+
+    it("doesn't flash the not-found screen while still mounted after a confirmed delete", async () => {
+      // Regression test: this component stays mounted until the router's
+      // route swap to /saved lands (slow on a slow connection), so once the
+      // delete removes the brew from the signal it must not briefly render
+      // its "no longer exists" not-found state in the meantime.
+      const brew = addSavedBrew({
+        brewType: "Aeropress",
+        ratio: 16,
+        water: 480,
+        coffee: 30,
+        oz: 16.2,
+      });
+      await mount(brew);
+
+      clickButton(deleteButton());
+      await element.updateComplete;
+
+      clickButton(deleteSheetButton("Yes, delete"));
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.textContent).not.toContain("no longer exists");
+      expect(element.shadowRoot?.querySelector("brew-top-bar")?.getAttribute("title")).not.toBe(
+        "Not found",
+      );
+    });
   });
 });

@@ -79,6 +79,15 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
   @state() private _shareStatusText = "";
   @state() private _originalRecipeOpen = false;
   @state() private _confirmingDelete = false;
+  /**
+   * Set right before `deleteSavedBrew` fires. On a slow connection the
+   * router's lazy chunk import for `/saved` can take a while to resolve, so
+   * this still-mounted component keeps re-rendering in the meantime - once
+   * the signal update removes this brew, `render()` would otherwise briefly
+   * flash the "no longer exists" not-found screen instead of just sitting
+   * blank until the route swap lands.
+   */
+  @state() private _deleting = false;
   /** Which version of `brew.brewSteps` the inline card shows - only relevant while `brew.recipeSource` is present. Defaults to today's plain behavior. */
   @state() private _stepsViewMode: BrewStepsViewMode = "modified";
   /** Which version the "see the original" sheet shows - defaults to today's plain behavior (the curated recipe card). */
@@ -205,6 +214,7 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
 
   private _onConfirmDelete(id: number): void {
     this._confirmingDelete = false;
+    this._deleting = true;
     deleteSavedBrew(id);
     navigateTo("/saved");
   }
@@ -221,6 +231,11 @@ export class SavedDetailPage extends SignalWatcher(LitElement) {
     const brew = brews.find((item) => item.id === id);
 
     if (!brew) {
+      // Already on the way out to `/saved` - avoid flashing the not-found
+      // screen while the router's route swap is still in flight.
+      if (this._deleting) {
+        return html`<div class="screen"></div>`;
+      }
       return html`
         <div class="screen">
           <brew-top-bar
