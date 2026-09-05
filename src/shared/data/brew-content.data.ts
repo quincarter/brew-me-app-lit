@@ -102,6 +102,11 @@ const AEROPRESS_VIDEOS: IBrewVideo[] = [
     title: "A Very Good AeroPress Recipe, Maybe the Best",
     channel: "Lance Hedrick",
   },
+  {
+    youtubeId: "1pc1P435Chs",
+    title: "The Internet's Trendiest Coffee Recipe... On an Aeropress",
+    channel: "Lance Hedrick",
+  },
 ];
 
 const HARIO_SWITCH_VIDEOS: IBrewVideo[] = [

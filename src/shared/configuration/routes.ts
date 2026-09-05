@@ -50,7 +50,7 @@ export const routes: IRouteConfig[] = [
     fileName: "timer-page",
   },
   {
-    name: "WAC Recipes",
+    name: "AeroPress Recipes",
     path: "/more/aeropress-recipes",
     tagName: "aeropress-recipes-page",
     directory: "aeropress-recipes-page",

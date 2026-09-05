@@ -186,6 +186,23 @@ export interface IAeropressRecipe {
   timedSteps?: IBrewStep[];
 }
 
+/**
+ * One named creator's AeroPress recipe that isn't a World AeroPress
+ * Championship entry, transcribed from an external source - same shape as
+ * the pour-over "named expert" recipes below, since it's rendered by the
+ * same `brew-pourover-recipe-card` and shares its generic setup/ratio
+ * parsing.
+ */
+export interface IAeropressExpertRecipe {
+  id: string;
+  author: string;
+  title: string;
+  setup: Record<string, string>;
+  steps: string[];
+  note?: string;
+  timedSteps?: IBrewStep[];
+}
+
 /** One named expert or brand's V60 recipe, transcribed from an external source. */
 export interface IV60Recipe {
   id: string;

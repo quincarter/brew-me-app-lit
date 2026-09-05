@@ -2,7 +2,11 @@ import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ESPRESSO_PROFILES } from "../../data/espresso-profiles.data";
 import { ESPRESSO_SHOT_STYLES } from "../../data/espresso-shot-styles.data";
-import type { IAeropressRecipe, IShareableBrew } from "../../interfaces/brew.interface";
+import type {
+  IAeropressExpertRecipe,
+  IAeropressRecipe,
+  IShareableBrew,
+} from "../../interfaces/brew.interface";
 import {
   getAeropressRecipeLabel,
   getAeropressRecipeRatio,
@@ -14,9 +18,17 @@ import {
   ESPRESSO_STYLE_DEFAULT_WATER_TEMP,
   buildEspressoSteps,
 } from "../../utilities/espresso-recipe.utility";
+import {
+  getPouroverRecipeLabel,
+  getPouroverRecipeRatio,
+  getPouroverRecipeSteps,
+  parseDoseGrams,
+  parseWaterGrams,
+} from "../../utilities/pourover-recipe.utility";
 import { gramsToOunces } from "../../utilities/ratio.utility";
 import {
   addSavedBrew,
+  brewAeropressExpertRecipeNow,
   brewAeropressRecipeNow,
   brewAgain,
   brewEspressoRecipeNow,
@@ -52,6 +64,17 @@ const aeropressRecipe = (overrides: Partial<IAeropressRecipe> = {}): IAeropressR
   steps: ["Pour 100g of water.", "At 30s, stir gently."],
   doseGrams: 18,
   totalWaterGrams: 270,
+  ...overrides,
+});
+
+const aeropressExpertRecipe = (
+  overrides: Partial<IAeropressExpertRecipe> = {},
+): IAeropressExpertRecipe => ({
+  id: "test-expert-recipe",
+  author: "Test Author",
+  title: "Test Recipe",
+  setup: { Dose: "15g", Water: "150g" },
+  steps: ["Pour 150g of water.", "Press."],
   ...overrides,
 });
 
@@ -215,6 +238,51 @@ describe("brew.store", () => {
       brewAeropressRecipeNow(aeropressRecipe());
 
       expect(postSaveSheetAlreadyOnDetailSignal.value).toBe(false);
+    });
+  });
+
+  describe("brewAeropressExpertRecipeNow", () => {
+    it("adds a new saved brew with numbers/name/brewType derived from the recipe", () => {
+      const recipe = aeropressExpertRecipe();
+
+      brewAeropressExpertRecipeNow(recipe);
+
+      expect(savedBrewsSignal.value).toHaveLength(1);
+      const saved = savedBrewsSignal.value[0];
+      expect(saved.brewType).toBe("Aeropress");
+      expect(saved.name).toBe("Test Author · Test Recipe");
+      expect(saved.ratio).toBe(getPouroverRecipeRatio(recipe));
+      expect(saved.water).toBe(parseWaterGrams(recipe));
+      expect(saved.coffee).toBe(parseDoseGrams(recipe));
+      expect(saved.oz).toBe(gramsToOunces(parseWaterGrams(recipe)));
+    });
+
+    it("sets brewSteps and recipeSource on the saved brew from the recipe's curated steps", () => {
+      const recipe = aeropressExpertRecipe();
+      const expectedSteps = getPouroverRecipeSteps(recipe);
+
+      brewAeropressExpertRecipeNow(recipe);
+
+      const saved = savedBrewsSignal.value[0];
+      expect(saved.brewSteps).toEqual({ steps: expectedSteps });
+      expect(saved.recipeSource).toEqual({
+        recipeId: recipe.id,
+        label: getPouroverRecipeLabel(recipe),
+        ratio: getPouroverRecipeRatio(recipe),
+        water: parseWaterGrams(recipe),
+        coffee: parseDoseGrams(recipe),
+        steps: expectedSteps,
+      });
+    });
+
+    it("opens the post-save sheet with that exact new brew", () => {
+      const recipe = aeropressExpertRecipe();
+
+      brewAeropressExpertRecipeNow(recipe);
+
+      const saved = savedBrewsSignal.value[0];
+      expect(postSaveSheetOpenSignal.value).toBe(true);
+      expect(postSaveSheetBrewSignal.value).toEqual(saved);
     });
   });
 

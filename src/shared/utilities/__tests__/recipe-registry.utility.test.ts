@@ -1,6 +1,7 @@
 import { render } from "lit";
 import { describe, expect, it } from "vitest";
 import "../../../components/espresso-recipe-card/brew-espresso-recipe-card";
+import { AEROPRESS_OTHER_RECIPES } from "../../data/aeropress-other-recipes.data";
 import { AEROPRESS_RECIPES } from "../../data/aeropress-recipes.data";
 import { ESPRESSO_PROFILES } from "../../data/espresso-profiles.data";
 import { ESPRESSO_SHOT_STYLES } from "../../data/espresso-shot-styles.data";
@@ -34,6 +35,13 @@ describe("recipe-registry.utility", () => {
       expect(result).not.toBeNull();
       expect(result?.kind).toBe("pourover");
       expect(result?.recipe.id).toBe("rao");
+    });
+
+    it("finds a non-championship AeroPress recipe by ID (registered as pourover kind)", () => {
+      const result = findRecipeById("lance-hedrick-zuppa-lunga");
+      expect(result).not.toBeNull();
+      expect(result?.kind).toBe("pourover");
+      expect(result?.recipe.id).toBe("lance-hedrick-zuppa-lunga");
     });
 
     it("finds an Origami recipe by ID", () => {
@@ -87,6 +95,28 @@ describe("recipe-registry.utility", () => {
 
       expect(source).toEqual({
         recipeId: "rao",
+        label: getPouroverRecipeLabel(recipe),
+        ratio: getPouroverRecipeRatio(recipe),
+        water: parseWaterGrams(recipe),
+        coffee: parseDoseGrams(recipe),
+        steps: getPouroverRecipeSteps(recipe),
+      });
+    });
+
+    it("rebuilds the exact ILoadedRecipeSource snapshot for a known non-championship AeroPress recipe id", () => {
+      const recipe = AEROPRESS_OTHER_RECIPES.find(
+        (entry) => entry.id === "lance-hedrick-zuppa-lunga",
+      );
+      if (!recipe) {
+        throw new Error(
+          "Fixture recipe id 'lance-hedrick-zuppa-lunga' is no longer in AEROPRESS_OTHER_RECIPES.",
+        );
+      }
+
+      const source = buildRecipeSource("lance-hedrick-zuppa-lunga");
+
+      expect(source).toEqual({
+        recipeId: "lance-hedrick-zuppa-lunga",
         label: getPouroverRecipeLabel(recipe),
         ratio: getPouroverRecipeRatio(recipe),
         water: parseWaterGrams(recipe),
