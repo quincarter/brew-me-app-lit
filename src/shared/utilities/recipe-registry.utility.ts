@@ -2,6 +2,7 @@ import { type HTMLTemplateResult, html } from "lit";
 import "../../components/espresso-recipe-card/brew-espresso-recipe-card";
 import "../../components/pourover-recipe-card/brew-pourover-recipe-card";
 import "../../components/recipe-card/brew-recipe-card";
+import { AEROPRESS_OTHER_RECIPES } from "../data/aeropress-other-recipes.data";
 import { AEROPRESS_RECIPES } from "../data/aeropress-recipes.data";
 import { CHEMEX_RECIPES } from "../data/chemex-recipes.data";
 import { CLEVER_DRIPPER_RECIPES } from "../data/clever-dripper-recipes.data";
@@ -48,7 +49,10 @@ for (const recipe of AEROPRESS_RECIPES) {
   RECIPE_REGISTRY.set(recipe.id, { recipe, kind: "aeropress" });
 }
 
-// Index Pour-Over recipes (V60, Origami, Kalita Wave, Chemex, Clever, Hario Switch)
+// Index Pour-Over recipes (V60, Origami, Kalita Wave, Chemex, Clever, Hario
+// Switch) plus non-championship AeroPress recipes - same
+// author/title/setup/steps shape, so they share this generic card/registry
+// path rather than the podium-shaped `AEROPRESS_RECIPES` one.
 const POUROVER_COLLECTIONS: IPouroverRecipe[][] = [
   V60_RECIPES,
   ORIGAMI_RECIPES,
@@ -56,6 +60,7 @@ const POUROVER_COLLECTIONS: IPouroverRecipe[][] = [
   CHEMEX_RECIPES,
   CLEVER_DRIPPER_RECIPES,
   HARIO_SWITCH_RECIPES,
+  AEROPRESS_OTHER_RECIPES,
 ];
 
 for (const collection of POUROVER_COLLECTIONS) {

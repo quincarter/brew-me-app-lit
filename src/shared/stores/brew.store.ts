@@ -1,5 +1,6 @@
 import { computed } from "@lit-labs/preact-signals";
 import type {
+  IAeropressExpertRecipe,
   IAeropressRecipe,
   IChemexRecipe,
   ICleverDripperRecipe,
@@ -147,6 +148,38 @@ export const brewAeropressRecipeNow = (recipe: IAeropressRecipe): void => {
       ratio,
       water: recipe.totalWaterGrams,
       coffee: recipe.doseGrams,
+      steps,
+    },
+  });
+
+  openPostSaveSheet(savedBrew);
+};
+
+/**
+ * Saves a curated named-creator AeroPress recipe (not a WAC entry - see
+ * `brewAeropressRecipeNow`) as a brand-new brew and opens the post-save
+ * sheet.
+ */
+export const brewAeropressExpertRecipeNow = (recipe: IAeropressExpertRecipe): void => {
+  const dose = parseDoseGrams(recipe);
+  const water = parseWaterGrams(recipe);
+  const ratio = getPouroverRecipeRatio(recipe);
+  const steps = getPouroverRecipeSteps(recipe);
+
+  const savedBrew = addSavedBrew({
+    brewType: "Aeropress",
+    name: `${recipe.author} · ${recipe.title}`,
+    ratio,
+    water,
+    coffee: dose,
+    oz: gramsToOunces(water),
+    brewSteps: { steps },
+    recipeSource: {
+      recipeId: recipe.id,
+      label: getPouroverRecipeLabel(recipe),
+      ratio,
+      water,
+      coffee: dose,
       steps,
     },
   });
