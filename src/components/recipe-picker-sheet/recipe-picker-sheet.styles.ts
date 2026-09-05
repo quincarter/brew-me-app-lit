@@ -24,4 +24,18 @@ export const RecipePickerSheetStyles = css`
     max-height: 60vh;
     overflow: auto;
   }
+
+  .section-label {
+    margin: 4px 0 -2px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .section-label:not(:first-child) {
+    padding-top: 8px;
+    border-top: 1px solid var(--brew-color-outline-variant);
+  }
 `;

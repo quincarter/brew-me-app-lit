@@ -1,6 +1,7 @@
 import { signal } from "@lit-labs/preact-signals";
 import { BREW_STEPS_PRESETS } from "../data/brew-steps-presets.data";
 import type {
+  IAeropressExpertRecipe,
   IAeropressRecipe,
   IBrewStepsConfig,
   IChemexRecipe,
@@ -107,6 +108,33 @@ export const loadAeropressRecipeIntoCalculator = (recipe: IAeropressRecipe): voi
     ratio,
     water: recipe.totalWaterGrams,
     coffee: recipe.doseGrams,
+    steps,
+  };
+};
+
+/**
+ * Loads a curated named-creator AeroPress recipe (not a WAC entry - see
+ * `loadAeropressRecipeIntoCalculator`) into the calculator.
+ */
+export const loadAeropressExpertRecipeIntoCalculator = (recipe: IAeropressExpertRecipe): void => {
+  selectedBrewTypeSignal.value = "Aeropress";
+  const dose = parseDoseGrams(recipe);
+  const water = parseWaterGrams(recipe);
+  const ratio = getPouroverRecipeRatio(recipe);
+  const steps = getPouroverRecipeSteps(recipe);
+
+  ratioSignal.value = String(ratio);
+  waterSignal.value = String(water);
+  ozSignal.value = String(gramsToOunces(water));
+  coffeeSignal.value = dose;
+
+  brewStepsSignal.value = { steps };
+  loadedRecipeSourceSignal.value = {
+    recipeId: recipe.id,
+    label: getPouroverRecipeLabel(recipe),
+    ratio,
+    water,
+    coffee: dose,
     steps,
   };
 };

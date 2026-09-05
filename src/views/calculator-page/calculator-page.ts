@@ -25,6 +25,7 @@ import {
   TIMER_ICON_SVG,
 } from "../../shared/icons/icons";
 import type {
+  IAeropressExpertRecipe,
   IAeropressRecipe,
   IBrewStepsConfig,
   IChemexRecipe,
@@ -39,6 +40,7 @@ import type {
 } from "../../shared/interfaces/brew.interface";
 import {
   brewStepsSignal,
+  loadAeropressExpertRecipeIntoCalculator,
   loadAeropressRecipeIntoCalculator,
   loadChemexRecipeIntoCalculator,
   loadCleverDripperRecipeIntoCalculator,
@@ -163,6 +165,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
   private _onRecipeSelect = (
     event: CustomEvent<
       | IAeropressRecipe
+      | IAeropressExpertRecipe
       | IV60Recipe
       | IOrigamiRecipe
       | IKalitaWaveRecipe
@@ -175,7 +178,14 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
   ): void => {
     const selectedType = selectedBrewTypeSignal.value;
     if (selectedType === "Aeropress") {
-      loadAeropressRecipeIntoCalculator(event.detail as IAeropressRecipe);
+      // Distinguish the two by the presence of `author`, which only a
+      // named-creator `IAeropressExpertRecipe` carries (a WAC entry has
+      // `competitor` instead).
+      if ("author" in event.detail) {
+        loadAeropressExpertRecipeIntoCalculator(event.detail as IAeropressExpertRecipe);
+      } else {
+        loadAeropressRecipeIntoCalculator(event.detail as IAeropressRecipe);
+      }
     } else if (selectedType === "V60") {
       loadV60RecipeIntoCalculator(event.detail as IV60Recipe);
     } else if (selectedType === "Origami") {
@@ -423,7 +433,7 @@ export class CalculatorPage extends SignalWatcher(LitElement) {
                     }}"
                     ><brew-icon .svg="${MENU_BOOK_ICON_SVG}" size="18"></brew-icon> ${
                       selectedType === "Aeropress"
-                        ? "Load a WAC recipe"
+                        ? "Load an AeroPress recipe"
                         : selectedType === "Espresso Shot"
                           ? "Load an espresso recipe"
                           : `Load ${regexVowels.test(selectedType.toLowerCase()) ? "an" : "a"} ${selectedType} barista recipe`

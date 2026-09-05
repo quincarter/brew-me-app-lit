@@ -1,8 +1,14 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { AEROPRESS_OTHER_RECIPES } from "../../../shared/data/aeropress-other-recipes.data";
 import { AEROPRESS_RECIPES } from "../../../shared/data/aeropress-recipes.data";
 import { ESPRESSO_PROFILES } from "../../../shared/data/espresso-profiles.data";
 import { ESPRESSO_SHOT_STYLES } from "../../../shared/data/espresso-shot-styles.data";
+import {
+  getPouroverRecipeRatio,
+  parseDoseGrams,
+  parseWaterGrams,
+} from "../../../shared/utilities/pourover-recipe.utility";
 import {
   loadAeropressRecipeIntoCalculator,
   loadEspressoShotStyleIntoCalculator,
@@ -11,7 +17,13 @@ import {
 } from "../../../shared/stores/brew-steps.store";
 import { deleteAllCustomBrewTypes } from "../../../shared/stores/brew-types.store";
 import { deleteAllSavedBrews } from "../../../shared/stores/brew.store";
-import { resetCalculator, setRatio } from "../../../shared/stores/calculator.store";
+import {
+  coffeeSignal,
+  resetCalculator,
+  ratioSignal,
+  setRatio,
+  waterSignal,
+} from "../../../shared/stores/calculator.store";
 import {
   espressoDoseInSignal,
   espressoDoseOutSignal,
@@ -68,7 +80,7 @@ describe("calculator-page", () => {
       expect(element.shadowRoot?.querySelector(".type-chip-row")).toBeNull();
       expect(element.shadowRoot?.querySelector("brew-steps-card")).toBeNull();
       expect(element.shadowRoot?.querySelector(".recipe-banner")).toBeNull();
-      expect(findButtonByText("Load a WAC recipe")).toBeUndefined();
+      expect(findButtonByText("Load an AeroPress recipe")).toBeUndefined();
     });
 
     it("picking a specific method collapses the chooser and shows a type chip with a Change action", async () => {
@@ -115,14 +127,14 @@ describe("calculator-page", () => {
       expect(element.shadowRoot?.querySelector("brew-steps-card")).toBeNull();
     });
 
-    it("only Aeropress gets the 'Load a WAC recipe' button", async () => {
+    it("only Aeropress gets the 'Load an AeroPress recipe' button", async () => {
       selectBrewType("V60");
       await element.updateComplete;
-      expect(findButtonByText("Load a WAC recipe")).toBeUndefined();
+      expect(findButtonByText("Load an AeroPress recipe")).toBeUndefined();
 
       selectBrewType("Aeropress");
       await element.updateComplete;
-      expect(findButtonByText("Load a WAC recipe")).not.toBeUndefined();
+      expect(findButtonByText("Load an AeroPress recipe")).not.toBeUndefined();
     });
   });
 
@@ -160,6 +172,44 @@ describe("calculator-page", () => {
       await element.updateComplete;
 
       expect(element.shadowRoot?.querySelector(".recipe-banner")).toBeNull();
+    });
+  });
+
+  describe("Aeropress recipe picker branch", () => {
+    it("loading a WAC recipe from the recipe picker routes to loadAeropressRecipeIntoCalculator", async () => {
+      selectBrewType("Aeropress");
+      await element.updateComplete;
+
+      const targetRecipe = AEROPRESS_RECIPES[0];
+      const sheet = element.shadowRoot?.querySelector("brew-recipe-picker-sheet");
+      sheet?.dispatchEvent(
+        new CustomEvent("recipe-select", { detail: targetRecipe, bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(waterSignal.value).toBe(String(targetRecipe.totalWaterGrams));
+      expect(coffeeSignal.value).toBe(targetRecipe.doseGrams);
+    });
+
+    it("loading a non-championship AeroPress recipe from the recipe picker routes to loadAeropressExpertRecipeIntoCalculator", async () => {
+      selectBrewType("Aeropress");
+      await element.updateComplete;
+
+      const targetRecipe = AEROPRESS_OTHER_RECIPES[0];
+      const sheet = element.shadowRoot?.querySelector("brew-recipe-picker-sheet");
+      sheet?.dispatchEvent(
+        new CustomEvent("recipe-select", { detail: targetRecipe, bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(ratioSignal.value).toBe(String(getPouroverRecipeRatio(targetRecipe)));
+      expect(waterSignal.value).toBe(String(parseWaterGrams(targetRecipe)));
+      expect(coffeeSignal.value).toBe(parseDoseGrams(targetRecipe));
+
+      const banner = element.shadowRoot?.querySelector(".recipe-banner .primed-banner-text");
+      expect(banner?.textContent?.trim()).toBe(
+        `Pulled from ${targetRecipe.author} — ${targetRecipe.title}`,
+      );
     });
   });
 

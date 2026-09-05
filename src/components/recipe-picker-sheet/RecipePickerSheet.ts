@@ -1,5 +1,6 @@
-import { type HTMLTemplateResult, html, LitElement } from "lit";
+import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
 import { property } from "lit/decorators.js";
+import { AEROPRESS_OTHER_RECIPES } from "../../shared/data/aeropress-other-recipes.data";
 import { AEROPRESS_RECIPES } from "../../shared/data/aeropress-recipes.data";
 import { CHEMEX_RECIPES } from "../../shared/data/chemex-recipes.data";
 import { CLEVER_DRIPPER_RECIPES } from "../../shared/data/clever-dripper-recipes.data";
@@ -10,6 +11,7 @@ import { KALITA_WAVE_RECIPES } from "../../shared/data/kalita-wave-recipes.data"
 import { ORIGAMI_RECIPES } from "../../shared/data/origami-recipes.data";
 import { V60_RECIPES } from "../../shared/data/v60-recipes.data";
 import type {
+  IAeropressExpertRecipe,
   IAeropressRecipe,
   IChemexRecipe,
   ICleverDripperRecipe,
@@ -28,6 +30,7 @@ const PLACE_LABEL: Record<number, string> = { 1: "1st", 2: "2nd", 3: "3rd" };
 
 export type AnyRecipe =
   | IAeropressRecipe
+  | IAeropressExpertRecipe
   | IV60Recipe
   | IOrigamiRecipe
   | IKalitaWaveRecipe
@@ -36,6 +39,15 @@ export type AnyRecipe =
   | IHarioSwitchRecipe
   | IEspressoShotStyle
   | IEspressoProfile;
+
+interface IRecipePickerItem {
+  recipe: AnyRecipe;
+  headline: string;
+  supporting: string;
+  initial: string;
+  /** Set on the first item of a new section - renders a divider/label above it (e.g. splitting WAC podium recipes from other creators'). */
+  sectionLabel?: string;
+}
 
 /**
  * # Recipe Picker Sheet
@@ -68,7 +80,7 @@ export class RecipePickerSheet extends LitElement {
   private _getRecipesAndTitle(): {
     title: string;
     hint: string;
-    items: { recipe: AnyRecipe; headline: string; supporting: string; initial: string }[];
+    items: IRecipePickerItem[];
   } {
     if (this.brewType === "V60") {
       return {
@@ -169,19 +181,29 @@ export class RecipePickerSheet extends LitElement {
       };
     }
 
-    // Default: Aeropress (WAC)
+    // Default: Aeropress (WAC podium recipes, then other creators')
     return {
-      title: "Load a WAC recipe",
+      title: "Load an AeroPress recipe",
       hint: "Auto-fills the ratio, water, and coffee from the selected recipe.",
-      items: AEROPRESS_RECIPES.map((recipe) => {
-        const placeLabel = PLACE_LABEL[recipe.place] ?? `${recipe.place}th`;
-        return {
+      items: [
+        ...AEROPRESS_RECIPES.map((recipe, index) => {
+          const placeLabel = PLACE_LABEL[recipe.place] ?? `${recipe.place}th`;
+          return {
+            recipe,
+            headline: `${recipe.competitor} · ${recipe.year}`,
+            supporting: `${placeLabel} place · ${recipe.doseGrams}g coffee : ${recipe.totalWaterGrams}g water`,
+            initial: recipe.competitor.charAt(0),
+            sectionLabel: index === 0 ? "World AeroPress Championship" : undefined,
+          };
+        }),
+        ...AEROPRESS_OTHER_RECIPES.map((recipe, index) => ({
           recipe,
-          headline: `${recipe.competitor} · ${recipe.year}`,
-          supporting: `${placeLabel} place · ${recipe.doseGrams}g coffee : ${recipe.totalWaterGrams}g water`,
-          initial: recipe.competitor.charAt(0),
-        };
-      }),
+          headline: `${recipe.author} · ${recipe.title}`,
+          supporting: `${recipe.setup.Dose ?? ""} coffee : ${recipe.setup.Water ?? ""} water`,
+          initial: recipe.author.charAt(0),
+          sectionLabel: index === 0 ? "Other creators" : undefined,
+        })),
+      ],
     };
   }
 
@@ -195,6 +217,11 @@ export class RecipePickerSheet extends LitElement {
         <div class="list">
           ${items.map(
             (item) => html`
+              ${
+                item.sectionLabel
+                  ? html`<div class="section-label">${item.sectionLabel}</div>`
+                  : nothing
+              }
               <brew-list-row
                 headline="${item.headline}"
                 supporting="${item.supporting}"
