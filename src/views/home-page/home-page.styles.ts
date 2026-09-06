@@ -126,4 +126,8 @@ export const HomePageStyles = css`
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     padding: 0 20px 28px;
   }
+
+  .support {
+    padding: 0 20px 24px;
+  }
 `;

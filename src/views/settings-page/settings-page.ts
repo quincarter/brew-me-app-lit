@@ -7,6 +7,7 @@ import "../../components/chip/brew-chip";
 import "../../components/device-connect-rows/brew-device-connect-rows";
 import "../../components/icon/brew-icon";
 import "../../components/list-row/brew-list-row";
+import "../../components/support-card/brew-support-card";
 import "../../components/switch/brew-switch";
 import "../../components/text-field/brew-text-field";
 import "../../components/top-bar/brew-top-bar";
@@ -424,6 +425,10 @@ export class SettingsPage extends SignalWatcher(LitElement) {
               : null
           }
           ${this._statusText ? html`<p class="status-text">${this._statusText}</p>` : null}
+
+          <div class="divider"></div>
+          <div class="section-title">Support BrewMe</div>
+          <brew-support-card></brew-support-card>
 
           <div class="divider"></div>
           <div class="danger-zone">

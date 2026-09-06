@@ -8,6 +8,7 @@ import "../../components/empty-state/brew-empty-state";
 import "../../components/icon-button/brew-icon-button";
 import "../../components/saved-card/brew-saved-card";
 import "../../components/stat-tile/brew-stat-tile";
+import "../../components/support-card/brew-support-card";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import {
   brewAgain,
@@ -249,6 +250,10 @@ export class HomePage extends SignalWatcher(LitElement) {
                   </div>
                 `
           }
+
+          <div class="support">
+            <brew-support-card></brew-support-card>
+          </div>
         </div>
 
         <brew-bottom-nav active="home"></brew-bottom-nav>
