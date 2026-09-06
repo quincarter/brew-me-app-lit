@@ -20,6 +20,8 @@ export class ActionTile extends LitElement {
 
   @property({ type: String }) icon = "";
   @property({ type: String }) label = "";
+  /** Optional second line under `label`, e.g. a connection/status summary (Home's Cloud Sync tile). Omitted entirely when unset. */
+  @property({ type: String }) sublabel = "";
   @property({ type: String }) tone: ActionTileTone = "primary";
   @property({ type: String }) href = "";
   @property({ type: String }) svg: SVGTemplateResult | null = null;
@@ -33,7 +35,10 @@ export class ActionTile extends LitElement {
     const inner = html`
       ${this.icon ? html`<brew-icon name="${this.icon}"></brew-icon>` : nothing}
       ${this.svg && !this.icon ? html`<brew-icon .svg="${this.svg}"></brew-icon>` : nothing}
-      <span class="label">${this.label}</span>
+      <span class="text">
+        <span class="label">${this.label}</span>
+        ${this.sublabel ? html`<span class="sublabel">${this.sublabel}</span>` : nothing}
+      </span>
     `;
 
     return this.href

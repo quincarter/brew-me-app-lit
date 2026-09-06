@@ -41,6 +41,15 @@ test.describe("starting a guided timer from the Calculator", () => {
       .getByRole("button", { name: "Save & Start Timer" })
       .click();
     await expect(page).toHaveURL("/timer");
+    // The URL updates synchronously via pushState, but @lit-labs/router's
+    // goto() is async (it awaits the lazy-loaded view's dynamic import)
+    // before it actually swaps the rendered outlet. Waiting for the Timer
+    // page to render something lets that in-flight goto() settle first -
+    // otherwise a same-origin goBack() below fires a second, concurrent
+    // goto() for /calculate, and since the router doesn't sequence
+    // overlapping goto() calls, whichever one's import resolves last wins
+    // and can clobber the other's render, regardless of call order.
+    await expect(page.locator(".recipe-caption-name")).toBeVisible();
 
     await page.goBack();
     await expect(page).toHaveURL("/calculate");

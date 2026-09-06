@@ -85,8 +85,9 @@ export const HomePageStyles = css`
     padding: 20px 20px 8px;
   }
 
-  .device-action {
+  .secondary-actions {
     display: flex;
+    gap: 12px;
     padding: 0 20px 8px;
   }
 
@@ -124,5 +125,9 @@ export const HomePageStyles = css`
     gap: 1rem;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     padding: 0 20px 28px;
+  }
+
+  .support {
+    padding: 0 20px 24px;
   }
 `;

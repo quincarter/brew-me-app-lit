@@ -1,5 +1,5 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
-import { type HTMLTemplateResult, html, LitElement, nothing } from "lit";
+import { type HTMLTemplateResult, html, LitElement, nothing, type SVGTemplateResult } from "lit";
 import { customElement } from "lit/decorators.js";
 import "../../components/action-tile/brew-action-tile";
 import "../../components/avatar/brew-avatar";
@@ -8,6 +8,7 @@ import "../../components/empty-state/brew-empty-state";
 import "../../components/icon-button/brew-icon-button";
 import "../../components/saved-card/brew-saved-card";
 import "../../components/stat-tile/brew-stat-tile";
+import "../../components/support-card/brew-support-card";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
 import {
   brewAgain,
@@ -16,11 +17,14 @@ import {
   streakDaysSignal,
   totalBrewsSignal,
 } from "../../shared/stores/brew.store";
+import { cloudSyncStateSignal } from "../../shared/stores/cloud-sync.store";
 import { openDeviceConnectSheet } from "../../shared/stores/device-connect-sheet.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
 import { getBrewTypeIcon } from "../../shared/utilities/brew-icon.utility";
+import { isAnyCloudProviderConfigured } from "../../shared/utilities/cloud-provider-config.utility";
+import { getCloudProviderLabel } from "../../shared/utilities/cloud-provider-label.utility";
 import { formatRatio } from "../../shared/utilities/format-ratio.utility";
 import { formatRelativeDay } from "../../shared/utilities/relative-date.utility";
 import { isWebBluetoothSupported } from "../../shared/utilities/web-bluetooth.utility";
@@ -30,6 +34,9 @@ import {
   BLUETOOTH_ICON_SVG,
   BOOKMARK_ADDED_ICON_SVG,
   CALCULATE_ICON_SVG,
+  CLOUD_DONE_ICON_SVG,
+  CLOUD_ICON_SVG,
+  CLOUD_OFF_ICON_SVG,
   LOCAL_FIRE_DEPARTMENT_SVG,
   SAVED_ICON_SVG,
   TIMER_ICON_SVG,
@@ -83,25 +90,82 @@ export class HomePage extends SignalWatcher(LitElement) {
     `;
   }
 
-  /** A fourth action tile opening `brew-device-connect-sheet` - Home has its own header (no `brew-top-bar`), so it gets its own entry point to the same sheet everywhere else reaches via the top bar's device-status control. Hidden entirely on a Web-Bluetooth-unsupported browser, same as that control. */
-  private _renderDeviceAction(): HTMLTemplateResult | typeof nothing {
+  /** A tile opening `brew-device-connect-sheet` - Home has its own header (no `brew-top-bar`), so it gets its own entry point to the same sheet everywhere else reaches via the top bar's device-status control. Hidden entirely on a Web-Bluetooth-unsupported browser, same as that control. */
+  private _renderDeviceTile(): HTMLTemplateResult | typeof nothing {
     if (!isWebBluetoothSupported()) return nothing;
 
     return html`
-      <div class="device-action">
-        <brew-action-tile
-          .svg="${BLUETOOTH_ICON_SVG}"
-          label="Devices"
-          tone="neutral"
-          @tile-click="${openDeviceConnectSheet}"
-        ></brew-action-tile>
-      </div>
+      <brew-action-tile
+        .svg="${BLUETOOTH_ICON_SVG}"
+        label="Devices"
+        tone="neutral"
+        @tile-click="${openDeviceConnectSheet}"
+      ></brew-action-tile>
+    `;
+  }
+
+  /**
+   * Icon + "Provider · status" summary for the Cloud Sync tile - kept as one
+   * derivation (not two separate icon/text methods) so the icon and its
+   * wording can't drift out of sync with each other. Mirrors
+   * `CloudSyncProviderRow`'s supporting-text phrasing, but shortened (no raw
+   * error message - there isn't room for one on a home-screen tile).
+   */
+  private _cloudSyncSummary(): { icon: SVGTemplateResult; sublabel: string } {
+    const state = cloudSyncStateSignal.value;
+    const providerId = state.activeProviderId;
+    if (!providerId) {
+      return { icon: CLOUD_OFF_ICON_SVG, sublabel: "Not connected" };
+    }
+
+    const label = getCloudProviderLabel(providerId);
+    const status = state.statuses[providerId];
+
+    if (status?.status === "error") {
+      return { icon: CLOUD_OFF_ICON_SVG, sublabel: `${label} · Sync error` };
+    }
+    if (status?.status === "syncing") {
+      return { icon: CLOUD_ICON_SVG, sublabel: `${label} · Syncing…` };
+    }
+    if (status?.lastSyncedAt) {
+      return {
+        icon: CLOUD_DONE_ICON_SVG,
+        sublabel: `${label} · Synced ${formatRelativeDay(status.lastSyncedAt)}`,
+      };
+    }
+    return { icon: CLOUD_ICON_SVG, sublabel: `${label} · Not synced yet` };
+  }
+
+  /**
+   * A tile linking to the Cloud Sync settings screen - shown regardless of
+   * Web Bluetooth support, since it's unrelated to a connected scale, but
+   * hidden entirely when no provider has a configured client id for this
+   * build (the feature toggle - see `isAnyCloudProviderConfigured`'s doc
+   * comment). No point offering an entry point into a screen that can only
+   * ever say "nothing is configured yet".
+   */
+  private _renderCloudSyncTile(): HTMLTemplateResult | typeof nothing {
+    if (!isAnyCloudProviderConfigured()) return nothing;
+
+    const { icon, sublabel } = this._cloudSyncSummary();
+
+    return html`
+      <brew-action-tile
+        .svg="${icon}"
+        label="Cloud Sync"
+        sublabel="${sublabel}"
+        tone="neutral"
+        href="/more/cloud-sync"
+      ></brew-action-tile>
     `;
   }
 
   render(): HTMLTemplateResult {
     const recent = recentSavedBrewsSignal.value;
     const mostRecent = mostRecentlyBrewedSignal.value;
+    const deviceTile = this._renderDeviceTile();
+    const cloudSyncTile = this._renderCloudSyncTile();
+    const hasSecondaryActions = deviceTile !== nothing || cloudSyncTile !== nothing;
 
     return html`
       <div class="screen">
@@ -134,7 +198,11 @@ export class HomePage extends SignalWatcher(LitElement) {
             ></brew-action-tile>
           </div>
 
-          ${this._renderDeviceAction()}
+          ${
+            hasSecondaryActions
+              ? html`<div class="secondary-actions">${deviceTile} ${cloudSyncTile}</div>`
+              : null
+          }
 
           <div class="stats">
             <brew-stat-tile
@@ -182,6 +250,10 @@ export class HomePage extends SignalWatcher(LitElement) {
                   </div>
                 `
           }
+
+          <div class="support">
+            <brew-support-card></brew-support-card>
+          </div>
         </div>
 
         <brew-bottom-nav active="home"></brew-bottom-nav>

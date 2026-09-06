@@ -3,9 +3,24 @@ import { supportsCssAnchorPositioning } from "../anchor-positioning.utility";
 
 describe("supportsCssAnchorPositioning", () => {
   it("returns false when the environment's style declaration has no anchorName property", () => {
-    // happy-dom's `CSSStyleDeclaration` doesn't implement `anchorName` -
-    // this is the real baseline for this repo's test environment.
+    // Stubbed explicitly rather than relying on the ambient test
+    // environment lacking `anchorName` - happy-dom has added real CSS
+    // Anchor Positioning properties to `CSSStyleDeclaration` in newer
+    // versions, so that's no longer a safe assumption to lean on here.
+    const original = document.documentElement.style;
+    const stub = { ...original } as Record<string, unknown>;
+    delete stub.anchorName;
+    Object.defineProperty(document.documentElement, "style", {
+      value: stub,
+      configurable: true,
+    });
+
     expect(supportsCssAnchorPositioning()).toBe(false);
+
+    Object.defineProperty(document.documentElement, "style", {
+      value: original,
+      configurable: true,
+    });
   });
 
   it("returns true when anchorName is present on documentElement.style", () => {

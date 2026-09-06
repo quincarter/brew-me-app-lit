@@ -46,8 +46,19 @@ export const ActionTileStyles = css`
     color: var(--brew-color-on-surface);
   }
 
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
   .label {
     font-size: 14px;
     font-weight: 500;
+  }
+
+  .sublabel {
+    font-size: 12px;
+    opacity: 0.75;
   }
 `;

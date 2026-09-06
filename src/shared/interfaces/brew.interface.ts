@@ -17,6 +17,8 @@ export interface ISavedBrew {
   tastingNote?: string;
   /** Epoch ms when this brew was last re-brewed via "Brew again" - falls back to `createdAt` for ordering/display when unset. */
   lastBrewedAt?: number;
+  /** Epoch ms when this record was last modified (created or patched) - distinct from `lastBrewedAt`, which only tracks re-brews. Used as the last-write-wins field when merging cloud sync data across devices. */
+  updatedAt?: number;
   /** Optional method-specific step sequence (bloom/steep/plunge, etc.) - only present for brew types with a real step sequence. See `BREW_STEPS_PRESETS`. */
   brewSteps?: IBrewStepsConfig;
   /** Optional provenance for `brewSteps`/the ratio numbers when they were loaded from a curated recipe (e.g. a WAC AeroPress entry) rather than typed in by hand. */

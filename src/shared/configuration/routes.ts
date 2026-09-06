@@ -127,6 +127,20 @@ export const routes: IRouteConfig[] = [
     fileName: "settings-page",
   },
   {
+    name: "Cloud Sync",
+    path: "/more/cloud-sync",
+    tagName: "cloud-sync-page",
+    directory: "cloud-sync-page",
+    fileName: "cloud-sync-page",
+  },
+  {
+    name: "OAuth Callback",
+    path: "/oauth/callback",
+    tagName: "oauth-callback-page",
+    directory: "oauth-callback-page",
+    fileName: "oauth-callback-page",
+  },
+  {
     name: "Shared Brew",
     path: "/share",
     tagName: "brew-share-page",
