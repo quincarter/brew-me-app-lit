@@ -7,6 +7,21 @@ export interface IExportPayload {
 }
 
 /**
+ * Persisted keys that must never leave the device in a "download my data"
+ * export - `cloud-sync-state` holds live cloud-provider OAuth access/refresh
+ * tokens. `getAllPersistedData` is deliberately generic over every persisted
+ * key (see its own doc comment), so this is where it gets redacted rather
+ * than exported in plaintext alongside saved brews. (The PKCE pending-auth
+ * attempt lives in `sessionStorage`, not here, so it never reaches
+ * `getAllPersistedData` in the first place - see `cloud-sync.store.ts`.)
+ */
+const EXPORT_EXCLUDED_KEYS = new Set(["cloud-sync-state"]);
+
+/** Drops `EXPORT_EXCLUDED_KEYS` from a persisted-data snapshot. Pure/testable - kept separate from `exportAppData` so the redaction itself doesn't need IndexedDB mocked to test. */
+export const redactSensitiveExportKeys = (data: Record<string, unknown>): Record<string, unknown> =>
+  Object.fromEntries(Object.entries(data).filter(([key]) => !EXPORT_EXCLUDED_KEYS.has(key)));
+
+/**
  * Builds the exportable payload from raw persisted data. Kept pure/testable
  * - no DOM access - so tests don't need to mock a download.
  */
@@ -53,7 +68,7 @@ export const downloadJsonFile = (filename: string, payload: unknown): void => {
  */
 export const exportAppData = async (): Promise<void> => {
   const data = await getAllPersistedData();
-  const payload = buildExportPayload(data);
+  const payload = buildExportPayload(redactSensitiveExportKeys(data));
   const filename = buildExportFilename();
   downloadJsonFile(filename, payload);
 };

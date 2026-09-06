@@ -117,5 +117,16 @@ describe("brew-action-tile", () => {
 
       expect(element.shadowRoot?.querySelectorAll("brew-icon")).toHaveLength(1);
     });
+
+    it("omits the sublabel entirely when unset", async () => {
+      expect(element.shadowRoot?.querySelector(".sublabel")).toBeNull();
+    });
+
+    it("renders the sublabel text when set", async () => {
+      element.sublabel = "Dropbox · Synced";
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".sublabel")?.textContent).toBe("Dropbox · Synced");
+    });
   });
 });

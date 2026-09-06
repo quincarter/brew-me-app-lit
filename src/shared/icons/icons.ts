@@ -55,6 +55,9 @@ import { EXPAND_LESS_ICON_SVG } from "./expand-less.svg";
 import { EXPAND_MORE_ICON_SVG } from "./expand-more.svg";
 import { PRESSURE_MONITOR_ICON_SVG } from "./pressure-monitor.svg";
 import { LIBRARY_BOOKS_ICON_SVG } from "./library-books.svg";
+import { CLOUD_ICON_SVG } from "./cloud.svg";
+import { CLOUD_DONE_ICON_SVG } from "./cloud-done.svg";
+import { CLOUD_OFF_ICON_SVG } from "./cloud-off.svg";
 
 export {
   ADD_ICON_SVG,
@@ -71,6 +74,9 @@ export {
   CHEVRON_RIGHT_ICON_SVG,
   CLEVER_DRIPPER_ICON,
   CLOSE_ICON,
+  CLOUD_ICON_SVG,
+  CLOUD_DONE_ICON_SVG,
+  CLOUD_OFF_ICON_SVG,
   COLD_BREW_ICON,
   DARK_MODE_ICON_SVG,
   DELETE_ICON,

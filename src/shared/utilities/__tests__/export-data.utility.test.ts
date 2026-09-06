@@ -8,6 +8,7 @@ import {
   importAppData,
   parseImportPayload,
   readFileAsText,
+  redactSensitiveExportKeys,
 } from "../export-data.utility";
 import { REAL_DEVICE_EXPORT_RAW as REAL_EXPORT_RAW } from "./fixtures/real-device-export.fixture";
 
@@ -128,9 +129,52 @@ describe("export-data.utility", () => {
     });
   });
 
+  describe("redactSensitiveExportKeys", () => {
+    it("drops cloud-sync-state", () => {
+      const data = {
+        "saved-brews": [{ id: "1" }],
+        "cloud-sync-state": { connections: { dropbox: { tokens: { accessToken: "secret" } } } },
+      };
+
+      expect(redactSensitiveExportKeys(data)).toEqual({ "saved-brews": [{ id: "1" }] });
+    });
+
+    it("leaves an already-clean snapshot unchanged", () => {
+      const data = { "saved-brews": [{ id: "1" }], "custom-brew-types": ["Siphon"] };
+
+      expect(redactSensitiveExportKeys(data)).toEqual(data);
+    });
+  });
+
   describe("exportAppData", () => {
     afterEach(() => {
       vi.restoreAllMocks();
+    });
+
+    it("never bundles live cloud-sync OAuth tokens into the export", async () => {
+      const data = {
+        "saved-brews": [{ id: "1" }],
+        "cloud-sync-state": {
+          connections: { dropbox: { tokens: { accessToken: "secret-token" } } },
+        },
+      };
+      vi.spyOn(persistentSignalModule, "getAllPersistedData").mockResolvedValue(data);
+
+      const createObjectURL = vi.fn().mockReturnValue("blob:mock-url");
+      vi.stubGlobal("URL", { ...URL, createObjectURL, revokeObjectURL: vi.fn() });
+      vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+      vi.spyOn(document.body, "appendChild").mockImplementation((node) => node);
+      vi.spyOn(document.body, "removeChild").mockImplementation((node) => node);
+
+      await exportAppData();
+
+      const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
+      const parsed = JSON.parse(await blob.text()) as { data: Record<string, unknown> };
+
+      expect(parsed.data).toEqual({ "saved-brews": [{ id: "1" }] });
+      expect(JSON.stringify(parsed.data)).not.toContain("secret-token");
+
+      vi.unstubAllGlobals();
     });
 
     it("reads persisted data, builds a payload and filename, and downloads it", async () => {

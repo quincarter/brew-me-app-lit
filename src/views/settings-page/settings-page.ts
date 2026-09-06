@@ -34,6 +34,7 @@ import {
   timerCountStyleSignal,
 } from "../../shared/stores/timer-settings.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
+import { isAnyCloudProviderConfigured } from "../../shared/utilities/cloud-provider-config.utility";
 import { exportAppData, importAppData } from "../../shared/utilities/export-data.utility";
 import { refreshApp } from "../../shared/utilities/register-service-worker.utility";
 import { isWebBluetoothSupported } from "../../shared/utilities/web-bluetooth.utility";
@@ -286,6 +287,20 @@ export class SettingsPage extends SignalWatcher(LitElement) {
     `;
   }
 
+  /** Hidden entirely when no cloud provider has a configured client id for this build - the feature toggle, see `isAnyCloudProviderConfigured`'s doc comment. */
+  private _renderCloudSyncRow(): HTMLTemplateResult | typeof nothing {
+    if (!isAnyCloudProviderConfigured()) return nothing;
+
+    return html`
+      <brew-list-row
+        headline="Cloud Sync"
+        supporting="Automatically back up saved brews to Dropbox and more"
+        leading-icon="cloud_sync"
+        href="/more/cloud-sync"
+      ></brew-list-row>
+    `;
+  }
+
   render(): HTMLTemplateResult {
     const customTypes = customBrewTypesSignal.value;
 
@@ -374,6 +389,7 @@ export class SettingsPage extends SignalWatcher(LitElement) {
 
           <div class="divider"></div>
           <div class="section-title">Data</div>
+          ${this._renderCloudSyncRow()}
           <p class="section-hint">Download everything saved on this device as a JSON file.</p>
           <div class="data-actions">
             <brew-button variant="outlined" @button-click="${this._onExportData}"

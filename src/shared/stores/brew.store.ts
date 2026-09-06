@@ -32,6 +32,7 @@ import {
 import { gramsToOunces } from "../utilities/ratio.utility";
 import { persistentSignal } from "./persistent-signal";
 import { openPostSaveSheet } from "./post-save-sheet.store";
+import { recordSyncTombstone } from "./sync-tombstones.store";
 
 /** No seed data - a fresh install starts with nothing saved. */
 export const savedBrewsSignal = persistentSignal<ISavedBrew[]>([], { key: "saved-brews" });
@@ -91,18 +92,19 @@ export const getSavedBrewById = (id: number): ISavedBrew | undefined =>
 
 export const addSavedBrew = (brew: IShareableBrew): ISavedBrew => {
   const now = Date.now();
-  const savedBrew = { ...brew, id: now, createdAt: now };
+  const savedBrew = { ...brew, id: now, createdAt: now, updatedAt: now };
   savedBrewsSignal.value = [...savedBrewsSignal.value, savedBrew];
   return savedBrew;
 };
 
 export const updateSavedBrew = (id: number, patch: Partial<Omit<ISavedBrew, "id">>): void => {
   savedBrewsSignal.value = savedBrewsSignal.value.map((brew) =>
-    brew.id === id ? { ...brew, ...patch } : brew,
+    brew.id === id ? { ...brew, ...patch, updatedAt: Date.now() } : brew,
   );
 };
 
 export const deleteSavedBrew = (id: number): void => {
+  recordSyncTombstone(id);
   savedBrewsSignal.value = savedBrewsSignal.value.filter((brew) => brew.id !== id);
 };
 
@@ -388,7 +390,8 @@ export const brewEspressoRecipeNow = (recipe: IEspressoShotStyle | IEspressoProf
   openPostSaveSheet(savedBrew);
 };
 
-/** Danger-zone reset: clears every saved ratio. Used by the Settings screen. */
+/** Danger-zone reset: clears every saved ratio. Used by the Settings screen. Records a tombstone per brew so a cloud sync pull doesn't resurrect them. */
 export const deleteAllSavedBrews = (): void => {
+  savedBrewsSignal.value.forEach((brew) => recordSyncTombstone(brew.id));
   savedBrewsSignal.value = [];
 };

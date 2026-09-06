@@ -38,6 +38,12 @@ describe("settings-page", () => {
     scrollToTimerSettingsSectionSignal.value = false;
     vi.mocked(exportAppData).mockReset();
     vi.mocked(importAppData).mockReset();
+    // Stubbed explicitly so the Cloud Sync row's visibility is deterministic
+    // regardless of what's actually configured in a real local `.env` on
+    // the machine running the suite (see cloud-provider-config.utility.ts).
+    vi.stubEnv("VITE_DROPBOX_CLIENT_ID", "test-client-id");
+    vi.stubEnv("VITE_MICROSOFT_CLIENT_ID", "");
+    vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "");
 
     reloadSpy = vi.fn();
     Object.defineProperty(window, "location", {
@@ -58,6 +64,22 @@ describe("settings-page", () => {
     Object.defineProperty(window, "location", {
       configurable: true,
       value: originalLocation,
+    });
+    vi.unstubAllEnvs();
+  });
+
+  describe("Cloud Sync row", () => {
+    it("links to /more/cloud-sync when at least one provider is configured", () => {
+      const row = element.shadowRoot?.querySelector("brew-list-row[headline='Cloud Sync']");
+      expect(row?.getAttribute("href")).toBe("/more/cloud-sync");
+    });
+
+    it("is hidden when no cloud provider has a configured client id", async () => {
+      vi.stubEnv("VITE_DROPBOX_CLIENT_ID", "");
+      element.requestUpdate();
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector("brew-list-row[headline='Cloud Sync']")).toBeNull();
     });
   });
 
