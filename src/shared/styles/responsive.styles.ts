@@ -35,12 +35,26 @@ export const responsiveScreenStyles = css`
     padding-top: env(safe-area-inset-top, 0px);
   }
 
+  /*
+   * brew-bottom-nav is position: fixed (an overlay, not a flex sibling), so
+   * it never actually shrinks .content/.scroll's own flex-computed box -
+   * that box already extends underneath it. A padding-bottom reservation
+   * alone only pays off once the content is tall enough to actually need
+   * scrolling: scrolling to the true bottom then reveals the last item
+   * pushed up clear of the nav. When the content is shorter than the
+   * viewport, nothing overflows, no scrolling happens at all, and the tail
+   * end of the content just renders wherever it naturally falls - which can
+   * land in the region the fixed nav covers, with no way to scroll it into
+   * view. Using margin-bottom instead genuinely shrinks .content/.scroll's
+   * own box by the nav's height, so content is never laid out behind it in
+   * the first place, whether or not scrolling ever engages.
+   */
   .content,
   .scroll {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    margin-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
     touch-action: pan-y;
@@ -58,7 +72,9 @@ export const responsiveScreenStyles = css`
       width: 100%;
       margin-inline: auto;
       box-sizing: border-box;
-      padding-bottom: 20px;
+      /* No fixed bottom bar at this breakpoint (brew-bottom-nav becomes a
+       * left rail instead) - just cosmetic bottom breathing room. */
+      margin-bottom: 20px;
     }
   }
 `;

@@ -47,6 +47,12 @@ describe("cloud-sync-page", () => {
     vi.unstubAllEnvs();
   });
 
+  it("renders the bottom nav with 'more' highlighted, matching Settings (which this screen is reached from)", () => {
+    const nav = element.shadowRoot?.querySelector("brew-bottom-nav");
+    expect(nav).not.toBeNull();
+    expect(nav?.getAttribute("active")).toBe("more");
+  });
+
   it("renders enabled Dropbox, OneDrive, and Google Drive rows and no 'Sync now' section while disconnected", () => {
     const rows = element.shadowRoot?.querySelectorAll("brew-cloud-sync-provider-row");
     expect(rows).toHaveLength(3);

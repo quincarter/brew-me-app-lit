@@ -1,6 +1,7 @@
 import { SignalWatcher } from "@lit-labs/preact-signals";
 import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
+import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/button/brew-button";
 import "../../components/cloud-sync-provider-row/brew-cloud-sync-provider-row";
 import "../../components/top-bar/brew-top-bar";
@@ -24,9 +25,9 @@ const GOOGLE_DRIVE_NOTE = "May need reconnecting periodically.";
  * Cloud Sync settings screen (`/more/cloud-sync`) - connect/disconnect a
  * cloud storage provider for automatic background sync of saved brews plus
  * custom brew types/step labels. All three providers (Dropbox, OneDrive,
- * Google Drive) are wired up as of Phase 2. A sub-screen under Settings, not
- * a top-level tab - no bottom nav, matching other `/more/...` sub-screens
- * (e.g. the recipe archive pages).
+ * Google Drive) are wired up as of Phase 2. Reached from Settings, which
+ * keeps its own bottom nav visible - this screen does too (with `more`
+ * still highlighted) so drilling in doesn't lose the tab bar.
  */
 @customElement("cloud-sync-page")
 export class CloudSyncPage extends SignalWatcher(LitElement) {
@@ -134,6 +135,8 @@ export class CloudSyncPage extends SignalWatcher(LitElement) {
               : null
           }
         </div>
+
+        <brew-bottom-nav active="more"></brew-bottom-nav>
       </div>
     `;
   }
