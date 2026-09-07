@@ -141,6 +141,17 @@ export class HomeScreenConfiguratorPage extends SignalWatcher(LitElement) {
    * is excluded - it's already tracking the pointer via its own drag
    * feedback, so flipping it too would fight that instead of complementing
    * it.
+   *
+   * While a row's slide animation is in flight, it's given
+   * `pointer-events: none` (restored once nothing's animating on it
+   * anymore) - a CSS transform mid-animation moves an element's *visual*
+   * position, which `elementFromPoint` hit-tests against, but `_rowIdAtPoint`
+   * only ever cares where a row's slot has *settled*. Without this, dragging
+   * a row up exactly one slot (e.g. the 2nd row to the top) would resolve
+   * `overId` to the row it just swapped past a second time while that row
+   * was still mid-slide back into view, computing the swap in reverse and
+   * silently undoing the very move that was just made - repeatedly, for as
+   * long as the pointer lingered near that boundary.
    */
   protected updated(_changed: PropertyValues<this>): void {
     const rowsAfter = this.shadowRoot?.querySelectorAll<HTMLElement>("[data-section-id]") ?? [];
@@ -155,10 +166,15 @@ export class HomeScreenConfiguratorPage extends SignalWatcher(LitElement) {
       const deltaY = before.top - after.top;
       if (Math.abs(deltaY) < 1) return;
 
-      row.animate([{ transform: `translateY(${deltaY}px)` }, { transform: "translateY(0)" }], {
-        duration: REORDER_ANIMATION_DURATION_MS,
-        easing: "cubic-bezier(0.2, 0, 0, 1)",
-      });
+      const animation = row.animate(
+        [{ transform: `translateY(${deltaY}px)` }, { transform: "translateY(0)" }],
+        { duration: REORDER_ANIMATION_DURATION_MS, easing: "cubic-bezier(0.2, 0, 0, 1)" },
+      );
+      row.style.pointerEvents = "none";
+      const restoreIfIdle = (): void => {
+        if ((row.getAnimations?.() ?? []).length === 0) row.style.pointerEvents = "";
+      };
+      animation.finished.then(restoreIfIdle).catch(restoreIfIdle);
     });
   }
 
