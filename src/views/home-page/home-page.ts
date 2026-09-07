@@ -300,10 +300,10 @@ export class HomePage extends SignalWatcher(LitElement) {
               <brew-icon-button
                 class="edit-home-screen-button"
                 .svgIcon="${EDIT_ICON}"
-                size="16"
+                size="22"
                 href="/more/settings/home-screen"
                 aria-label="Edit Home screen layout"
-                style="--icon-button-size: 32px"
+                style="--icon-button-size: 40px"
               ></brew-icon-button>
             </div>
           </div>
