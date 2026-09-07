@@ -262,6 +262,33 @@ export class HomePage extends SignalWatcher(LitElement) {
       support: html`<div class="support"><brew-support-card></brew-support-card></div>`,
     };
 
+    // Devices and Cloud Sync visually pair into one shared row (matching
+    // Home's original design) whenever they land next to each other in
+    // display order - the common case, since that's the default order and
+    // most people won't reorder these two apart from each other. Falls
+    // back to each rendering its own full-width row (from `sections`
+    // above) if only one is visible, or if reordering actually did split
+    // them apart.
+    const merged: (HTMLTemplateResult | typeof nothing)[] = [];
+    for (let i = 0; i < sectionIds.length; i++) {
+      const id = sectionIds[i];
+      const isAdjacentDevicesCloudSyncPair =
+        (id === "devices" && sectionIds[i + 1] === "cloudSync") ||
+        (id === "cloudSync" && sectionIds[i + 1] === "devices");
+
+      if (isAdjacentDevicesCloudSyncPair) {
+        merged.push(
+          html`<div class="secondary-actions">
+            ${this._renderDeviceTile()} ${this._renderCloudSyncTile()}
+          </div>`,
+        );
+        i += 1; // consume the paired id too, it's already rendered above
+        continue;
+      }
+
+      merged.push(sections[id]);
+    }
+
     return html`
       <div class="screen">
         <div class="scroll">
@@ -270,7 +297,7 @@ export class HomePage extends SignalWatcher(LitElement) {
             <div class="headline">Ready to brew?</div>
           </div>
 
-          ${sectionIds.map((id) => sections[id])}
+          ${merged}
         </div>
 
         <brew-bottom-nav active="home"></brew-bottom-nav>
