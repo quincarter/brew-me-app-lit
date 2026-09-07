@@ -30,6 +30,19 @@ describe("brew-home-screen-config-row", () => {
     expect(element.shadowRoot?.querySelector(".supporting")).toBeNull();
   });
 
+  it("defaults visible to false, not true", () => {
+    // Regression guard: `?visible="${entry.visible}"` (a boolean-attribute
+    // binding) never writes `visible="false"` on a freshly created element -
+    // it just never sets the attribute at all for a falsy value. If this
+    // property's own default were `true`, a fresh row for an
+    // already-hidden section would silently render as visible, exactly the
+    // "hide a section, navigate away and back, it's on again" bug this
+    // guards against. The default must match what "no attribute" means,
+    // the same way `brew-switch`'s `checked` defaults to `false`.
+    const fresh = document.createElement("brew-home-screen-config-row") as HomeScreenConfigRow;
+    expect(fresh.visible).toBe(false);
+  });
+
   it("reflects the visible property onto the switch", async () => {
     element.visible = false;
     await element.updateComplete;

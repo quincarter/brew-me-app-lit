@@ -40,7 +40,18 @@ export class HomeScreenConfigRow extends LitElement {
 
   @property({ type: String }) title = "";
   @property({ type: String }) description = "";
-  @property({ type: Boolean, reflect: true }) visible = true;
+  /**
+   * Defaults to `false`, not `true` - `?visible="${entry.visible}"` (a
+   * boolean-attribute binding) only ever *adds* the `visible` attribute for
+   * a truthy value; it never writes `visible="false"`. On a freshly created
+   * element (e.g. remounting this page after navigating away) where the
+   * bound value is `false`, the attribute is simply never set, so whatever
+   * this field defaults to is what the property silently keeps. Defaulting
+   * to `true` here made every freshly-created row for an already-hidden
+   * section look visible again despite the store correctly having it
+   * hidden - matching `brew-switch`'s `checked = false` default avoids it.
+   */
+  @property({ type: Boolean, reflect: true }) visible = false;
   @property({ type: Boolean, attribute: "disable-move-up" }) disableMoveUp = false;
   @property({ type: Boolean, attribute: "disable-move-down" }) disableMoveDown = false;
 
