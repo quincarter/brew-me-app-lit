@@ -39,6 +39,7 @@ import {
   CLOUD_DONE_ICON_SVG,
   CLOUD_ICON_SVG,
   CLOUD_OFF_ICON_SVG,
+  EDIT_ICON,
   LOCAL_FIRE_DEPARTMENT_SVG,
   SAVED_ICON_SVG,
   TIMER_ICON_SVG,
@@ -294,7 +295,17 @@ export class HomePage extends SignalWatcher(LitElement) {
         <div class="scroll">
           <div class="greeting">
             <div class="eyebrow">${getGreeting()}</div>
-            <div class="headline">Ready to brew?</div>
+            <div class="headline-row">
+              <div class="headline">Ready to brew?</div>
+              <brew-icon-button
+                class="edit-home-screen-button"
+                .svgIcon="${EDIT_ICON}"
+                size="16"
+                href="/more/settings/home-screen"
+                aria-label="Edit Home screen layout"
+                style="--icon-button-size: 32px"
+              ></brew-icon-button>
+            </div>
           </div>
 
           ${merged}

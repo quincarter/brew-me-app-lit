@@ -208,6 +208,18 @@ describe("home-page", () => {
     });
   });
 
+  describe("Edit Home screen button", () => {
+    it("renders next to the headline and links to the Home Screen Configurator", async () => {
+      await mount();
+
+      const editButton = element.shadowRoot?.querySelector(".edit-home-screen-button") as
+        | (HTMLElement & { href: string })
+        | null;
+      expect(editButton).not.toBeNull();
+      expect(editButton?.href).toBe("/more/settings/home-screen");
+    });
+  });
+
   describe("home-screen-config.store-driven rendering", () => {
     it("omits a section hidden via setHomeScreenSectionVisible", async () => {
       setHomeScreenSectionVisible("stats", false);
