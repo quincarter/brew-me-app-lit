@@ -9,6 +9,10 @@ import {
 import { savedBrewsSignal } from "../../../shared/stores/brew.store";
 import { cloudSyncStateSignal } from "../../../shared/stores/cloud-sync.store";
 import { deviceConnectSheetOpenSignal } from "../../../shared/stores/device-connect-sheet.store";
+import {
+  resetHomeScreenConfig,
+  setHomeScreenSectionVisible,
+} from "../../../shared/stores/home-screen-config.store";
 import "../home-page";
 import type { HomePage } from "../home-page";
 
@@ -39,6 +43,7 @@ describe("home-page", () => {
     element.remove();
     Reflect.deleteProperty(navigator, "bluetooth");
     deviceConnectSheetOpenSignal.value = false;
+    resetHomeScreenConfig();
     vi.unstubAllEnvs();
   });
 
@@ -174,6 +179,45 @@ describe("home-page", () => {
       await mount();
 
       expect(element.shadowRoot?.querySelector(".secondary-actions")).toBeNull();
+    });
+  });
+
+  describe("home-screen-config.store-driven rendering", () => {
+    it("omits a section hidden via setHomeScreenSectionVisible", async () => {
+      setHomeScreenSectionVisible("stats", false);
+      await mount();
+
+      expect(element.shadowRoot?.querySelector(".stats")).toBeNull();
+    });
+
+    it("renders a section again once its visibility is restored", async () => {
+      setHomeScreenSectionVisible("stats", false);
+      await mount();
+      expect(element.shadowRoot?.querySelector(".stats")).toBeNull();
+
+      setHomeScreenSectionVisible("stats", true);
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".stats")).not.toBeNull();
+    });
+
+    it("renders sections in the configured order", async () => {
+      await mount();
+      const scroll = element.shadowRoot?.querySelector(".scroll");
+      const defaultOrder = [...(scroll?.children ?? [])].map((el) => el.className);
+      expect(defaultOrder.indexOf("stats")).toBeLessThan(defaultOrder.indexOf("section-header"));
+
+      element.remove();
+      const { moveHomeScreenSection } =
+        await import("../../../shared/stores/home-screen-config.store");
+      moveHomeScreenSection("stats", "down");
+      moveHomeScreenSection("stats", "down");
+      await mount();
+
+      const reordered = [...(element.shadowRoot?.querySelector(".scroll")?.children ?? [])].map(
+        (el) => el.className,
+      );
+      expect(reordered.indexOf("stats")).toBeGreaterThan(reordered.indexOf("section-header"));
     });
   });
 });

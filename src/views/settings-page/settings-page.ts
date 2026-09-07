@@ -376,6 +376,12 @@ export class SettingsPage extends SignalWatcher(LitElement) {
               @change="${(e: CustomEvent<boolean>) => setDarkTheme(e.detail)}"
             ></brew-switch>
           </div>
+          <brew-list-row
+            headline="Home Screen"
+            supporting="Reorder or hide cards shown on Home"
+            leading-icon="dashboard_customize"
+            href="/more/settings/home-screen"
+          ></brew-list-row>
           ${this._renderTimerSection()}
 
           <div class="divider"></div>

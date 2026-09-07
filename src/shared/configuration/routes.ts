@@ -134,6 +134,13 @@ export const routes: IRouteConfig[] = [
     fileName: "cloud-sync-page",
   },
   {
+    name: "Home Screen Configurator",
+    path: "/more/settings/home-screen",
+    tagName: "home-screen-configurator-page",
+    directory: "home-screen-configurator-page",
+    fileName: "home-screen-configurator-page",
+  },
+  {
     name: "OAuth Callback",
     path: "/oauth/callback",
     tagName: "oauth-callback-page",

@@ -1,0 +1,44 @@
+import { css } from "lit";
+
+export const HomeScreenConfiguratorPageStyles = css`
+  :host {
+    display: block;
+    height: 100%;
+  }
+
+  .screen {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .content {
+    padding: 8px 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .section-hint {
+    margin: 0;
+    font-size: 13px;
+    color: var(--brew-color-on-surface-variant);
+    line-height: 1.5;
+  }
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    background: var(--brew-color-surface-container-low);
+    padding: 4px 16px;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--brew-color-outline-variant);
+  }
+`;
