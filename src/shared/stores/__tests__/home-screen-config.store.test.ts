@@ -7,6 +7,7 @@ import {
   isHomeScreenSectionAvailable,
   moveHomeScreenSection,
   orderedHomeScreenConfigSignal,
+  reorderHomeScreenSections,
   resetHomeScreenConfig,
   setHomeScreenSectionVisible,
 } from "../home-screen-config.store";
@@ -216,6 +217,61 @@ describe("home-screen-config.store", () => {
 
       const support = getAvailableHomeScreenConfig().find((entry) => entry.id === "support");
       expect(support?.visible).toBe(false);
+    });
+  });
+
+  describe("reorderHomeScreenSections", () => {
+    it("applies a full reordering of the available sections", () => {
+      reorderHomeScreenSections([
+        "support",
+        "recentBrews",
+        "stats",
+        "cloudSync",
+        "devices",
+        "quickActions",
+        "brewAgain",
+      ]);
+
+      expect(getAvailableHomeScreenConfig().map((entry) => entry.id)).toEqual([
+        "support",
+        "recentBrews",
+        "stats",
+        "cloudSync",
+        "devices",
+        "quickActions",
+        "brewAgain",
+      ]);
+    });
+
+    it("preserves each entry's visible flag across the reorder", () => {
+      setHomeScreenSectionVisible("stats", false);
+
+      reorderHomeScreenSections([
+        "support",
+        "stats",
+        "recentBrews",
+        "cloudSync",
+        "devices",
+        "quickActions",
+        "brewAgain",
+      ]);
+
+      const stats = getAvailableHomeScreenConfig().find((entry) => entry.id === "stats");
+      expect(stats?.visible).toBe(false);
+    });
+
+    it("leaves an unavailable section's slot untouched", () => {
+      Reflect.deleteProperty(navigator, "bluetooth");
+      vi.stubEnv("VITE_DROPBOX_CLIENT_ID", "");
+      vi.stubEnv("VITE_MICROSOFT_CLIENT_ID", "");
+      vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "");
+
+      reorderHomeScreenSections(["support", "recentBrews", "stats", "quickActions", "brewAgain"]);
+
+      const ids = homeScreenConfigSignal.value.map((entry) => entry.id);
+      // devices/cloudSync (unavailable) keep their original DEFAULT_ORDER slots (index 2, 3).
+      expect(ids[2]).toBe("devices");
+      expect(ids[3]).toBe("cloudSync");
     });
   });
 

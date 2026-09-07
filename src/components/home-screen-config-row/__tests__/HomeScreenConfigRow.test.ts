@@ -66,51 +66,117 @@ describe("brew-home-screen-config-row", () => {
     expect((listener.mock.calls[0][0] as CustomEvent<boolean>).detail).toBe(false);
   });
 
-  it("fires move-up-click when the move-up button is activated", async () => {
-    const listener = vi.fn();
-    element.addEventListener("move-up-click", listener);
+  it("renders a drag handle", () => {
+    const handle = element.shadowRoot?.querySelector("brew-icon-button.drag-handle");
+    expect(handle).not.toBeNull();
+  });
 
-    const [upButton] = element.shadowRoot?.querySelectorAll(".move-btn") ?? [];
-    (upButton as HTMLButtonElement)?.click();
+  it("reflects the dragging property as a class on the row", async () => {
+    element.dragging = true;
+    await element.updateComplete;
+
+    expect(element.shadowRoot?.querySelector(".row")?.classList.contains("dragging")).toBe(true);
+  });
+
+  it("fires reorder-pointerdown with the original PointerEvent when the drag handle receives a pointerdown", () => {
+    const listener = vi.fn();
+    element.addEventListener("reorder-pointerdown", listener);
+
+    const handle = element.shadowRoot?.querySelector("brew-icon-button.drag-handle");
+    handle?.dispatchEvent(
+      new PointerEvent("pointerdown", { pointerId: 1, bubbles: true, composed: true }),
+    );
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect((listener.mock.calls[0][0] as CustomEvent<PointerEvent>).detail).toBeInstanceOf(
+      PointerEvent,
+    );
+  });
+
+  it("fires reorder-pointermove with the pointer's client coordinates", () => {
+    const listener = vi.fn();
+    element.addEventListener("reorder-pointermove", listener);
+
+    const handle = element.shadowRoot?.querySelector("brew-icon-button.drag-handle");
+    handle?.dispatchEvent(
+      new PointerEvent("pointermove", {
+        pointerId: 1,
+        clientX: 42,
+        clientY: 84,
+        bubbles: true,
+        composed: true,
+      }),
+    );
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(
+      (listener.mock.calls[0][0] as CustomEvent<{ clientX: number; clientY: number }>).detail,
+    ).toEqual({
+      clientX: 42,
+      clientY: 84,
+    });
+  });
+
+  it("fires reorder-pointerend on pointerup", () => {
+    const listener = vi.fn();
+    element.addEventListener("reorder-pointerend", listener);
+
+    const handle = element.shadowRoot?.querySelector("brew-icon-button.drag-handle");
+    handle?.dispatchEvent(
+      new PointerEvent("pointerup", { pointerId: 1, bubbles: true, composed: true }),
+    );
 
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it("fires move-down-click when the move-down button is activated", async () => {
+  it("fires reorder-pointerend on pointercancel", () => {
     const listener = vi.fn();
-    element.addEventListener("move-down-click", listener);
+    element.addEventListener("reorder-pointerend", listener);
 
-    const [, downButton] = element.shadowRoot?.querySelectorAll(".move-btn") ?? [];
-    (downButton as HTMLButtonElement)?.click();
+    const handle = element.shadowRoot?.querySelector("brew-icon-button.drag-handle");
+    handle?.dispatchEvent(
+      new PointerEvent("pointercancel", { pointerId: 1, bubbles: true, composed: true }),
+    );
 
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it("disables and never fires move-up-click when disable-move-up is set", async () => {
-    element.disableMoveUp = true;
-    await element.updateComplete;
-
-    const [upButton] = element.shadowRoot?.querySelectorAll(".move-btn") ?? [];
-    expect((upButton as HTMLButtonElement).disabled).toBe(true);
-
+  it("fires move-up-click when ArrowUp is pressed on the drag handle", () => {
     const listener = vi.fn();
     element.addEventListener("move-up-click", listener);
-    (upButton as HTMLButtonElement).click();
 
-    expect(listener).not.toHaveBeenCalled();
+    const handle = element.shadowRoot?.querySelector("brew-icon-button.drag-handle");
+    handle?.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true, composed: true }),
+    );
+
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it("disables and never fires move-down-click when disable-move-down is set", async () => {
-    element.disableMoveDown = true;
-    await element.updateComplete;
-
-    const [, downButton] = element.shadowRoot?.querySelectorAll(".move-btn") ?? [];
-    expect((downButton as HTMLButtonElement).disabled).toBe(true);
-
+  it("fires move-down-click when ArrowDown is pressed on the drag handle", () => {
     const listener = vi.fn();
     element.addEventListener("move-down-click", listener);
-    (downButton as HTMLButtonElement).click();
 
-    expect(listener).not.toHaveBeenCalled();
+    const handle = element.shadowRoot?.querySelector("brew-icon-button.drag-handle");
+    handle?.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, composed: true }),
+    );
+
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("fires neither move event for an unrelated key", () => {
+    const upListener = vi.fn();
+    const downListener = vi.fn();
+    element.addEventListener("move-up-click", upListener);
+    element.addEventListener("move-down-click", downListener);
+
+    const handle = element.shadowRoot?.querySelector("brew-icon-button.drag-handle");
+    handle?.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, composed: true }),
+    );
+
+    expect(upListener).not.toHaveBeenCalled();
+    expect(downListener).not.toHaveBeenCalled();
   });
 });

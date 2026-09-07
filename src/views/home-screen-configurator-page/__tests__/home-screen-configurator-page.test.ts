@@ -12,8 +12,7 @@ import type { HomeScreenConfiguratorPage } from "../home-screen-configurator-pag
 type ConfigRowElement = HTMLElement & {
   title: string;
   visible: boolean;
-  disableMoveUp: boolean;
-  disableMoveDown: boolean;
+  dragging: boolean;
 };
 
 describe("home-screen-configurator-page", () => {
@@ -92,16 +91,21 @@ describe("home-screen-configurator-page", () => {
     expect(statsSwitch.checked).toBe(false);
   });
 
-  it("disables move-up on the first row and move-down on the last row only", async () => {
+  it("tags every row with a data-section-id matching its section", async () => {
     await mount();
 
-    const rowList = rows();
-    expect(rowList[0].disableMoveUp).toBe(true);
-    expect(rowList[0].disableMoveDown).toBe(false);
-    expect(rowList[rowList.length - 1].disableMoveDown).toBe(true);
-    expect(rowList[rowList.length - 1].disableMoveUp).toBe(false);
-    expect(rowList[3].disableMoveUp).toBe(false);
-    expect(rowList[3].disableMoveDown).toBe(false);
+    const ids = [
+      ...(element.shadowRoot?.querySelectorAll<HTMLElement>("[data-section-id]") ?? []),
+    ].map((row) => row.dataset.sectionId);
+    expect(ids).toEqual([
+      "brewAgain",
+      "quickActions",
+      "devices",
+      "cloudSync",
+      "stats",
+      "recentBrews",
+      "support",
+    ]);
   });
 
   it("omits the Devices row entirely when Web Bluetooth is unsupported", async () => {
@@ -141,6 +145,147 @@ describe("home-screen-configurator-page", () => {
 
     const titles = rows().map((row) => row.title);
     expect(titles.indexOf("Support BrewMe")).toBeLessThan(titles.indexOf("Recent brews"));
+  });
+
+  describe("pointer drag-to-reorder", () => {
+    afterEach(() => {
+      // @ts-expect-error - restoring the stub set by individual tests.
+      delete document.elementFromPoint;
+    });
+
+    const dragHandleFor = (title: string): Element => {
+      const row = rows().find((r) => r.title === title);
+      if (!row) throw new Error(`expected a row titled ${title}`);
+      const handle = row.shadowRoot?.querySelector("brew-icon-button.drag-handle");
+      if (!handle) throw new Error(`expected a drag handle on the ${title} row`);
+      return handle;
+    };
+
+    // happy-dom doesn't implement `ShadowRoot.elementFromPoint`, so
+    // `deepElementFromPoint` (in deep-shadow-dom.utility.ts) would throw if
+    // `document.elementFromPoint` resolved straight to a row custom element
+    // (which has its own shadow root) - stubbing it to a plain descendant
+    // *inside* that row's shadow root instead sidesteps that entirely,
+    // matching how a real browser resolves a point over rendered text.
+    const descendantOf = (title: string): Element => {
+      const row = rows().find((r) => r.title === title);
+      if (!row) throw new Error(`expected a row titled ${title}`);
+      const headline = row.shadowRoot?.querySelector(".headline");
+      if (!headline) throw new Error(`expected a .headline in the ${title} row`);
+      return headline;
+    };
+
+    it("reorders the dragged row to sit where the row the pointer moved over was", async () => {
+      await mount();
+      document.elementFromPoint = () => descendantOf("Support BrewMe");
+
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointerdown", { pointerId: 1, bubbles: true, composed: true }),
+      );
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointermove", {
+          pointerId: 1,
+          clientX: 10,
+          clientY: 500,
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointerup", { pointerId: 1, bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(rows().map((row) => row.title)[rows().length - 1]).toBe("Brew again");
+      expect(homeScreenConfigSignal.value.map((entry) => entry.id)[6]).toBe("brewAgain");
+    });
+
+    it("marks the dragged row's dragging property true only while the drag is in progress", async () => {
+      await mount();
+      document.elementFromPoint = () => descendantOf("Brew again");
+
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointerdown", { pointerId: 1, bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+      expect(rows().find((row) => row.title === "Brew again")?.dragging).toBe(true);
+
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointerup", { pointerId: 1, bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+      expect(rows().find((row) => row.title === "Brew again")?.dragging).toBe(false);
+    });
+
+    it("does not persist a reorder when the drag ends without the order actually changing", async () => {
+      await mount();
+      document.elementFromPoint = () => descendantOf("Brew again");
+      const before = homeScreenConfigSignal.value;
+
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointerdown", { pointerId: 1, bubbles: true, composed: true }),
+      );
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointerup", { pointerId: 1, bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(homeScreenConfigSignal.value).toBe(before);
+    });
+
+    it("does not reorder when the pointer moves over the row already being dragged", async () => {
+      await mount();
+      document.elementFromPoint = () => descendantOf("Brew again");
+      const before = homeScreenConfigSignal.value;
+
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointerdown", { pointerId: 1, bubbles: true, composed: true }),
+      );
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointermove", {
+          pointerId: 1,
+          clientX: 10,
+          clientY: 10,
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointerup", { pointerId: 1, bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(homeScreenConfigSignal.value).toBe(before);
+    });
+
+    it("ends the drag and clears the dragging state on pointercancel, same as pointerup", async () => {
+      // Matches `brew-steps-card`'s own `_endDrag`, which is wired to both
+      // pointerup and pointercancel identically - neither distinguishes a
+      // deliberate drop from an interrupted gesture, both just commit
+      // whatever the live preview ended up at.
+      await mount();
+      document.elementFromPoint = () => descendantOf("Support BrewMe");
+
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointerdown", { pointerId: 1, bubbles: true, composed: true }),
+      );
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointermove", {
+          pointerId: 1,
+          clientX: 10,
+          clientY: 500,
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      dragHandleFor("Brew again").dispatchEvent(
+        new PointerEvent("pointercancel", { pointerId: 1, bubbles: true, composed: true }),
+      );
+      await element.updateComplete;
+
+      expect(homeScreenConfigSignal.value.map((entry) => entry.id)[6]).toBe("brewAgain");
+      expect(rows().find((row) => row.title === "Brew again")?.dragging).toBe(false);
+    });
   });
 
   it("restores the default order and visibility when 'Reset to default' is activated", async () => {

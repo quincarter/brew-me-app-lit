@@ -181,6 +181,29 @@ export function moveHomeScreenSection(id: HomeScreenSectionId, direction: "up" |
   homeScreenConfigSignal.value = moveItem(config, fromIndex, toIndex);
 }
 
+/**
+ * Commits a full reordering of the *available* sections (see
+ * `isHomeScreenSectionAvailable`) - e.g. the live result of a
+ * pointer-drag-to-reorder gesture, where every intermediate position
+ * during the drag is a complete reordering rather than a single one-step
+ * move. `newAvailableOrder` must contain exactly the same ids as
+ * `getAvailableHomeScreenConfig()` returned (same set, any order) -
+ * unavailable sections aren't included since they're never shown to drag
+ * in the first place, so they simply keep their existing slot in the full
+ * persisted array untouched.
+ */
+export function reorderHomeScreenSections(newAvailableOrder: HomeScreenSectionId[]): void {
+  const config = normalize(homeScreenConfigSignal.value);
+  const byId = new Map(config.map((entry) => [entry.id, entry]));
+  let cursor = 0;
+  homeScreenConfigSignal.value = config.map((entry) => {
+    if (!isHomeScreenSectionAvailable(entry.id)) return entry;
+    const nextId = newAvailableOrder[cursor];
+    cursor += 1;
+    return (nextId && byId.get(nextId)) || entry;
+  });
+}
+
 /** Restores Home's original section order and shows every section again. */
 export function resetHomeScreenConfig(): void {
   homeScreenConfigSignal.value = DEFAULT_CONFIG;

@@ -8,9 +8,36 @@ export const HomeScreenConfigRowStyles = css`
   .row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 12px;
-    padding: 10px 0;
+    padding: 10px 4px;
+    border-radius: 10px;
+    transition:
+      opacity 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  /* Drag feedback: lift the row being reordered off the list visually, same treatment brew-steps-card's own dragging row uses. */
+  .row.dragging {
+    opacity: 0.6;
+    background: var(--brew-color-surface-container);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  }
+
+  /*
+   * icon-button's own internal .btn sets an explicit "cursor: pointer" (not
+   * inherited), which would otherwise shadow a plain "cursor: grab" set
+   * here on the host - go through its "--icon-button-cursor" custom
+   * property instead, same pattern brew-steps-card's own drag handle uses.
+   */
+  .drag-handle {
+    flex-shrink: 0;
+    --icon-button-cursor: grab;
+    touch-action: none;
+    color: var(--brew-color-on-surface-variant);
+  }
+
+  .row.dragging .drag-handle {
+    --icon-button-cursor: grabbing;
   }
 
   .row-text {
@@ -18,6 +45,7 @@ export const HomeScreenConfigRowStyles = css`
     flex-direction: column;
     gap: 2px;
     min-width: 0;
+    flex: 1;
   }
 
   .headline {
@@ -30,42 +58,7 @@ export const HomeScreenConfigRowStyles = css`
     color: var(--brew-color-on-surface-variant);
   }
 
-  .row-controls {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    flex-shrink: 0;
-  }
-
-  .move-btn {
-    all: unset;
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    color: var(--brew-color-on-surface-variant);
-    transition: background-color 0.15s ease;
-  }
-
-  .move-btn:hover:not(:disabled) {
-    background: color-mix(in srgb, currentColor 8%, transparent);
-  }
-
-  .move-btn:focus-visible {
-    outline: 2px solid var(--brew-color-primary);
-    outline-offset: 2px;
-  }
-
-  .move-btn:disabled {
-    opacity: 0.3;
-    cursor: default;
-  }
-
   brew-switch {
-    margin-left: 8px;
+    flex-shrink: 0;
   }
 `;
