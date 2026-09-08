@@ -31,10 +31,10 @@ const REORDER_ANIMATION_DURATION_MS = 200;
 
 /**
  * Home Screen Configurator screen (`/more/settings/home-screen`) - reorder
- * and show/hide Home's cards. Reached from Settings, which keeps its own
- * bottom nav visible - this screen does too (with `more` still highlighted)
- * so drilling in doesn't lose the tab bar, same convention as Cloud Sync's
- * own settings detail screen.
+ * and show/hide Home's cards. Reached from Display Settings, which keeps its
+ * own bottom nav visible - this screen does too (with `more` still
+ * highlighted) so drilling in doesn't lose the tab bar, same convention as
+ * Cloud Sync's own settings detail screen.
  *
  * Only ever renders rows for sections `isHomeScreenSectionAvailable`
  * (via `getAvailableHomeScreenConfig`) - a section gated by a
@@ -186,7 +186,7 @@ export class HomeScreenConfiguratorPage extends SignalWatcher(LitElement) {
         <brew-top-bar
           title="Home Screen"
           .icon="${ARROW_BACK_ICON_SVG}"
-          href="/more/settings"
+          href="/more/settings/display"
         ></brew-top-bar>
 
         <div class="content">

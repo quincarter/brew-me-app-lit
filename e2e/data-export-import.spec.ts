@@ -14,7 +14,7 @@ test.describe("exporting saved data", () => {
       water: "300",
     });
 
-    await page.goto("/more/settings");
+    await page.goto("/more/settings/data");
     const [download] = await Promise.all([
       page.waitForEvent("download"),
       page.getByRole("button", { name: "Export data" }).click(),
@@ -45,7 +45,7 @@ test.describe("importing saved data", () => {
   test("restores saved brews, ratings, and custom brew types from a real exported file", async ({
     page,
   }) => {
-    await page.goto("/more/settings");
+    await page.goto("/more/settings/data");
 
     await page.locator('input[type="file"]').setInputFiles(REAL_EXPORT_FIXTURE);
     await expect(
@@ -65,14 +65,14 @@ test.describe("importing saved data", () => {
     await expect(page.locator("brew-star-rating .star.filled")).toHaveCount(4);
     await expect(page.locator(".tasting-note")).toHaveText('"Fruity and tea like"');
 
-    await page.goto("/more/settings");
+    await page.goto("/more/settings/brew-types");
     await expect(page.locator(".type-tag.custom")).toContainText("Nitro Cold Brew");
   });
 
   test("rejects an invalid file and leaves existing data untouched", async ({ page }) => {
     await saveBrewFromCalculator(page, { name: "Keep Me", type: "V60" });
 
-    await page.goto("/more/settings");
+    await page.goto("/more/settings/data");
     await page.locator('input[type="file"]').setInputFiles({
       name: "not-an-export.json",
       mimeType: "application/json",
@@ -91,7 +91,7 @@ test.describe("importing saved data", () => {
   test("canceling an import leaves existing data untouched", async ({ page }) => {
     await saveBrewFromCalculator(page, { name: "Keep Me", type: "V60" });
 
-    await page.goto("/more/settings");
+    await page.goto("/more/settings/data");
     await page.locator('input[type="file"]').setInputFiles(REAL_EXPORT_FIXTURE);
     await expect(page.getByRole("button", { name: "Yes, import and replace" })).toBeVisible();
 

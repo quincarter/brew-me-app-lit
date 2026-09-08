@@ -72,7 +72,7 @@ export const stubWebBluetoothSupport = async (page: Page): Promise<void> => {
  * samples) that `importAppData` takes real time to parse and persist.
  */
 export const importDataFile = async (page: Page, filePath: string): Promise<void> => {
-  await page.goto("/more/settings");
+  await page.goto("/more/settings/data");
   await page.locator('input[type="file"]').setInputFiles(filePath);
 
   const loaded = page.waitForEvent("load");

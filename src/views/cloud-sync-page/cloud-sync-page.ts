@@ -66,7 +66,7 @@ export class CloudSyncPage extends SignalWatcher(LitElement) {
         <brew-top-bar
           title="Cloud Sync"
           .icon="${ARROW_BACK_ICON_SVG}"
-          href="/more/settings"
+          href="/more/settings/data"
         ></brew-top-bar>
 
         <div class="content">

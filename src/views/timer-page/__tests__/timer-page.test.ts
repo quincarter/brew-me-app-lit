@@ -153,13 +153,13 @@ describe("timer-page", () => {
       expect(topBar?.title).toBe("V60 Timer");
     });
 
-    it("has a top-bar settings link to /more/settings", async () => {
+    it("has a top-bar settings link to /more/settings/general", async () => {
       await mount();
 
       const settingsLink = element.shadowRoot?.querySelector(
         'brew-top-bar brew-icon-button[slot="trailing"]',
       );
-      expect(settingsLink?.getAttribute("href")).toBe("/more/settings");
+      expect(settingsLink?.getAttribute("href")).toBe("/more/settings/general");
       expect(settingsLink?.getAttribute("aria-label")).toBe("Timer settings");
     });
 
@@ -695,7 +695,7 @@ describe("timer-page", () => {
       const settingsLink = Array.from(
         element.shadowRoot?.querySelectorAll("brew-button[href]") ?? [],
       ).find((button) => button.textContent?.trim() === "Go to Settings");
-      expect(settingsLink?.getAttribute("href")).toBe("/more/settings");
+      expect(settingsLink?.getAttribute("href")).toBe("/more/settings/general");
     });
 
     it("auto-hides the notice after 5 seconds", async () => {

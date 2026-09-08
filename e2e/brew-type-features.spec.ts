@@ -7,11 +7,16 @@ const featureRow = (page: Page, brewType: string): Locator =>
     has: page.locator(".row-label", { hasText: new RegExp(`^${brewType}$`) }),
   });
 
-/** From any screen with the bottom nav visible, reaches Settings via the same in-app links a user would tap - keeps SPA (ephemeral signal) state intact, unlike `page.goto`. */
-const goToSettingsViaNav = async (page: Page): Promise<void> => {
+/** From any screen with the bottom nav visible, reaches Brew Type Settings (where brew type feature rows live) via the same in-app links a user would tap - keeps SPA (ephemeral signal) state intact, unlike `page.goto`. */
+const goToBrewTypeSettingsViaNav = async (page: Page): Promise<void> => {
   await page.locator("brew-bottom-nav").getByRole("link", { name: "More" }).click();
   await page.locator("more-page brew-list-row").filter({ hasText: "Settings" }).click();
   await expect(page).toHaveURL("/more/settings");
+  await page
+    .locator("settings-page brew-list-row")
+    .filter({ hasText: "Brew Type Settings" })
+    .click();
+  await expect(page).toHaveURL("/more/settings/brew-types");
 };
 
 /** From Settings, reaches the Timer screen via the same in-app links a user would tap. */
@@ -45,7 +50,7 @@ test.describe("brew type feature settings", () => {
     await expect(page.locator(".section-title").filter({ hasText: "Brews" })).toBeVisible();
     await expect(page.locator("brew-shot-list")).toBeVisible();
 
-    await page.goto("/more/settings");
+    await page.goto("/more/settings/brew-types");
     const v60Row = featureRow(page, "V60");
     await expect(v60Row).toBeVisible();
     await v60Row.getByRole("switch", { name: "Show Brews/Shots section for V60" }).click();
@@ -55,7 +60,7 @@ test.describe("brew type feature settings", () => {
     await expect(page.locator(".section-title").filter({ hasText: "Brews" })).toHaveCount(0);
     await expect(page.locator("brew-shot-list")).toHaveCount(0);
 
-    await page.goto("/more/settings");
+    await page.goto("/more/settings/brew-types");
     await featureRow(page, "V60")
       .getByRole("switch", { name: "Show Brews/Shots section for V60" })
       .click();
@@ -80,7 +85,7 @@ test.describe("brew type feature settings", () => {
     await expect(page.locator(".telemetry-row")).toBeVisible();
     await expect(page.locator("brew-extraction-chart")).toBeVisible();
 
-    await goToSettingsViaNav(page);
+    await goToBrewTypeSettingsViaNav(page);
     const chemexRow = featureRow(page, "Chemex");
     await chemexRow.getByRole("button", { name: "Off", exact: true }).click();
     await expect(chemexRow.locator('brew-chip[label="Off"]')).toHaveJSProperty("selected", true);
@@ -91,7 +96,7 @@ test.describe("brew type feature settings", () => {
     await expect(page.locator(".telemetry-row")).toHaveCount(0);
     await expect(page.locator("brew-extraction-chart")).toHaveCount(0);
 
-    await goToSettingsViaNav(page);
+    await goToBrewTypeSettingsViaNav(page);
     await featureRow(page, "Chemex")
       .getByRole("button", { name: "Chart only", exact: true })
       .click();
@@ -108,7 +113,7 @@ test.describe("brew type feature settings", () => {
     page,
   }) => {
     await stubWebBluetoothSupport(page);
-    await page.goto("/more/settings");
+    await page.goto("/more/settings/brew-types");
     const aeropressRow = featureRow(page, "Aeropress");
     await expect(aeropressRow).toBeVisible();
     await expect(
@@ -163,7 +168,7 @@ test.describe("brew type feature settings", () => {
     const customType = "Vac Pot";
 
     await stubWebBluetoothSupport(page);
-    await page.goto("/more/settings");
+    await page.goto("/more/settings/brew-types");
     await page.getByRole("button", { name: "Add brew type", exact: true }).click();
     await page.getByLabel("New brew type", { exact: true }).fill(customType);
     await page.getByRole("button", { name: "Add", exact: true }).click();
@@ -197,7 +202,7 @@ test.describe("brew type feature settings", () => {
     await expect(page.locator("brew-shot-list")).toBeVisible();
 
     // Flip its "Show Brews/Shots section" off in Settings and confirm the effect on that live brew.
-    await page.goto("/more/settings");
+    await page.goto("/more/settings/brew-types");
     await featureRow(page, customType)
       .getByRole("switch", { name: `Show Brews/Shots section for ${customType}` })
       .click();

@@ -205,7 +205,7 @@ export class TimerPage extends SignalWatcher(LitElement) {
               @icon-click="${this._dismissSettingsNotice}"
             ></brew-icon-button>
           </div>
-          <brew-button variant="text" href="/more/settings">Go to Settings</brew-button>
+          <brew-button variant="text" href="/more/settings/general">Go to Settings</brew-button>
         </div>
       </brew-collapsible-banner>
     `;
@@ -366,7 +366,7 @@ export class TimerPage extends SignalWatcher(LitElement) {
           <brew-icon-button
             slot="trailing"
             .svgIcon="${SETTINGS_ICON_SVG}"
-            href="/more/settings"
+            href="/more/settings/general"
             aria-label="Timer settings"
             @click="${requestScrollToTimerSettingsSection}"
           ></brew-icon-button>
