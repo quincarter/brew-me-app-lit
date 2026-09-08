@@ -1,6 +1,6 @@
 import { css } from "lit";
 
-export const SettingsPageStyles = css`
+export const HomeScreenConfiguratorPageStyles = css`
   :host {
     display: block;
     height: 100%;
@@ -16,23 +16,29 @@ export const SettingsPageStyles = css`
     padding: 8px 20px 28px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 16px;
     flex: 1;
     min-height: 0;
     overflow: auto;
   }
 
-  .section-title {
+  .section-hint {
+    margin: 0;
     font-size: 13px;
-    font-weight: 600;
     color: var(--brew-color-on-surface-variant);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    line-height: 1.5;
+  }
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    background: var(--brew-color-surface-container-low);
+    padding: 4px 16px;
   }
 
   .divider {
     height: 1px;
     background: var(--brew-color-outline-variant);
-    margin: 8px 0 4px;
   }
 `;

@@ -1,11 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
 import { saveBrewFromCalculator } from "./helpers";
 
-/** From any screen with the bottom nav visible, reaches Settings via the same in-app links a user would tap - keeps SPA (ephemeral signal) state intact, unlike `page.goto`. */
-const goToSettingsViaNav = async (page: Page): Promise<void> => {
+/** From any screen with the bottom nav visible, reaches General Settings (where the Timer section lives) via the same in-app links a user would tap - keeps SPA (ephemeral signal) state intact, unlike `page.goto`. */
+const goToGeneralSettingsViaNav = async (page: Page): Promise<void> => {
   await page.locator("brew-bottom-nav").getByRole("link", { name: "More" }).click();
   await page.locator("more-page brew-list-row").filter({ hasText: "Settings" }).click();
   await expect(page).toHaveURL("/more/settings");
+  await page.locator("settings-page brew-list-row").filter({ hasText: "General" }).click();
+  await expect(page).toHaveURL("/more/settings/general");
 };
 
 /** From Settings, reaches the Timer screen via the same in-app links a user would tap. */
@@ -49,7 +51,7 @@ test.describe("timer settings", () => {
       await saveBrewFromCalculator(page, { name: "V60 Count Up A", type: "V60" });
       await saveBrewFromCalculator(page, { name: "V60 Count Up B", type: "V60" });
 
-      await page.goto("/more/settings");
+      await page.goto("/more/settings/general");
       const countUpChip = timerSettingsRow(page, "Default count style").locator(
         'brew-chip[label="Count up"]',
       );
@@ -82,7 +84,7 @@ test.describe("timer settings", () => {
       );
 
       // Settings itself still reflects "Count up" as the stored default, surviving a full reload.
-      await page.goto("/more/settings");
+      await page.goto("/more/settings/general");
       await expect(countUpChip).toHaveJSProperty("selected", true);
     });
   });
@@ -98,7 +100,7 @@ test.describe("timer settings", () => {
       await page.getByRole("button", { name: "Start", exact: true }).click();
       await expect(page.locator("brew-active-step-banner")).toBeVisible();
 
-      await goToSettingsViaNav(page);
+      await goToGeneralSettingsViaNav(page);
       const bannerRow = timerSettingsRow(page, "Show large step banner");
       const bannerSwitchEl = bannerRow.locator("brew-switch");
       await expect(bannerSwitchEl).toHaveJSProperty("checked", true);
@@ -110,7 +112,7 @@ test.describe("timer settings", () => {
       await goToTimerViaNav(page);
       await expect(page.locator("brew-active-step-banner")).toHaveCount(0);
 
-      await goToSettingsViaNav(page);
+      await goToGeneralSettingsViaNav(page);
       await bannerRow.getByRole("switch", { name: "Show large step banner" }).click();
       await expect(bannerSwitchEl).toHaveJSProperty("checked", true);
 

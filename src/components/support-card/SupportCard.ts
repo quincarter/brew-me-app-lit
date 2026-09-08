@@ -8,8 +8,8 @@ const BUY_ME_A_COFFEE_BUTTON_IMAGE = "https://cdn.buymeacoffee.com/buttons/v2/de
  * # Support Card
  * A small, warm "if this app's been useful, here's how to support it" card -
  * BrewMe is free with no ads or paywall, so this is the one place the app
- * asks for anything. Shown on Home and in Settings; deliberately not
- * repeated on every screen so it doesn't nag.
+ * asks for anything. Shown on Home, the Settings hub, and General Settings;
+ * not repeated on any other screen so it doesn't nag.
  * @element brew-support-card
  */
 export class SupportCard extends LitElement {

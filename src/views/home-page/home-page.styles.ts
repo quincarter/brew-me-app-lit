@@ -29,11 +29,22 @@ export const HomePageStyles = css`
     color: var(--brew-color-on-surface-variant);
   }
 
+  .headline-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
   .headline {
     font-size: 32px;
     font-weight: 500;
     color: var(--brew-color-on-surface);
-    margin-top: 2px;
+  }
+
+  /* Sits inline after the headline text (not pinned to the screen's top-right corner) so it never collides with the globally floating theme toggle button. */
+  .edit-home-screen-button {
+    margin-top: 6px;
   }
 
   .brew-again-card {

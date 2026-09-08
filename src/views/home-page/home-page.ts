@@ -10,6 +10,7 @@ import "../../components/saved-card/brew-saved-card";
 import "../../components/stat-tile/brew-stat-tile";
 import "../../components/support-card/brew-support-card";
 import type { ISavedBrew } from "../../shared/interfaces/brew.interface";
+import type { HomeScreenSectionId } from "../../shared/interfaces/home-screen-config.interface";
 import {
   brewAgain,
   mostRecentlyBrewedSignal,
@@ -19,6 +20,7 @@ import {
 } from "../../shared/stores/brew.store";
 import { cloudSyncStateSignal } from "../../shared/stores/cloud-sync.store";
 import { openDeviceConnectSheet } from "../../shared/stores/device-connect-sheet.store";
+import { getVisibleHomeScreenSections } from "../../shared/stores/home-screen-config.store";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
 import { getAvatarColors, getInitial } from "../../shared/utilities/avatar-palette.utility";
 import { getBrewDisplayName } from "../../shared/utilities/brew-display.utility";
@@ -37,6 +39,7 @@ import {
   CLOUD_DONE_ICON_SVG,
   CLOUD_ICON_SVG,
   CLOUD_OFF_ICON_SVG,
+  EDIT_ICON,
   LOCAL_FIRE_DEPARTMENT_SVG,
   SAVED_ICON_SVG,
   TIMER_ICON_SVG,
@@ -160,100 +163,152 @@ export class HomePage extends SignalWatcher(LitElement) {
     `;
   }
 
+  private _renderQuickActions(): HTMLTemplateResult {
+    return html`
+      <div class="actions" data-tour="home-actions">
+        <brew-action-tile
+          .svg="${CALCULATE_ICON_SVG}"
+          label="Calculate"
+          tone="primary"
+          href="/calculate"
+        ></brew-action-tile>
+        <brew-action-tile
+          .svg="${SAVED_ICON_SVG}"
+          label="Saved Brews"
+          tone="secondary"
+          href="/saved"
+        ></brew-action-tile>
+        <brew-action-tile
+          .svg="${TIMER_ICON_SVG}"
+          label="Timer"
+          tone="tertiary"
+          href="/timer"
+        ></brew-action-tile>
+      </div>
+    `;
+  }
+
+  private _renderStats(): HTMLTemplateResult {
+    return html`
+      <div class="stats">
+        <brew-stat-tile
+          .svg="${BOOKMARK_ADDED_ICON_SVG}"
+          value="${totalBrewsSignal.value}"
+          label="saved brews"
+        ></brew-stat-tile>
+        <brew-stat-tile
+          .svg="${LOCAL_FIRE_DEPARTMENT_SVG}"
+          value="${streakDaysSignal.value}"
+          label="day streak"
+        ></brew-stat-tile>
+      </div>
+    `;
+  }
+
+  private _renderRecentBrewsSection(recent: ISavedBrew[]): HTMLTemplateResult {
+    return html`
+      <div class="section-header">
+        <span class="section-title">Recent brews</span>
+        <a class="see-all" href="/saved">See all</a>
+      </div>
+
+      ${
+        recent.length === 0
+          ? html`<brew-empty-state class="recent-empty"></brew-empty-state>`
+          : html`
+              <div class="recent-row">
+                ${recent.map((brew) => {
+                  const colors = getAvatarColors(brew.id);
+                  return html`
+                    <brew-saved-card
+                      href="/saved/${brew.id}"
+                      brew-type="${getBrewDisplayName(brew)}"
+                      ratio="${brew.ratio}"
+                      coffee="${brew.coffee}"
+                      water="${brew.water}"
+                      oz="${brew.oz}"
+                      avatar-initial="${getInitial(getBrewDisplayName(brew))}"
+                      avatar-bg="${colors.background}"
+                      avatar-fg="${colors.foreground}"
+                      .avatarIcon="${getBrewTypeIcon(brew.brewType, brew.icon)}"
+                      rating="${brew.rating ?? 0}"
+                      ?replayable="${true}"
+                      @replay-click="${() => brewAgain(brew)}"
+                    ></brew-saved-card>
+                  `;
+                })}
+              </div>
+            `
+      }
+    `;
+  }
+
   render(): HTMLTemplateResult {
     const recent = recentSavedBrewsSignal.value;
     const mostRecent = mostRecentlyBrewedSignal.value;
-    const deviceTile = this._renderDeviceTile();
-    const cloudSyncTile = this._renderCloudSyncTile();
-    const hasSecondaryActions = deviceTile !== nothing || cloudSyncTile !== nothing;
+    const sectionIds = getVisibleHomeScreenSections();
+
+    // A lookup rather than a switch - keeps each section's own template next
+    // to the data it needs, while `sectionIds` (from `home-screen-config.store`)
+    // drives both which of these actually render and in what order, honoring
+    // the same Bluetooth/cloud-provider progressive-enhancement gates
+    // `_renderDeviceTile`/`_renderCloudSyncTile` already apply internally.
+    const sections: Record<HomeScreenSectionId, HTMLTemplateResult | typeof nothing> = {
+      brewAgain: mostRecent ? this._renderBrewAgainCard(mostRecent) : nothing,
+      quickActions: this._renderQuickActions(),
+      devices: html`<div class="secondary-actions">${this._renderDeviceTile()}</div>`,
+      cloudSync: html`<div class="secondary-actions">${this._renderCloudSyncTile()}</div>`,
+      stats: this._renderStats(),
+      recentBrews: this._renderRecentBrewsSection(recent),
+      support: html`<div class="support"><brew-support-card></brew-support-card></div>`,
+    };
+
+    // Devices and Cloud Sync visually pair into one shared row (matching
+    // Home's original design) whenever they land next to each other in
+    // display order - the common case, since that's the default order and
+    // most people won't reorder these two apart from each other. Falls
+    // back to each rendering its own full-width row (from `sections`
+    // above) if only one is visible, or if reordering actually did split
+    // them apart.
+    const merged: (HTMLTemplateResult | typeof nothing)[] = [];
+    for (let i = 0; i < sectionIds.length; i++) {
+      const id = sectionIds[i];
+      const isAdjacentDevicesCloudSyncPair =
+        (id === "devices" && sectionIds[i + 1] === "cloudSync") ||
+        (id === "cloudSync" && sectionIds[i + 1] === "devices");
+
+      if (isAdjacentDevicesCloudSyncPair) {
+        merged.push(
+          html`<div class="secondary-actions">
+            ${this._renderDeviceTile()} ${this._renderCloudSyncTile()}
+          </div>`,
+        );
+        i += 1; // consume the paired id too, it's already rendered above
+        continue;
+      }
+
+      merged.push(sections[id]);
+    }
 
     return html`
       <div class="screen">
         <div class="scroll">
           <div class="greeting">
             <div class="eyebrow">${getGreeting()}</div>
-            <div class="headline">Ready to brew?</div>
+            <div class="headline-row">
+              <div class="headline">Ready to brew?</div>
+              <brew-icon-button
+                class="edit-home-screen-button"
+                .svgIcon="${EDIT_ICON}"
+                size="22"
+                href="/more/settings/home-screen"
+                aria-label="Edit Home screen layout"
+                style="--icon-button-size: 40px"
+              ></brew-icon-button>
+            </div>
           </div>
 
-          ${mostRecent ? this._renderBrewAgainCard(mostRecent) : nothing}
-
-          <div class="actions" data-tour="home-actions">
-            <brew-action-tile
-              .svg="${CALCULATE_ICON_SVG}"
-              label="Calculate"
-              tone="primary"
-              href="/calculate"
-            ></brew-action-tile>
-            <brew-action-tile
-              .svg="${SAVED_ICON_SVG}"
-              label="Saved Brews"
-              tone="secondary"
-              href="/saved"
-            ></brew-action-tile>
-            <brew-action-tile
-              .svg="${TIMER_ICON_SVG}"
-              label="Timer"
-              tone="tertiary"
-              href="/timer"
-            ></brew-action-tile>
-          </div>
-
-          ${
-            hasSecondaryActions
-              ? html`<div class="secondary-actions">${deviceTile} ${cloudSyncTile}</div>`
-              : null
-          }
-
-          <div class="stats">
-            <brew-stat-tile
-              .svg="${BOOKMARK_ADDED_ICON_SVG}"
-              value="${totalBrewsSignal.value}"
-              label="saved brews"
-            ></brew-stat-tile>
-            <brew-stat-tile
-              .svg="${LOCAL_FIRE_DEPARTMENT_SVG}"
-              value="${streakDaysSignal.value}"
-              label="day streak"
-            ></brew-stat-tile>
-          </div>
-
-          <div class="section-header">
-            <span class="section-title">Recent brews</span>
-            <a class="see-all" href="/saved">See all</a>
-          </div>
-
-          ${
-            recent.length === 0
-              ? html`<brew-empty-state class="recent-empty"></brew-empty-state>`
-              : html`
-                  <div class="recent-row">
-                    ${recent.map((brew) => {
-                      const colors = getAvatarColors(brew.id);
-                      return html`
-                        <brew-saved-card
-                          href="/saved/${brew.id}"
-                          brew-type="${getBrewDisplayName(brew)}"
-                          ratio="${brew.ratio}"
-                          coffee="${brew.coffee}"
-                          water="${brew.water}"
-                          oz="${brew.oz}"
-                          avatar-initial="${getInitial(getBrewDisplayName(brew))}"
-                          avatar-bg="${colors.background}"
-                          avatar-fg="${colors.foreground}"
-                          .avatarIcon="${getBrewTypeIcon(brew.brewType, brew.icon)}"
-                          rating="${brew.rating ?? 0}"
-                          ?replayable="${true}"
-                          @replay-click="${() => brewAgain(brew)}"
-                        ></brew-saved-card>
-                      `;
-                    })}
-                  </div>
-                `
-          }
-
-          <div class="support">
-            <brew-support-card></brew-support-card>
-          </div>
+          ${merged}
         </div>
 
         <brew-bottom-nav active="home"></brew-bottom-nav>

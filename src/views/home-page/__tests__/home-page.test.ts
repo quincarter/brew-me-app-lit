@@ -9,6 +9,10 @@ import {
 import { savedBrewsSignal } from "../../../shared/stores/brew.store";
 import { cloudSyncStateSignal } from "../../../shared/stores/cloud-sync.store";
 import { deviceConnectSheetOpenSignal } from "../../../shared/stores/device-connect-sheet.store";
+import {
+  resetHomeScreenConfig,
+  setHomeScreenSectionVisible,
+} from "../../../shared/stores/home-screen-config.store";
 import "../home-page";
 import type { HomePage } from "../home-page";
 
@@ -39,6 +43,7 @@ describe("home-page", () => {
     element.remove();
     Reflect.deleteProperty(navigator, "bluetooth");
     deviceConnectSheetOpenSignal.value = false;
+    resetHomeScreenConfig();
     vi.unstubAllEnvs();
   });
 
@@ -174,6 +179,83 @@ describe("home-page", () => {
       await mount();
 
       expect(element.shadowRoot?.querySelector(".secondary-actions")).toBeNull();
+    });
+
+    it("renders Devices and Cloud Sync in a single shared row when both are visible, side by side like Home's original design", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      await mount();
+
+      const rows = element.shadowRoot?.querySelectorAll(".secondary-actions") ?? [];
+      expect(rows).toHaveLength(1);
+      expect(devicesTile()).not.toBeNull();
+      expect(cloudSyncTile()).not.toBeNull();
+    });
+
+    it("falls back to two separate rows when reordering splits Devices and Cloud Sync apart", async () => {
+      Object.defineProperty(navigator, "bluetooth", { value: {}, configurable: true });
+      const { moveHomeScreenSection } =
+        await import("../../../shared/stores/home-screen-config.store");
+      // Default order is ...quickActions, devices, cloudSync, stats... -
+      // moving stats up once swaps it with cloudSync, landing it between
+      // devices and cloudSync and splitting the pair apart.
+      moveHomeScreenSection("stats", "up");
+      await mount();
+
+      const rows = element.shadowRoot?.querySelectorAll(".secondary-actions") ?? [];
+      expect(rows).toHaveLength(2);
+      expect(devicesTile()).not.toBeNull();
+      expect(cloudSyncTile()).not.toBeNull();
+    });
+  });
+
+  describe("Edit Home screen button", () => {
+    it("renders next to the headline and links to the Home Screen Configurator", async () => {
+      await mount();
+
+      const editButton = element.shadowRoot?.querySelector(".edit-home-screen-button") as
+        | (HTMLElement & { href: string })
+        | null;
+      expect(editButton).not.toBeNull();
+      expect(editButton?.href).toBe("/more/settings/home-screen");
+    });
+  });
+
+  describe("home-screen-config.store-driven rendering", () => {
+    it("omits a section hidden via setHomeScreenSectionVisible", async () => {
+      setHomeScreenSectionVisible("stats", false);
+      await mount();
+
+      expect(element.shadowRoot?.querySelector(".stats")).toBeNull();
+    });
+
+    it("renders a section again once its visibility is restored", async () => {
+      setHomeScreenSectionVisible("stats", false);
+      await mount();
+      expect(element.shadowRoot?.querySelector(".stats")).toBeNull();
+
+      setHomeScreenSectionVisible("stats", true);
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector(".stats")).not.toBeNull();
+    });
+
+    it("renders sections in the configured order", async () => {
+      await mount();
+      const scroll = element.shadowRoot?.querySelector(".scroll");
+      const defaultOrder = [...(scroll?.children ?? [])].map((el) => el.className);
+      expect(defaultOrder.indexOf("stats")).toBeLessThan(defaultOrder.indexOf("section-header"));
+
+      element.remove();
+      const { moveHomeScreenSection } =
+        await import("../../../shared/stores/home-screen-config.store");
+      moveHomeScreenSection("stats", "down");
+      moveHomeScreenSection("stats", "down");
+      await mount();
+
+      const reordered = [...(element.shadowRoot?.querySelector(".scroll")?.children ?? [])].map(
+        (el) => el.className,
+      );
+      expect(reordered.indexOf("stats")).toBeGreaterThan(reordered.indexOf("section-header"));
     });
   });
 });

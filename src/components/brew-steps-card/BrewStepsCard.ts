@@ -13,6 +13,10 @@ import {
   findMovedStepIds,
   type IBrewStepsDiff,
 } from "../../shared/utilities/brew-steps-diff.utility";
+import {
+  composedClosest,
+  deepElementFromPoint,
+} from "../../shared/utilities/deep-shadow-dom.utility";
 import { formatSeconds } from "../../shared/utilities/format-time.utility";
 import { moveItem } from "../../shared/utilities/reorder.utility";
 import "../button/brew-button";
@@ -34,46 +38,6 @@ import {
 const ADD_CUSTOM_LABEL_OPTION = "__add_custom__";
 
 const TIMELINE_COLOR_COUNT = 4;
-
-/**
- * `document.elementFromPoint` only pierces one level of (open) shadow DOM -
- * it returns the shadow *host* rather than descending further, so through
- * this app's several nested custom-element shells (app-shell ->
- * calculator-page -> brew-steps-card -> brew-icon-button) it resolves to
- * the outermost host and nothing more. Repeatedly hand the point to each
- * successive host's own `shadowRoot.elementFromPoint` to reach the real
- * element actually under the point.
- */
-const deepElementFromPoint = (x: number, y: number): Element | null => {
-  let el = document.elementFromPoint(x, y);
-  while (el?.shadowRoot) {
-    const nested = el.shadowRoot.elementFromPoint(x, y);
-    if (!nested || nested === el) break;
-    el = nested;
-  }
-  return el;
-};
-
-/**
- * `Element.closest()` only searches its own shadow tree - it can't cross
- * back out through a shadow boundary to keep walking up into the host
- * document, which `deepElementFromPoint` above will have crossed *into*.
- * Same walk as `closest()`, but hops from a shadow root's top to its host
- * and keeps going instead of stopping there.
- */
-const composedClosest = (start: Element | null, selector: string): HTMLElement | null => {
-  let node: Element | null = start;
-  while (node) {
-    if (node.matches(selector)) return node as HTMLElement;
-    if (node.parentElement) {
-      node = node.parentElement;
-      continue;
-    }
-    const root = node.getRootNode();
-    node = root instanceof ShadowRoot ? root.host : null;
-  }
-  return null;
-};
 
 /**
  * # Brew Steps Card

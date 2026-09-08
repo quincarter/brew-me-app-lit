@@ -28,6 +28,75 @@ export interface PersistentSignalOptions {
 }
 
 /**
+ * One entry per live persistent signal, tracked so `flushPendingWrites`
+ * (below) can find every signal whose in-memory value hasn't actually
+ * landed in IndexedDB yet, without every call site having to thread its own
+ * signal through some shared flush call. `lastWrittenValue` is compared by
+ * reference, not deep equality - every store built on `persistentSignal`
+ * already follows an immutable-update convention (`.map()`/spread/etc.,
+ * never mutating in place), so a changed value always means a new
+ * reference.
+ */
+interface PersistentSignalEntry {
+  getValue: () => unknown;
+  lastWrittenValue: unknown;
+}
+const registry = new Map<string, PersistentSignalEntry>();
+
+let flushListenersInstalled = false;
+
+/**
+ * A page can be discarded with no further warning shortly after
+ * `visibilitychange`/`pagehide` fire - most commonly on mobile, where
+ * backgrounding a tab (switching apps, locking the screen) can lead to the
+ * OS killing the renderer process to reclaim memory well before the
+ * `effect()`-driven write below has had a chance to complete (IndexedDB
+ * transactions resolve on the task queue, not immediately). Reacting to
+ * both events - `visibilitychange` also covers the tab simply being backgrounded
+ * without a full teardown, `pagehide` covers actual navigation away - gives
+ * `flushPendingWrites` the earliest possible signal to make a last attempt.
+ */
+function installFlushListenersOnce(): void {
+  if (flushListenersInstalled || typeof document === "undefined") return;
+  flushListenersInstalled = true;
+
+  const onPotentialTeardown = (): void => {
+    void flushPendingWrites();
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") onPotentialTeardown();
+  });
+  window.addEventListener("pagehide", onPotentialTeardown);
+}
+
+/**
+ * Forces a durable write of every persistent signal whose current value
+ * hasn't been confirmed written yet - the tab's last chance to persist
+ * before it's backgrounded/discarded. Every dirty key is written in one
+ * `"strict"`-durability transaction (rather than each signal's own
+ * `"default"`-durability effect) so the commit is flushed to disk
+ * immediately instead of possibly being buffered, since there may be no
+ * further opportunity for the OS to give this page CPU time at all.
+ */
+async function flushPendingWrites(): Promise<void> {
+  const dirty = [...registry].filter(([, entry]) => entry.getValue() !== entry.lastWrittenValue);
+  if (dirty.length === 0) return;
+
+  try {
+    const db = await getDB();
+    const tx = db.transaction(STORE_NAME, "readwrite", { durability: "strict" });
+    dirty.forEach(([key, entry]) => {
+      const value = entry.getValue();
+      entry.lastWrittenValue = value;
+      void tx.store.put(value, key);
+    });
+    await tx.done;
+  } catch (error) {
+    console.error("Failed to flush pending persistent signals:", error);
+  }
+}
+
+/**
  * Creates a signal with optional IndexedDB persistence.
  *
  * @param defaultValue The initial value of the signal.
@@ -45,6 +114,10 @@ export function persistentSignal<T>(
     return s;
   }
 
+  installFlushListenersOnce();
+  const entry: PersistentSignalEntry = { getValue: () => s.value, lastWrittenValue: defaultValue };
+  registry.set(key, entry);
+
   const initialized = signal(false);
 
   // Load initial value from IndexedDB
@@ -54,6 +127,7 @@ export function persistentSignal<T>(
         const storedValue = await db.get(STORE_NAME, key);
         if (storedValue !== undefined) {
           s.value = storedValue;
+          entry.lastWrittenValue = storedValue;
         }
       } catch (error) {
         console.error(`Failed to load persistent signal for key "${key}":`, error);
@@ -79,6 +153,7 @@ export function persistentSignal<T>(
       try {
         const db = await getDB();
         await db.put(STORE_NAME, value, key);
+        entry.lastWrittenValue = value;
       } catch (error) {
         console.error(`Failed to persist signal for key "${key}":`, error);
       }

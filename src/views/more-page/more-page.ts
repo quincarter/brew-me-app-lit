@@ -53,7 +53,7 @@ export class MorePage extends SignalWatcher(LitElement) {
           <div class="section-title">Settings</div>
           <brew-list-row
             headline="Settings"
-            supporting="Brew types, dark mode, refresh, data"
+            supporting="Brew types, display, data, and general"
             .leadingIcon="${SETTINGS_ICON_SVG}"
             leading-bg="var(--brew-color-surface-container-high)"
             leading-fg="var(--brew-color-on-surface)"

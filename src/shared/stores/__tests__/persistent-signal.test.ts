@@ -65,6 +65,36 @@ describe("persistent-signal", () => {
     });
   });
 
+  describe("flush on visibilitychange/pagehide", () => {
+    // Regression test for the reported bug: a value changed right before the
+    // tab is backgrounded/discarded (e.g. Android killing the renderer
+    // shortly after the user drags a row) could be lost because the write
+    // is normally async and nothing forced it to complete first.
+    it("persists a just-changed value immediately when the page becomes hidden, without waiting for the effect's own async write", async () => {
+      const value = persistentSignal("first", { key: "test-flush-hidden" });
+      value.value = "second";
+
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => "hidden",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+
+      const data = await waitUntilPersisted((d) => d["test-flush-hidden"] === "second");
+      expect(data).toEqual({ "test-flush-hidden": "second" });
+    });
+
+    it("persists a just-changed value on pagehide", async () => {
+      const value = persistentSignal("first", { key: "test-flush-pagehide" });
+      value.value = "second";
+
+      window.dispatchEvent(new Event("pagehide"));
+
+      const data = await waitUntilPersisted((d) => d["test-flush-pagehide"] === "second");
+      expect(data).toEqual({ "test-flush-pagehide": "second" });
+    });
+  });
+
   describe("replaceAllPersistedData", () => {
     it("populates an empty store with the given data", async () => {
       await replaceAllPersistedData({ "test-a": 1, "test-b": "brewing" });

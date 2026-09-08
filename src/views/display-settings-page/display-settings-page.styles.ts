@@ -1,6 +1,6 @@
 import { css } from "lit";
 
-export const SettingsPageStyles = css`
+export const DisplaySettingsPageStyles = css`
   :host {
     display: block;
     height: 100%;
@@ -16,7 +16,7 @@ export const SettingsPageStyles = css`
     padding: 8px 20px 28px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 12px;
     flex: 1;
     min-height: 0;
     overflow: auto;
@@ -30,9 +30,15 @@ export const SettingsPageStyles = css`
     letter-spacing: 0.04em;
   }
 
-  .divider {
-    height: 1px;
-    background: var(--brew-color-outline-variant);
-    margin: 8px 0 4px;
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+  }
+
+  .row-label {
+    font-size: 16px;
+    color: var(--brew-color-on-surface);
   }
 `;
