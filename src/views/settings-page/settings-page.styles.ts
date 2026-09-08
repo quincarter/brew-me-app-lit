@@ -21,4 +21,18 @@ export const SettingsPageStyles = css`
     min-height: 0;
     overflow: auto;
   }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brew-color-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--brew-color-outline-variant);
+    margin: 8px 0 4px;
+  }
 `;

@@ -40,4 +40,8 @@ describe("settings-page", () => {
   it("links General to /more/settings/general", () => {
     expect(rowFor("General")?.getAttribute("href")).toBe("/more/settings/general");
   });
+
+  it("renders a support card below the category list", () => {
+    expect(element.shadowRoot?.querySelector("brew-support-card")).not.toBeNull();
+  });
 });

@@ -2,6 +2,7 @@ import { type HTMLTemplateResult, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
 import "../../components/bottom-nav/brew-bottom-nav";
 import "../../components/list-row/brew-list-row";
+import "../../components/support-card/brew-support-card";
 import "../../components/top-bar/brew-top-bar";
 import { ARROW_BACK_ICON_SVG } from "../../shared/icons/icons";
 import { responsiveScreenStyles } from "../../shared/styles/responsive.styles";
@@ -49,6 +50,10 @@ export class SettingsPage extends LitElement {
             leading-icon="tune"
             href="/more/settings/general"
           ></brew-list-row>
+
+          <div class="divider"></div>
+          <div class="section-title">Support BrewMe</div>
+          <brew-support-card></brew-support-card>
         </div>
 
         <brew-bottom-nav active="more"></brew-bottom-nav>
