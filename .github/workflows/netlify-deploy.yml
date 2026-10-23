@@ -36,6 +36,10 @@ jobs:
         with:
           publish-dir: "./dist"
           production-branch: main
+          # Gives PR previews a predictable "pr<number>--brew-me-app.netlify.app" URL instead of
+          # Netlify's default random-build-id alias. Left unset on a `main` push (production
+          # deploy), since `github.event.number` only exists on `pull_request` events.
+          alias: ${{ github.event_name == 'pull_request' && format('pr{0}', github.event.number) || '' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           deploy-message: "Deploy ${{ github.sha }}"
           enable-pull-request-comment: true
